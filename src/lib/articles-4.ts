@@ -1,0 +1,14 @@
+import type { Article } from "./article-types";
+import { buildArticle } from "./build-article";
+export const articles4: Article[] = [
+  buildArticle("como-vender-produtos-usados-online","Comércio online","Como vender produtos usados pela internet","Crie anúncios transparentes e calcule taxas e envio.","revenda de itens próprios","um lote pequeno","limpeza, fotos, descrição e embalagem","lavender"),
+  buildArticle("como-abrir-brecho-online","Comércio online","Como abrir um brechó online","Planeje curadoria, medidas, estoque e trocas.","seleção e revenda de roupas","uma coleção cápsula","estoque, fotos e tabela de medidas","peach"),
+  buildArticle("como-vender-artesanato-online","Artesanato","Como vender artesanato online","Calcule materiais e tempo de produção.","peças artesanais originais","uma linha pequena","materiais, fotos e ficha de custos","mint"),
+  buildArticle("como-montar-papelaria-personalizada","Artesanato","Como montar uma papelaria personalizada","Comece com poucos modelos e controle prazos.","papelaria sob encomenda","um catálogo curto","impressão, acabamento e arquivos","yellow"),
+  buildArticle("como-vender-cestas-e-kits-para-presentes","Comércio local","Como vender cestas e kits para presentes","Controle custos, validade e entrega.","kits para presentes","três opções de kit","fornecedores, embalagem e logística","lavender"),
+  buildArticle("como-ganhar-dinheiro-revendendo-cosmeticos","Comércio online","Como ganhar dinheiro revendendo cosméticos","Avalie margem, procedência e estoque.","revenda de cosméticos regulares","um catálogo sem estoque excessivo","fornecedor, pedidos e finanças","peach"),
+  buildArticle("como-vender-alimentos-por-encomenda","Alimentação","Como vender alimentos por encomenda","Crie cardápio enxuto e verifique regras sanitárias.","alimentos sob encomenda","um cardápio pequeno","cozinha adequada, embalagem e controle","mint"),
+  buildArticle("como-montar-negocio-de-marmitas","Alimentação","Como montar um negócio de marmitas","Defina público, cardápio, rota e capacidade.","marmitas para um público específico","um dia de entregas","fichas técnicas, conservação e logística","yellow"),
+  buildArticle("como-vender-bolos-doces-e-salgados","Alimentação","Como vender bolos, doces e salgados","Use ficha técnica e agenda de produção.","confeitaria e salgados","um menu curto","ingredientes, utensílios e embalagem","lavender"),
+  buildArticle("como-criar-loja-de-nicho","Comércio online","Como criar uma loja de produtos para um nicho","Pesquise demanda antes de comprar estoque.","curadoria de produtos de nicho","uma pré-venda","pesquisa, fornecedores e plataforma","peach")
+];
