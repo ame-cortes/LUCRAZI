@@ -60,6 +60,20 @@ Para ativar o painel no projeto Firebase:
 
 O site continua apresentando os artigos iniciais enquanto eles ainda não foram importados. Operações administrativas são verificadas pelas regras do Firestore, não apenas pela tela de login. A configuração do projeto e a publicação das regras no Firebase Console são necessárias antes de usar o painel.
 
+#### Inicialização segura pelo terminal local (opcional)
+
+Para popular os documentos antes de publicar, o comando `npm run seed:firestore` usa o Firebase Admin SDK e a conta de serviço somente no seu computador. Ative primeiro a API do Firestore e crie o banco padrão. A conta de serviço precisa de permissões de leitura e escrita no Firestore (por exemplo, **Cloud Datastore User**) no projeto.
+
+No PowerShell, configure o caminho local do JSON que você baixou e o ID do projeto; depois execute:
+
+```powershell
+$env:GOOGLE_APPLICATION_CREDENTIALS = "C:\caminho\local\conta-de-servico.json"
+$env:FIREBASE_PROJECT_ID = "lucrazi"
+npm run seed:firestore
+```
+
+O comando cria os 50 artigos com estado `published` e preserva documentos ou marcadores de exclusão que já existam. Não é um passo de build/deploy e não requer adicionar a chave privada às variáveis do Vercel. Nunca envie esse JSON ao GitHub nem o coloque em `NEXT_PUBLIC_*`. Depois de popular os documentos, o deploy usa a configuração pública do app Web para ler os artigos publicados.
+
 Antes de lançar, configure um domínio próprio, e-mail de contato e Google Search Console; revise o conteúdo e as páginas institucionais; confirme direitos de imagens e fontes; e confira os requisitos atuais do Google AdSense para seu público e região.
 
 O sitemap público fica em `/sitemap.xml` e é referenciado em `/robots.txt`. Depois de verificar a propriedade do domínio no Google Search Console, envie `https://www.lucrazi.com.br/sitemap.xml` em **Indexação > Sitemaps**. O envio ajuda o Google a descobrir URLs, mas não garante rastreamento, indexação ou posicionamento.
