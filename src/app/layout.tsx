@@ -4,6 +4,7 @@ import { siteUrl } from "@/lib/site-config";
 import "./globals.css";
 
 const adsenseClientId = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT_ID;
+const homeShareImage = "/images/articles/como-monetizar-blog-de-nicho.jpg";
 if (adsenseClientId && !/^ca-pub-\d+$/.test(adsenseClientId)) {
   throw new Error("NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT_ID precisa ter o formato ca-pub- seguido por números.");
 }
@@ -34,6 +35,14 @@ export const metadata: Metadata = {
     title: "Lucrazi — ideias para fazer o dinheiro render",
     description:
       "Ideias de renda extra e conteúdo prático para construir suas possibilidades financeiras, com os pés no chão.",
+    images: [
+      {
+        url: homeShareImage,
+        width: 1600,
+        height: 900,
+        alt: "Notebook em uma mesa de trabalho para criar e planejar conteúdo digital",
+      },
+    ],
   },
   alternates: { canonical: "/" },
   robots: {
@@ -51,10 +60,11 @@ export const metadata: Metadata = {
     ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }
     : {}),
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Lucrazi — ideias para fazer o dinheiro render",
     description:
       "Ideias de renda extra e conteúdo prático para construir suas possibilidades financeiras, com os pés no chão.",
+    images: [homeShareImage],
   },
 };
 

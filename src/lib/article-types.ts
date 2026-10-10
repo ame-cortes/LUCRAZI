@@ -17,3 +17,9 @@ export type Article = {
   sections: ArticleSection[];
   takeaway: string;
 };
+
+export type ArticleWithImage = Article & {
+  imageSrc: string;
+  imageAlt: string;
+  imageCreditUrl: string;
+};

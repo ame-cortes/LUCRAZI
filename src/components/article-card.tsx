@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { formatArticleDate, getEstimatedReadTime, type Article } from "@/lib/articles";
+import Image from "next/image";
+import { formatArticleDate, getEstimatedReadTime, type ArticleWithImage } from "@/lib/articles";
 
 type ArticleCardProps = {
-  article: Article;
+  article: ArticleWithImage;
   featured?: boolean;
   index?: number;
 };
@@ -12,6 +13,13 @@ export function ArticleCard({ article, featured = false, index }: ArticleCardPro
     <article className={`article-card${featured ? " article-card-featured" : ""}`}>
       <Link className="card-art" href={`/artigos/${article.slug}`} aria-label={article.title}>
         <div className={`card-art-inner art-${article.accent}`}>
+          <Image
+            src={article.imageSrc}
+            alt=""
+            fill
+            sizes="(max-width: 720px) 100vw, (max-width: 1100px) 50vw, 33vw"
+            className="card-photo"
+          />
           {featured ? (
             <>
               <span className="art-big-number">01</span>

@@ -427,6 +427,35 @@ button:focus-visible {
   transition: transform 240ms ease;
 }
 
+.card-photo {
+  object-fit: cover;
+}
+
+.card-art-inner::after {
+  position: absolute;
+  z-index: 0;
+  background: linear-gradient(180deg, rgb(20 28 20 / 12%) 15%, rgb(20 28 20 / 66%) 100%);
+  content: "";
+  inset: 0;
+}
+
+.art-big-number,
+.art-big-word,
+.art-corner-label,
+.card-art-number,
+.card-art-mark,
+.card-art-caption {
+  z-index: 1;
+}
+
+.art-big-number,
+.art-big-word,
+.art-corner-label,
+.card-art-caption {
+  color: #fff;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 35%);
+}
+
 .card-art:hover .card-art-inner {
   transform: scale(1.025);
 }
@@ -915,46 +944,37 @@ button:focus-visible {
 
 .article-cover {
   position: relative;
-  display: flex;
+  display: block;
   min-height: 310px;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
 }
 
-.cover-brand {
-  z-index: 1;
-  color: #304631;
-  font-size: 82px;
-  font-weight: 700;
-  letter-spacing: -8px;
-}
-
-.cover-shape {
-  position: absolute;
-  display: block;
-  width: 250px;
-  height: 250px;
-  border: 1px solid rgb(55 66 46 / 25%);
-  border-radius: 50%;
-}
-
-.cover-shape-one {
-  transform: translate(-115px, 40px);
-}
-
-.cover-shape-two {
-  transform: translate(115px, -40px);
+.article-cover-image {
+  object-fit: cover;
 }
 
 .cover-caption {
   position: absolute;
+  z-index: 1;
   right: 22px;
   bottom: 19px;
-  color: #646c5c;
+  padding: 6px 9px;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 55%);
+  color: #fff;
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 1px;
+}
+
+.cover-caption a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.cover-caption a:hover {
+  text-decoration-thickness: 2px;
 }
 
 .article-body {

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -37,11 +38,20 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
       url: new URL(`/artigos/${article.slug}`, siteUrl).toString(),
       publishedTime: new Date(article.publishedAt).toISOString(),
       authors: [article.author],
+      images: [
+        {
+          url: new URL(article.imageSrc, siteUrl).toString(),
+          width: 1600,
+          height: 900,
+          alt: article.imageAlt,
+        },
+      ],
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title: article.title,
       description: article.description,
+      images: [new URL(article.imageSrc, siteUrl).toString()],
     },
   };
 }
@@ -75,6 +85,7 @@ async function ArticleContent({ params }: ArticlePageProps) {
         "@type": "BlogPosting",
         headline: article.title,
         description: article.description,
+        image: new URL(article.imageSrc, siteUrl).toString(),
         datePublished: article.publishedAt,
         dateModified: article.publishedAt,
         inLanguage: "pt-BR",
@@ -134,12 +145,22 @@ async function ArticleContent({ params }: ArticlePageProps) {
                 <span>{getEstimatedReadTime(article)}</span>
               </div>
             </header>
-            <div className={`article-cover art-${article.accent}`} aria-hidden="true">
-              <span className="cover-brand">L.</span>
-              <span className="cover-shape cover-shape-one" />
-              <span className="cover-shape cover-shape-two" />
-              <span className="cover-caption">{article.category} / LUCrazi</span>
-            </div>
+            <figure className={`article-cover art-${article.accent}`}>
+              <Image
+                src={article.imageSrc}
+                alt={article.imageAlt}
+                fill
+                preload
+                sizes="(max-width: 800px) 100vw, 1000px"
+                className="article-cover-image"
+              />
+              <figcaption className="cover-caption">
+                Foto:{" "}
+                <a href={article.imageCreditUrl} target="_blank" rel="noreferrer">
+                  Unsplash
+                </a>
+              </figcaption>
+            </figure>
             <div className="article-body">
               <p className="article-intro">{article.intro}</p>
               <nav className="article-toc" aria-label="Neste artigo">
