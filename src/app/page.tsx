@@ -24,12 +24,16 @@ const structuredData = {
       "@type": "Organization",
       "@id": `${siteUrl}#organization`,
       name: "Lucrazi",
+      description:
+        "Projeto editorial independente com guias práticos sobre renda online, trabalho freelancer, marketing digital e pequenos negócios.",
       url: siteUrl.toString(),
     },
     {
-      "@type": "WebSite",
+      "@type": "Blog",
       "@id": `${siteUrl}#website`,
       name: "Lucrazi",
+      description:
+        "Blog sobre como ganhar dinheiro na internet, com guias de trabalho freelancer, marketing digital, YouTube, produtos digitais e renda extra.",
       url: siteUrl.toString(),
       inLanguage: "pt-BR",
       publisher: { "@id": `${siteUrl}#organization` },
@@ -50,8 +54,8 @@ export default function Home() {
       <section className="hero wrap">
         <div className="hero-copy">
           <span className="eyebrow"><span className="eyebrow-dot" /> DINHEIRO, COM OS PÉS NO CHÃO</span>
-          <h1>Mais renda.<br /><span>Novos caminhos.</span></h1>
-          <p>Ideias práticas para explorar formas de renda, avaliar possibilidades e dar os primeiros passos com mais clareza — sem fórmula mágica.</p>
+          <h1>Como ganhar dinheiro<br /><span>na internet.</span></h1>
+          <p>Guias práticos de renda online, trabalho freelancer, marketing digital e produtos digitais. Também exploramos serviços e pequenos negócios, sem promessas de ganhos.</p>
           <Link className="button button-dark" href="#guias-iniciais">Conheça os guias <span aria-hidden="true">↘</span></Link>
           <div className="hero-note"><span className="note-star" aria-hidden="true">✳</span><span>Teste pequeno. Aprenda. Só depois invista mais.</span></div>
         </div>

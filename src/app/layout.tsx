@@ -22,19 +22,20 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: siteUrl,
   title: {
-    default: "Lucrazi — ideias para fazer o dinheiro render",
+    default: "Lucrazi — como ganhar dinheiro na internet",
     template: "%s | Lucrazi",
   },
   description:
-    "Guias práticos sobre renda extra, ideias de negócio, trabalho freelance e organização financeira. Informação útil, sem fórmula mágica.",
+    "Blog com guias práticos sobre como ganhar dinheiro na internet: trabalho freelancer, marketing digital, YouTube, produtos digitais e renda extra. Sem promessas de ganhos.",
   applicationName: "Lucrazi",
+  category: "blog",
   openGraph: {
     type: "website",
     locale: "pt_BR",
     siteName: "Lucrazi",
-    title: "Lucrazi — ideias para fazer o dinheiro render",
+    title: "Lucrazi — como ganhar dinheiro na internet",
     description:
-      "Ideias de renda extra e conteúdo prático para construir suas possibilidades financeiras, com os pés no chão.",
+      "Blog com guias práticos de renda online, trabalho freelancer, marketing digital e produtos digitais — sem promessas de ganhos.",
     images: [
       {
         url: homeShareImage,
@@ -61,9 +62,9 @@ export const metadata: Metadata = {
     : {}),
   twitter: {
     card: "summary_large_image",
-    title: "Lucrazi — ideias para fazer o dinheiro render",
+    title: "Lucrazi — como ganhar dinheiro na internet",
     description:
-      "Ideias de renda extra e conteúdo prático para construir suas possibilidades financeiras, com os pés no chão.",
+      "Guias práticos de renda online, trabalho freelancer, marketing digital e produtos digitais. Sem promessas de ganhos.",
     images: [homeShareImage],
   },
 };

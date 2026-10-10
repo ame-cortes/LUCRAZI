@@ -1,6 +1,6 @@
 # Lucrazi
 
-Blog em português sobre renda extra, ideias de negócio, trabalho freelance e organização financeira. O objetivo editorial é compartilhar informação prática e transparente — sem prometer ganhos ou resultados.
+Blog em português sobre como ganhar dinheiro na internet, com guias de trabalho freelancer, marketing digital, YouTube, produtos digitais e renda extra. Também abordamos serviços e pequenos negócios, sempre com informação prática e transparente — sem prometer ganhos ou resultados.
 
 ## Começar
 
