@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { articles } from "@/lib/articles";
+import { connection } from "next/server";
+import { loadPublishedArticles } from "@/lib/articles";
 import { ArticleCard } from "@/components/article-card";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { siteUrl } from "@/lib/site-config";
@@ -41,12 +42,19 @@ const structuredData = {
   ],
 };
 
-export default function Home() {
-  const featuredArticles = featuredArticleSlugs.map((slug) => {
-    const article = articles.find((item) => item.slug === slug);
-    if (!article) throw new Error(`Artigo em destaque não encontrado: ${slug}`);
-    return article;
-  });
+export const instant = false;
+
+export default async function Home() {
+  await connection();
+  const articles = await loadPublishedArticles();
+  const preferredArticles = featuredArticleSlugs
+    .map((slug) => articles.find((item) => item.slug === slug))
+    .filter((article) => article !== undefined);
+  const preferredSlugs = new Set(preferredArticles.map((article) => article.slug));
+  const featuredArticles = [
+    ...preferredArticles,
+    ...articles.filter((article) => !preferredSlugs.has(article.slug)),
+  ].slice(0, 3);
 
   return (<>
     <SiteHeader />
@@ -70,7 +78,7 @@ export default function Home() {
         <div className="wrap">
           <div className="section-heading">
             <div><span className="eyebrow">PARA COMEÇAR COM CALMA</span><h2>Três ideias para dar o primeiro passo.</h2></div>
-            <Link className="text-link" href="/artigos">Ver todos os 50 guias <span aria-hidden="true">↗</span></Link>
+            <Link className="text-link" href="/artigos">Ver todos os guias <span aria-hidden="true">↗</span></Link>
           </div>
           <div className="article-grid home-guides-grid">
             {featuredArticles.map((article, index) => <ArticleCard article={article} key={article.slug} index={index + 1} />)}

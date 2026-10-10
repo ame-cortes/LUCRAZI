@@ -1,0 +1,34 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.allowAdmin == true;
+    }
+
+    match /articles/{articleId} {
+      allow read: if isAdmin()
+        || resource.data.status == "published";
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(["slug", "status", "article", "updatedAt"])
+        && request.resource.data.slug == articleId
+        && request.resource.data.status in ["draft", "published"]
+        && request.resource.data.article is map
+        && request.resource.data.article.slug == articleId;
+      allow delete: if isAdmin();
+    }
+
+    match /deletedArticles/{articleId} {
+      allow read: if true;
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(["slug", "updatedAt"])
+        && request.resource.data.slug == articleId;
+      allow delete: if isAdmin();
+    }
+
+    match /admins/{adminId} {
+      allow read: if request.auth != null && request.auth.uid == adminId;
+      allow write: if false;
+    }
+  }
+}

@@ -40,8 +40,25 @@ Copie `.env.example` para `.env.local` e configure os valores para o seu domíni
 - `GOOGLE_SITE_VERIFICATION`: token opcional de verificação HTML do Google Search Console. Para verificação por DNS, não é necessário configurar esta variável.
 - `NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT_ID`: identificador de publicador fornecido pelo AdSense.
 - `NEXT_PUBLIC_GOOGLE_ADSENSE_SLOT_ID`: identificador de um bloco de anúncios aprovado.
+- `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID` e `NEXT_PUBLIC_FIREBASE_APP_ID`: configuração pública do app Firebase Web.
+- `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`, `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` e `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID`: valores adicionais da configuração Firebase.
 
 Os anúncios não são carregados enquanto cliente ou bloco não estiverem configurados. Os blocos ficam somente no meio dos artigos, depois de uma parte substancial do conteúdo, e são identificados como publicidade. O endpoint `/ads.txt` é gerado com o ID de publicador configurado. Use somente identificadores da sua conta e configure os avisos, consentimento e políticas aplicáveis antes de veicular anúncios. A aprovação no AdSense, o tráfego e a receita não são garantidos. Nunca clique nos próprios anúncios nem incentive cliques.
+
+### Painel de artigos no Firebase
+
+O painel administrativo fica em `/admin`. O app usa Firebase Authentication com e-mail e senha e Firestore para salvar artigos. As chaves `NEXT_PUBLIC_FIREBASE_*` são a configuração pública do SDK Web; elas não substituem as regras de segurança do Firestore. Não coloque chaves privadas de conta de serviço no navegador.
+
+Para ativar o painel no projeto Firebase:
+
+1. No Firebase Console do projeto `lucrazi`, crie um banco Firestore em modo de produção e ative **Authentication > E-mail/senha**. Se o Console informar que a API do Cloud Firestore está desativada, habilite-a no projeto Google Cloud vinculado e aguarde a propagação.
+2. Crie a conta administrativa em **Authentication > Users**, autorize o domínio do site em **Authentication > Settings > Authorized domains** e copie o UID dessa conta.
+3. Publique as regras do arquivo [`firestore.rules`](./firestore.rules) na área **Firestore Database > Regras**.
+4. No Firestore, crie o documento `admins/{UID}` e defina o campo booleano `allowAdmin` como `true`. A regra permite que cada usuário leia somente o documento com o próprio UID; as regras bloqueiam alterações a essa lista pelo painel.
+5. Copie os valores do app Web para as variáveis Firebase em `.env.local` e para as variáveis de ambiente da hospedagem. Reinicie o servidor depois de alterar `.env.local`.
+6. Entre em `/admin` e use **Importar os 50 guias** para gravar os artigos atuais no Firestore. Depois disso, alterações publicadas aparecem nas páginas do site; rascunhos ficam privados e exclusões são registradas apenas como slugs numa coleção separada para não expor o texto removido nem fazer um artigo inicial reaparecer.
+
+O site continua apresentando os artigos iniciais enquanto eles ainda não foram importados. Operações administrativas são verificadas pelas regras do Firestore, não apenas pela tela de login. A configuração do projeto e a publicação das regras no Firebase Console são necessárias antes de usar o painel.
 
 Antes de lançar, configure um domínio próprio, e-mail de contato e Google Search Console; revise o conteúdo e as páginas institucionais; confirme direitos de imagens e fontes; e confira os requisitos atuais do Google AdSense para seu público e região.
 

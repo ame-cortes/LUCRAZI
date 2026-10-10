@@ -3,23 +3,23 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { AdSlot } from "@/components/ad-slot";
 import { ArticleCard } from "@/components/article-card";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
-import { articles, formatArticleDate, getArticle, getEstimatedReadTime } from "@/lib/articles";
+import { formatArticleDate, loadArticle, loadPublishedArticles, getEstimatedReadTime } from "@/lib/articles";
 import { siteUrl } from "@/lib/site-config";
 
 type ArticlePageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export function generateStaticParams() {
-  return articles.map((article) => ({ slug: article.slug }));
-}
+export const instant = false;
 
 export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
+  await connection();
   const { slug } = await params;
-  const article = getArticle(slug);
+  const article = await loadArticle(slug);
   if (!article) {
     return {
       title: "Artigo não encontrado | Lucrazi",
@@ -65,8 +65,10 @@ export default function ArticlePage({ params }: ArticlePageProps) {
 }
 
 async function ArticleContent({ params }: ArticlePageProps) {
+  await connection();
   const { slug } = await params;
-  const article = getArticle(slug);
+  const articles = await loadPublishedArticles();
+  const article = articles.find((item) => item.slug === slug);
   if (!article) notFound();
 
   const sameCategory = articles.filter(

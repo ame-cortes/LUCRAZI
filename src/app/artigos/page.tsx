@@ -1,17 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import { ArticleCard } from "@/components/article-card";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
-import { articles } from "@/lib/articles";
+import { loadPublishedArticles } from "@/lib/articles";
 
 export const metadata: Metadata = {
   title: "Todos os guias",
   description:
-    "Explore os 50 guias do Lucrazi sobre renda extra, serviços, produtos digitais, comércio e pequenos negócios.",
+    "Explore os guias do Lucrazi sobre renda extra, serviços, produtos digitais, comércio e pequenos negócios.",
   alternates: { canonical: "/artigos" },
 };
 
-export default function ArticlesPage() {
+export const instant = false;
+
+export default async function ArticlesPage() {
+  await connection();
+  const articles = await loadPublishedArticles();
   return (
     <>
       <SiteHeader />

@@ -1,8 +1,11 @@
 import type { MetadataRoute } from "next";
-import { articles } from "@/lib/articles";
+import { connection } from "next/server";
+import { loadPublishedArticles } from "@/lib/articles";
 import { siteUrl } from "@/lib/site-config";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  await connection();
+  const articles = await loadPublishedArticles();
   const pages = [
     { path: "", changeFrequency: "weekly" as const, priority: 1 },
     { path: "/artigos", changeFrequency: "weekly" as const, priority: 0.9 },
