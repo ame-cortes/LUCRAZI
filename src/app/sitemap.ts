@@ -1,10 +1,8 @@
 import type { MetadataRoute } from "next";
 import { articles } from "@/lib/articles";
+import { siteUrl } from "@/lib/site-config";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-  if (!siteUrl) return [];
-
   const pages = [
     { path: "", changeFrequency: "weekly" as const, priority: 1 },
     { path: "/artigos", changeFrequency: "weekly" as const, priority: 0.9 },

@@ -6,6 +6,7 @@ import { AdSlot } from "@/components/ad-slot";
 import { ArticleCard } from "@/components/article-card";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { articles, formatArticleDate, getArticle, getEstimatedReadTime } from "@/lib/articles";
+import { siteUrl } from "@/lib/site-config";
 
 type ArticlePageProps = {
   params: Promise<{ slug: string }>;
@@ -18,17 +19,29 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
   const { slug } = await params;
   const article = getArticle(slug);
-  if (!article) return { title: "Artigo não encontrado | Lucrazi" };
+  if (!article) {
+    return {
+      title: "Artigo não encontrado | Lucrazi",
+      robots: { index: false, follow: true },
+    };
+  }
 
   return {
     title: article.title,
     description: article.description,
+    alternates: { canonical: `/artigos/${article.slug}` },
     openGraph: {
       type: "article",
       title: article.title,
       description: article.description,
+      url: new URL(`/artigos/${article.slug}`, siteUrl).toString(),
       publishedTime: new Date(article.publishedAt).toISOString(),
       authors: [article.author],
+    },
+    twitter: {
+      card: "summary",
+      title: article.title,
+      description: article.description,
     },
   };
 }
@@ -57,22 +70,50 @@ async function ArticleContent({ params }: ArticlePageProps) {
   ].slice(0, 2);
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    headline: article.title,
-    description: article.description,
-    datePublished: article.publishedAt,
-    dateModified: article.publishedAt,
-    author: { "@type": "Organization", name: article.author },
-    publisher: { "@type": "Organization", name: "Lucrazi" },
-    ...(process.env.NEXT_PUBLIC_SITE_URL
-      ? { mainEntityOfPage: new URL(`/artigos/${article.slug}`, process.env.NEXT_PUBLIC_SITE_URL).toString() }
-      : {}),
+    "@graph": [
+      {
+        "@type": "BlogPosting",
+        headline: article.title,
+        description: article.description,
+        datePublished: article.publishedAt,
+        dateModified: article.publishedAt,
+        inLanguage: "pt-BR",
+        author: {
+          "@type": "Organization",
+          name: article.author,
+          url: new URL("/sobre", siteUrl).toString(),
+        },
+        publisher: {
+          "@type": "Organization",
+          "@id": `${siteUrl}#organization`,
+          name: "Lucrazi",
+          url: siteUrl.toString(),
+        },
+        mainEntityOfPage: {
+          "@type": "WebPage",
+          "@id": new URL(`/artigos/${article.slug}`, siteUrl).toString(),
+        },
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Início", item: siteUrl.toString() },
+          { "@type": "ListItem", position: 2, name: "Guias", item: new URL("/artigos", siteUrl).toString() },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: article.title,
+            item: new URL(`/artigos/${article.slug}`, siteUrl).toString(),
+          },
+        ],
+      },
+    ],
   };
 
   return (
     <>
       <SiteHeader />
-      <main className="article-page">
+      <main id="main-content" className="article-page">
         <div className="wrap article-wrap">
           <nav className="breadcrumbs" aria-label="Trilha de navegação">
             <Link href="/">Início</Link><span aria-hidden="true">/</span>
@@ -101,8 +142,8 @@ async function ArticleContent({ params }: ArticlePageProps) {
             </div>
             <div className="article-body">
               <p className="article-intro">{article.intro}</p>
-              <div className="article-toc">
-                <span>NESTE ARTIGO</span>
+              <nav className="article-toc" aria-label="Neste artigo">
+                <span aria-hidden="true">NESTE ARTIGO</span>
                 <ol>
                   {article.sections.map((section, index) => (
                     <li key={section.heading}>
@@ -110,7 +151,7 @@ async function ArticleContent({ params }: ArticlePageProps) {
                     </li>
                   ))}
                 </ol>
-              </div>
+              </nav>
               {article.sections.map((section, index) => (
                 <div key={section.heading}>
                   <section className="article-content-section" id={`secao-${index + 1}`}>

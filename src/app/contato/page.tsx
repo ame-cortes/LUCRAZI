@@ -4,6 +4,7 @@ import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 export const metadata: Metadata = {
   title: "Contato",
   description: "Entre em contato com a redação do Lucrazi para enviar sugestões ou apontar correções.",
+  alternates: { canonical: "/contato" },
 };
 
 export default function ContactPage() {
@@ -12,7 +13,7 @@ export default function ContactPage() {
   return (
     <>
       <SiteHeader />
-      <main className="wrap info-page">
+      <main id="main-content" className="wrap info-page">
         <article className="info-page-content">
           <span className="eyebrow">FALE COM A GENTE</span>
           <h1>Uma ideia, dúvida ou correção?</h1>

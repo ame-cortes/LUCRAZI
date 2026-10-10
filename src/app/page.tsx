@@ -2,6 +2,7 @@ import Link from "next/link";
 import { articles } from "@/lib/articles";
 import { ArticleCard } from "@/components/article-card";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
+import { siteUrl } from "@/lib/site-config";
 
 const topics = [
   { label: "Freelance", href: "/artigos/como-ganhar-dinheiro-como-redator-freelancer" },
@@ -10,12 +11,42 @@ const topics = [
   { label: "Serviços locais", href: "/artigos/como-ganhar-dinheiro-como-pet-sitter" },
 ];
 
+const featuredArticleSlugs = [
+  "como-ganhar-dinheiro-com-marketing-de-afiliados",
+  "como-ganhar-dinheiro-no-youtube",
+  "como-vender-produtos-usados-online",
+];
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${siteUrl}#organization`,
+      name: "Lucrazi",
+      url: siteUrl.toString(),
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${siteUrl}#website`,
+      name: "Lucrazi",
+      url: siteUrl.toString(),
+      inLanguage: "pt-BR",
+      publisher: { "@id": `${siteUrl}#organization` },
+    },
+  ],
+};
+
 export default function Home() {
-  const featuredArticles = articles.slice(0, 3);
+  const featuredArticles = featuredArticleSlugs.map((slug) => {
+    const article = articles.find((item) => item.slug === slug);
+    if (!article) throw new Error(`Artigo em destaque não encontrado: ${slug}`);
+    return article;
+  });
 
   return (<>
     <SiteHeader />
-    <main>
+    <main id="main-content">
       <section className="hero wrap">
         <div className="hero-copy">
           <span className="eyebrow"><span className="eyebrow-dot" /> DINHEIRO, COM OS PÉS NO CHÃO</span>
@@ -24,7 +55,7 @@ export default function Home() {
           <Link className="button button-dark" href="#guias-iniciais">Conheça os guias <span aria-hidden="true">↘</span></Link>
           <div className="hero-note"><span className="note-star" aria-hidden="true">✳</span><span>Teste pequeno. Aprenda. Só depois invista mais.</span></div>
         </div>
-        <div className="hero-art" aria-label="Ilustração abstrata com formas e a palavra ideias">
+        <div className="hero-art" aria-hidden="true">
           <div className="art-sun" /><div className="art-ring art-ring-one" /><div className="art-ring art-ring-two" /><div className="art-orbit" />
           <div className="art-label">ideias que<br />viram planos<span>↗</span></div><div className="art-caption">UM PASSO DE CADA VEZ</div>
           <div className="art-spark art-spark-one">✳</div><div className="art-spark art-spark-two">✳</div>
@@ -44,6 +75,10 @@ export default function Home() {
       </section>
       <section className="newsletter-section wrap"><div className="newsletter-mark" aria-hidden="true">L.</div><div><span className="eyebrow">UMA NOTA IMPORTANTE</span><h2>Possibilidade não é promessa.</h2><p>Os resultados dependem de procura, preço, custos, experiência e região. Pesquise as regras da atividade e não arrisque dinheiro reservado para despesas essenciais.</p></div><Link className="text-link" href="/sobre">Conheça o Lucrazi <span aria-hidden="true">↗</span></Link></section>
     </main>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
+    />
     <SiteFooter />
   </>);
 }

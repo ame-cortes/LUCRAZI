@@ -5,13 +5,14 @@ import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 export const metadata: Metadata = {
   title: "Sobre o Lucrazi",
   description: "Conheça a proposta editorial do Lucrazi: informação prática sobre renda extra e dinheiro, sem promessas de ganhos.",
+  alternates: { canonical: "/sobre" },
 };
 
 export default function AboutPage() {
   return (
     <>
       <SiteHeader />
-      <main className="wrap info-page">
+      <main id="main-content" className="wrap info-page">
         <article className="info-page-content">
           <span className="eyebrow">SOBRE O LUCrazi</span>
           <h1>Mais clareza para pensar em dinheiro.</h1>

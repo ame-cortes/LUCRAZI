@@ -8,13 +8,14 @@ export const metadata: Metadata = {
   title: "Todos os guias",
   description:
     "Explore os 50 guias do Lucrazi sobre renda extra, serviços, produtos digitais, comércio e pequenos negócios.",
+  alternates: { canonical: "/artigos" },
 };
 
 export default function ArticlesPage() {
   return (
     <>
       <SiteHeader />
-      <main>
+      <main id="main-content">
         <header className="catalog-hero">
           <div className="wrap catalog-hero-inner">
             <nav className="breadcrumbs" aria-label="Trilha de navegação">

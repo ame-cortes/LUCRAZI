@@ -5,6 +5,7 @@ import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 export const metadata: Metadata = {
   title: "Política de privacidade",
   description: "Como o Lucrazi trata dados e cookies, inclusive tecnologias de publicidade quando anúncios estão habilitados.",
+  alternates: { canonical: "/privacidade" },
 };
 
 export default function PrivacyPage() {
@@ -13,11 +14,11 @@ export default function PrivacyPage() {
   return (
     <>
       <SiteHeader />
-      <main className="wrap info-page">
+      <main id="main-content" className="wrap info-page">
         <article className="info-page-content">
           <span className="eyebrow">TRANSPARÊNCIA</span>
           <h1>Política de privacidade.</h1>
-          <p className="info-lead">Última atualização: 9 de outubro de 2026.</p>
+          <p className="info-lead">Última atualização: 10 de outubro de 2026.</p>
           <p>
             Esta página explica, em linguagem simples, como o site Lucrazi pode tratar
             informações quando você navega por seus artigos. A configuração efetiva pode
@@ -37,6 +38,18 @@ export default function PrivacyPage() {
             semelhantes para exibir, medir ou personalizar anúncios, conforme suas configurações
             e políticas aplicáveis. A publicidade só é carregada nas páginas quando os
             identificadores de anúncio são configurados.
+          </p>
+          <p>
+            Consulte também a{" "}
+            <a href="https://policies.google.com/technologies/ads">
+              política de publicidade do Google
+            </a>{" "}
+            e as{" "}
+            <a href="https://policies.google.com/privacy">
+              informações de privacidade do Google
+            </a>
+            . A presença de anúncios e as opções de personalização dependem da configuração
+            efetivamente habilitada e das regras aplicáveis à sua região.
           </p>
           <p>
             Você pode gerenciar cookies nas configurações do navegador e, quando disponível,

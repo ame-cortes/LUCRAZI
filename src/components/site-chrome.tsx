@@ -2,20 +2,23 @@ import Link from "next/link";
 
 export function SiteHeader() {
   return (
-    <header className="site-header">
-      <div className="wrap header-inner">
-        <Link className="wordmark" href="/" aria-label="Lucrazi, página inicial">
-          lucr<span>a</span>zi<span className="wordmark-dot">.</span>
-        </Link>
-        <nav className="main-nav" aria-label="Navegação principal">
-          <Link href="/artigos">Guias</Link>
-          <Link href="/sobre">Sobre</Link>
-        </nav>
-        <Link className="header-cta" href="/#guias-iniciais">
-          Começar <span aria-hidden="true">↗</span>
-        </Link>
-      </div>
-    </header>
+    <>
+      <a className="skip-link" href="#main-content">Pular para o conteúdo principal</a>
+      <header className="site-header">
+        <div className="wrap header-inner">
+          <Link className="wordmark" href="/" aria-label="Lucrazi, página inicial">
+            lucr<span>a</span>zi<span className="wordmark-dot">.</span>
+          </Link>
+          <nav className="main-nav" aria-label="Navegação principal">
+            <Link href="/artigos">Guias</Link>
+            <Link href="/sobre">Sobre</Link>
+          </nav>
+          <Link className="header-cta" href="/#guias-iniciais">
+            Começar <span aria-hidden="true">↗</span>
+          </Link>
+        </div>
+      </header>
+    </>
   );
 }
 

@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { siteUrl } from "@/lib/site-config";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,10 +13,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-
 export const metadata: Metadata = {
-  ...(siteUrl ? { metadataBase: new URL(siteUrl) } : {}),
+  metadataBase: siteUrl,
   title: {
     default: "Lucrazi — ideias para fazer o dinheiro render",
     template: "%s | Lucrazi",
@@ -31,6 +30,32 @@ export const metadata: Metadata = {
     description:
       "Ideias de renda extra e conteúdo prático para construir suas possibilidades financeiras, com os pés no chão.",
   },
+  alternates: { canonical: "/" },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  ...(process.env.GOOGLE_SITE_VERIFICATION
+    ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }
+    : {}),
+  twitter: {
+    card: "summary",
+    title: "Lucrazi — ideias para fazer o dinheiro render",
+    description:
+      "Ideias de renda extra e conteúdo prático para construir suas possibilidades financeiras, com os pés no chão.",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
