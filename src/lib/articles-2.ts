@@ -1,0 +1,14 @@
+import type { Article } from "./article-types";
+import { buildArticle } from "./build-article";
+export const articles2: Article[] = [
+  buildArticle("como-dar-aulas-particulares-online","Ensino","Como dar aulas particulares online","Planeje aulas individuais ou em pequenos grupos.","ensino de uma matéria ou habilidade","uma aula diagnóstica","videoconferência, material e agenda","lavender"),
+  buildArticle("como-criar-e-vender-curso-online","Produtos digitais","Como criar e vender um curso online","Valide o tema antes de gravar uma turma completa.","um curso online específico","uma aula ao vivo piloto","roteiro, gravação e hospedagem","peach"),
+  buildArticle("como-criar-e-vender-ebook","Produtos digitais","Como criar e vender um e-book","Transforme conhecimento próprio em material útil.","um guia digital original","um capítulo de amostra","editor, revisão e diagramação","mint"),
+  buildArticle("como-vender-planilhas-prontas","Produtos digitais","Como vender planilhas prontas","Crie modelos fáceis de usar e documentados.","planilhas de organização","um modelo para uma necessidade","planilha, instruções e testes","yellow"),
+  buildArticle("como-vender-modelos-editaveis","Produtos digitais","Como vender modelos e documentos editáveis","Desenvolva currículos, propostas e calendários.","modelos digitais editáveis","um pequeno kit","editor, licença e instruções","lavender"),
+  buildArticle("como-criar-oficina-presencial-ou-online","Ensino","Como criar uma oficina presencial ou online","Organize uma experiência curta de aprendizagem.","uma oficina prática","uma turma piloto","plano de aula, materiais e inscrições","peach"),
+  buildArticle("como-oferecer-consultoria","Consultoria","Como oferecer consultoria em uma área que você domina","Diferencie diagnóstico, orientação e execução.","consultoria dentro da sua experiência","uma sessão diagnóstica","questionário, reunião e relatório","mint"),
+  buildArticle("como-criar-comunidade-por-assinatura","Produtos digitais","Como criar uma comunidade por assinatura","Planeje conteúdo recorrente e moderação.","uma comunidade paga","um grupo piloto","plataforma, calendário e regras","yellow"),
+  buildArticle("como-vender-audiobooks-e-materiais-em-audio","Economia criativa","Como vender audiobooks e materiais em áudio","Entenda produção, direitos e distribuição.","áudio de obras autorizadas","uma amostra original","microfone, editor e licenças","lavender"),
+  buildArticle("como-transformar-habilidade-manual-em-aulas","Ensino","Como transformar uma habilidade manual em aulas","Estruture aulas de técnicas manuais.","aulas de uma técnica manual","uma oficina introdutória","materiais, demonstração e segurança","peach")
+];
