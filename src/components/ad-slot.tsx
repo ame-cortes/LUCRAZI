@@ -1,7 +1,6 @@
 "use client";
 
-import Script from "next/script";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 declare global {
   interface Window {
@@ -16,29 +15,20 @@ type AdSlotProps = {
 export function AdSlot({ className = "" }: AdSlotProps) {
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT_ID;
   const slotId = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_SLOT_ID;
-  const [scriptReady, setScriptReady] = useState(false);
   const pushed = useRef(false);
 
   useEffect(() => {
-    if (!scriptReady || pushed.current) return;
+    if (!clientId || !slotId || pushed.current) return;
     window.adsbygoogle = window.adsbygoogle || [];
     window.adsbygoogle.push({});
     pushed.current = true;
-  }, [scriptReady]);
+  }, [clientId, slotId]);
 
   if (!clientId || !slotId) return null;
 
   return (
     <aside className={`ad-slot ${className}`} aria-label="Publicidade">
       <span className="ad-label">PUBLICIDADE</span>
-      <Script
-        id="google-adsense"
-        async
-        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${clientId}`}
-        crossOrigin="anonymous"
-        strategy="afterInteractive"
-        onReady={() => setScriptReady(true)}
-      />
       <ins
         className="adsbygoogle"
         style={{ display: "block" }}

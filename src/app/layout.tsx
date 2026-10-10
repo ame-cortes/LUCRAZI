@@ -1,7 +1,13 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import { siteUrl } from "@/lib/site-config";
 import "./globals.css";
+
+const adsenseClientId = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT_ID;
+if (adsenseClientId && !/^ca-pub-\d+$/.test(adsenseClientId)) {
+  throw new Error("NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT_ID precisa ter o formato ca-pub- seguido por números.");
+}
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -61,6 +67,15 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="pt-BR" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+      {adsenseClientId && (
+        <Script
+          id="google-adsense"
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}`}
+          crossOrigin="anonymous"
+          strategy="beforeInteractive"
+        />
+      )}
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
