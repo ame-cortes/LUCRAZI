@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { articles } from "@/lib/articles";
-import { AdSlot } from "@/components/ad-slot";
 import { ArticleCard } from "@/components/article-card";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 
@@ -44,7 +43,6 @@ export default function Home() {
         </div>
       </section>
       <section className="newsletter-section wrap"><div className="newsletter-mark" aria-hidden="true">L.</div><div><span className="eyebrow">UMA NOTA IMPORTANTE</span><h2>Possibilidade não é promessa.</h2><p>Os resultados dependem de procura, preço, custos, experiência e região. Pesquise as regras da atividade e não arrisque dinheiro reservado para despesas essenciais.</p></div><Link className="text-link" href="/sobre">Conheça o Lucrazi <span aria-hidden="true">↗</span></Link></section>
-      <AdSlot className="wrap home-ad" />
     </main>
     <SiteFooter />
   </>);

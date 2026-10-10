@@ -1047,20 +1047,19 @@ button:focus-visible {
 
 .ad-slot {
   display: block;
-  min-height: 90px;
-  margin-block: 28px;
+  min-height: 110px;
+  margin-block: 44px;
+  border-block: 1px solid var(--line);
+  padding-block: 15px;
   text-align: center;
 }
 
 .ad-label {
   display: block;
-  margin-bottom: 7px;
+  margin-bottom: 9px;
   color: #96978f;
-  font-size: 8px;
-}
-
-.ad-slot.home-ad {
-  margin-block: 0 35px;
+  font-size: 10px;
+  letter-spacing: 1px;
 }
 
 .related-section {
@@ -1306,6 +1305,10 @@ button:focus-visible {
     font-size: 17px;
   }
 
+  .ad-slot {
+    margin-block: 34px;
+  }
+
   .related-section {
     padding-block: 57px 65px;
   }
@@ -1456,6 +1459,11 @@ button:focus-visible {
     padding-top: 30px;
     font-size: 17px;
     line-height: 1.8;
+  }
+
+  .ad-slot {
+    min-height: 100px;
+    margin-block: 30px;
   }
 
   .article-intro {

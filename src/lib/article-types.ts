@@ -10,7 +10,6 @@ export type Article = {
   category: string;
   title: string;
   description: string;
-  readTime: string;
   publishedAt: string;
   author: string;
   accent: "mint" | "yellow" | "lavender" | "peach";

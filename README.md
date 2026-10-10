@@ -40,6 +40,6 @@ Copie `.env.example` para `.env.local` e configure os valores para o seu domíni
 - `NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT_ID`: identificador de publicador fornecido pelo AdSense.
 - `NEXT_PUBLIC_GOOGLE_ADSENSE_SLOT_ID`: identificador de um bloco de anúncios aprovado.
 
-Os anúncios não são carregados enquanto cliente ou bloco não estiverem configurados. O espaço de anúncio aparece na página inicial e nos artigos, identificado como publicidade. Use somente identificadores da sua conta e configure os avisos, consentimento e políticas aplicáveis antes de veicular anúncios. A aprovação no AdSense, o tráfego e a receita não são garantidos. Nunca clique nos próprios anúncios nem incentive cliques.
+Os anúncios não são carregados enquanto cliente ou bloco não estiverem configurados. Os blocos ficam somente no meio dos artigos, depois de uma parte substancial do conteúdo, e são identificados como publicidade. O endpoint `/ads.txt` é gerado com o ID de publicador configurado. Use somente identificadores da sua conta e configure os avisos, consentimento e políticas aplicáveis antes de veicular anúncios. A aprovação no AdSense, o tráfego e a receita não são garantidos. Nunca clique nos próprios anúncios nem incentive cliques.
 
 Antes de lançar, configure um domínio próprio, e-mail de contato e Google Search Console; revise o conteúdo e as páginas institucionais; confirme direitos de imagens e fontes; e confira os requisitos atuais do Google AdSense para seu público e região.

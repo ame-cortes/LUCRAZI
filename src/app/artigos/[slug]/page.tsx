@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { AdSlot } from "@/components/ad-slot";
 import { ArticleCard } from "@/components/article-card";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
-import { articles, formatArticleDate, getArticle } from "@/lib/articles";
+import { articles, formatArticleDate, getArticle, getEstimatedReadTime } from "@/lib/articles";
 
 type ArticlePageProps = {
   params: Promise<{ slug: string }>;
@@ -46,7 +46,15 @@ async function ArticleContent({ params }: ArticlePageProps) {
   const article = getArticle(slug);
   if (!article) notFound();
 
-  const relatedArticles = articles.filter((item) => item.slug !== article.slug).slice(0, 2);
+  const sameCategory = articles.filter(
+    (item) => item.slug !== article.slug && item.category === article.category,
+  );
+  const relatedArticles = [
+    ...sameCategory,
+    ...articles.filter(
+      (item) => item.slug !== article.slug && item.category !== article.category,
+    ),
+  ].slice(0, 2);
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -82,7 +90,7 @@ async function ArticleContent({ params }: ArticlePageProps) {
                 <span aria-hidden="true">·</span>
                 <time dateTime={article.publishedAt}>{formatArticleDate(article.publishedAt)}</time>
                 <span aria-hidden="true">·</span>
-                <span>{article.readTime}</span>
+                <span>{getEstimatedReadTime(article)}</span>
               </div>
             </header>
             <div className={`article-cover art-${article.accent}`} aria-hidden="true">
@@ -93,7 +101,6 @@ async function ArticleContent({ params }: ArticlePageProps) {
             </div>
             <div className="article-body">
               <p className="article-intro">{article.intro}</p>
-              <AdSlot className="article-ad" />
               <div className="article-toc">
                 <span>NESTE ARTIGO</span>
                 <ol>
@@ -105,16 +112,19 @@ async function ArticleContent({ params }: ArticlePageProps) {
                 </ol>
               </div>
               {article.sections.map((section, index) => (
-                <section className="article-content-section" id={`secao-${index + 1}`} key={section.heading}>
-                  <h2>{section.heading}</h2>
-                  {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-                  {section.bullets && (
-                    <ul>
-                      {section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}
-                    </ul>
-                  )}
-                  {section.note && <aside className="article-note">{section.note}</aside>}
-                </section>
+                <div key={section.heading}>
+                  <section className="article-content-section" id={`secao-${index + 1}`}>
+                    <h2>{section.heading}</h2>
+                    {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+                    {section.bullets && (
+                      <ul>
+                        {section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}
+                      </ul>
+                    )}
+                    {section.note && <aside className="article-note">{section.note}</aside>}
+                  </section>
+                  {index === 2 && <AdSlot className="article-ad" />}
+                </div>
               ))}
               <aside className="article-takeaway">
                 <span>PARA LEVAR COM VOCÊ</span>

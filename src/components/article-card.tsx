@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatArticleDate, type Article } from "@/lib/articles";
+import { formatArticleDate, getEstimatedReadTime, type Article } from "@/lib/articles";
 
 type ArticleCardProps = {
   article: Article;
@@ -31,7 +31,7 @@ export function ArticleCard({ article, featured = false, index }: ArticleCardPro
       <div className="card-copy">
         <div className="card-meta">
           <span>{article.category}</span>
-          <span>{article.readTime}</span>
+          <span>{getEstimatedReadTime(article)}</span>
         </div>
         <h3><Link href={`/artigos/${article.slug}`}>{article.title}</Link></h3>
         <p>{article.description}</p>
