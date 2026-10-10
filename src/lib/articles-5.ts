@@ -1,0 +1,14 @@
+import type { Article } from "./article-types";
+import { buildArticle } from "./build-article";
+export const articles5: Article[] = [
+  buildArticle("como-ganhar-dinheiro-como-pet-sitter","Serviços locais","Como ganhar dinheiro como pet sitter","Organize visitas ou hospedagem com segurança.","cuidados básicos de pets","uma visita acompanhada","ficha do animal e contatos de emergência","mint"),
+  buildArticle("como-trabalhar-passeando-com-caes","Serviços locais","Como trabalhar passeando com cães","Planeje passeios seguros e pacotes recorrentes.","passeios com cães","um passeio de avaliação","guias seguras, água e cadastro","yellow"),
+  buildArticle("como-oferecer-limpeza-residencial","Serviços locais","Como oferecer serviços de limpeza residencial","Defina escopo, materiais, duração e preço.","limpeza residencial","uma diária com checklist","materiais, proteção e agenda","lavender"),
+  buildArticle("como-trabalhar-com-organizacao-profissional","Serviços locais","Como trabalhar como organizador profissional","Organize ambientes com método e discrição.","organização de ambientes","um único cômodo","etiquetas, caixas e checklist","peach"),
+  buildArticle("como-ganhar-dinheiro-montando-moveis","Serviços locais","Como ganhar dinheiro montando móveis","Estruture orçamento e prevenção de danos.","montagem de móveis","um serviço simples","ferramentas, proteção e manual","mint"),
+  buildArticle("como-oferecer-pequenos-reparos-residenciais","Serviços locais","Como oferecer pequenos reparos residenciais","Aceite apenas tarefas dentro da sua qualificação.","pequenos reparos domésticos","uma lista de tarefas permitidas","ferramentas, proteção e orçamento","yellow"),
+  buildArticle("como-prestar-servicos-de-jardinagem","Serviços locais","Como prestar serviços de jardinagem","Ofereça manutenção periódica de jardins.","cuidados de jardins e plantas","uma avaliação inicial","ferramentas, proteção e calendário","lavender"),
+  buildArticle("como-oferecer-beleza-em-domicilio","Serviços locais","Como oferecer serviços de beleza em domicílio","Planeje higiene, deslocamento e qualificação.","beleza em domicílio","um atendimento com escopo claro","materiais higienizados e agenda","peach"),
+  buildArticle("como-ganhar-dinheiro-organizando-pequenas-festas","Eventos","Como ganhar dinheiro organizando pequenas festas","Coordene fornecedores, decoração e cronograma.","organização de pequenas festas","um evento de escopo enxuto","cronograma, orçamento e contrato","mint"),
+  buildArticle("como-trabalhar-com-turismo-local","Turismo","Como trabalhar com turismo local e roteiros personalizados","Crie experiências verificando regras e credenciais.","roteiros e experiências locais","um roteiro testado","pesquisa, reservas e plano de segurança","yellow")
+];
