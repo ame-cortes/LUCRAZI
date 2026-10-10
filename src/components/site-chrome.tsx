@@ -8,11 +8,11 @@ export function SiteHeader() {
           lucr<span>a</span>zi<span className="wordmark-dot">.</span>
         </Link>
         <nav className="main-nav" aria-label="Navegação principal">
-          <Link href="/#ultimos-artigos">Artigos</Link>
+          <Link href="/artigos">Guias</Link>
           <Link href="/sobre">Sobre</Link>
         </nav>
-        <Link className="header-cta" href="/#ultimos-artigos">
-          Descobrir ideias <span aria-hidden="true">↗</span>
+        <Link className="header-cta" href="/#guias-iniciais">
+          Começar <span aria-hidden="true">↗</span>
         </Link>
       </div>
     </header>
@@ -33,7 +33,8 @@ export function SiteFooter() {
         </div>
         <div className="footer-links">
           <span>EXPLORE</span>
-          <Link href="/#ultimos-artigos">Artigos</Link>
+          <Link href="/artigos">Todos os guias</Link>
+          <Link href="/#guias-iniciais">Destaques</Link>
           <Link href="/sobre">Sobre o Lucrazi</Link>
         </div>
         <div className="footer-links">

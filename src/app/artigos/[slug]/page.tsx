@@ -68,7 +68,7 @@ async function ArticleContent({ params }: ArticlePageProps) {
         <div className="wrap article-wrap">
           <nav className="breadcrumbs" aria-label="Trilha de navegação">
             <Link href="/">Início</Link><span aria-hidden="true">/</span>
-            <Link href="/#ultimos-artigos">Artigos</Link><span aria-hidden="true">/</span>
+            <Link href="/artigos">Guias</Link><span aria-hidden="true">/</span>
             <span>{article.category}</span>
           </nav>
           <article>
@@ -131,7 +131,7 @@ async function ArticleContent({ params }: ArticlePageProps) {
           <div className="wrap">
             <div className="section-heading">
               <div><span className="eyebrow">CONTINUE EXPLORANDO</span><h2>Mais ideias para você.</h2></div>
-              <Link className="text-link" href="/#ultimos-artigos">Todos os artigos <span aria-hidden="true">↗</span></Link>
+              <Link className="text-link" href="/artigos">Todos os guias <span aria-hidden="true">↗</span></Link>
             </div>
             <div className="article-grid related-grid">
               {relatedArticles.map((related, index) => (

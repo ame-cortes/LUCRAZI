@@ -23,7 +23,8 @@ Abra [http://localhost:3000](http://localhost:3000).
 ## Conteúdo
 
 - `src/lib/articles.ts`: artigos, metadados editoriais e conteúdo estruturado.
-- `src/app/page.tsx`: página inicial e listagem de artigos.
+- `src/app/page.tsx`: página inicial com três guias em destaque.
+- `src/app/artigos/page.tsx`: catálogo com todos os guias publicados.
 - `src/app/artigos/[slug]/page.tsx`: páginas dos artigos, sumário, artigos relacionados e dados estruturados.
 - `src/app/sobre/`, `src/app/contato/` e `src/app/privacidade/`: páginas institucionais.
 - `src/app/sitemap.ts` e `src/app/robots.ts`: recursos para rastreamento e indexação.
