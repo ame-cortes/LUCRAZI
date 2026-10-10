@@ -8,22 +8,36 @@ import { extras2 } from "./article-extras-2";
 import { extras3 } from "./article-extras-3";
 import { extras4 } from "./article-extras-4";
 import { extras5 } from "./article-extras-5";
+import { practiceSections1 } from "./article-practice-sections-1";
+import { practiceSections2 } from "./article-practice-sections-2";
+import { practiceSections3 } from "./article-practice-sections-3";
+import { practiceSections4 } from "./article-practice-sections-4";
+import { practiceSections5 } from "./article-practice-sections-5";
 import { articleImageSources } from "./article-images";
 import type { Article, ArticleWithImage } from "./article-types";
 
 export type { Article, ArticleSection, ArticleWithImage } from "./article-types";
 const articleContent = [...articles1, ...articles2, ...articles3, ...articles4, ...articles5];
 const articleExtras = { ...extras1, ...extras2, ...extras3, ...extras4, ...extras5 };
+const articlePracticeSections = {
+  ...practiceSections1,
+  ...practiceSections2,
+  ...practiceSections3,
+  ...practiceSections4,
+  ...practiceSections5,
+};
 
 function withExtras(article: Article): Article {
   const extra = articleExtras[article.slug];
   if (!extra) return article;
+  const practiceSection = articlePracticeSections[article.slug];
+  if (!practiceSection) throw new Error(`Exemplo prático do artigo não encontrado: ${article.slug}`);
 
   return {
     ...article,
     title: extra.title,
     description: extra.description,
-    sections: [extra.lead, ...article.sections, ...extra.sections],
+    sections: [extra.lead, ...article.sections, practiceSection, ...extra.sections],
   };
 }
 
