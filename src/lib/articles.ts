@@ -3,13 +3,31 @@ import { articles2 } from "./articles-2";
 import { articles3 } from "./articles-3";
 import { articles4 } from "./articles-4";
 import { articles5 } from "./articles-5";
+import { extras1 } from "./article-extras-1";
+import { extras2 } from "./article-extras-2";
+import { extras3 } from "./article-extras-3";
+import { extras4 } from "./article-extras-4";
+import { extras5 } from "./article-extras-5";
 import { articleImageSources } from "./article-images";
 import type { Article, ArticleWithImage } from "./article-types";
 
 export type { Article, ArticleSection, ArticleWithImage } from "./article-types";
 const articleContent = [...articles1, ...articles2, ...articles3, ...articles4, ...articles5];
+const articleExtras = { ...extras1, ...extras2, ...extras3, ...extras4, ...extras5 };
 
-export const articles: ArticleWithImage[] = articleContent.map((article) => {
+function withExtras(article: Article): Article {
+  const extra = articleExtras[article.slug];
+  if (!extra) return article;
+
+  return {
+    ...article,
+    title: extra.title,
+    description: extra.description,
+    sections: [extra.lead, ...article.sections, ...extra.sections],
+  };
+}
+
+export const articles: ArticleWithImage[] = articleContent.map(withExtras).map((article) => {
   const image = articleImageSources[article.slug];
   if (!image) throw new Error(`Imagem do artigo não encontrada: ${article.slug}`);
 
