@@ -990,6 +990,25 @@ button:focus-visible {
   margin: 0 0 24px;
 }
 
+.article-body p,
+.article-note,
+.article-takeaway p {
+  hyphens: auto;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.article-number {
+  color: #557b2e;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.article-quote {
+  color: #48563c;
+  font-style: italic;
+}
+
 .article-intro {
   color: #34372f;
   font-size: 21px;

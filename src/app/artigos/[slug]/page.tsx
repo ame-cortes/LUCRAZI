@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { AdSlot } from "@/components/ad-slot";
 import { ArticleCard } from "@/components/article-card";
+import { ArticleText } from "@/components/article-text";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { formatArticleDate, loadArticle, loadPublishedArticles, getEstimatedReadTime } from "@/lib/articles";
 import { siteUrl } from "@/lib/site-config";
@@ -164,7 +165,7 @@ async function ArticleContent({ params }: ArticlePageProps) {
               </figcaption>
             </figure>
             <div className="article-body">
-              <p className="article-intro">{article.intro}</p>
+              <p className="article-intro"><ArticleText text={article.intro} /></p>
               <nav className="article-toc" aria-label="Neste artigo">
                 <span aria-hidden="true">NESTE ARTIGO</span>
                 <ol>
@@ -176,23 +177,27 @@ async function ArticleContent({ params }: ArticlePageProps) {
                 </ol>
               </nav>
               {article.sections.map((section, index) => (
-                <div key={section.heading}>
+                <div key={`section-${index}`}>
                   <section className="article-content-section" id={`secao-${index + 1}`}>
-                    <h2>{section.heading}</h2>
-                    {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+                    <h2><ArticleText text={section.heading} /></h2>
+                    {section.paragraphs.map((paragraph, paragraphIndex) => (
+                      <p key={`paragraph-${paragraphIndex}`}><ArticleText text={paragraph} /></p>
+                    ))}
                     {section.bullets && (
                       <ul>
-                        {section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}
+                        {section.bullets.map((bullet, bulletIndex) => (
+                          <li key={`bullet-${bulletIndex}`}><ArticleText text={bullet} /></li>
+                        ))}
                       </ul>
                     )}
-                    {section.note && <aside className="article-note">{section.note}</aside>}
+                    {section.note && <aside className="article-note"><ArticleText text={section.note} /></aside>}
                   </section>
                   {index === 2 && <AdSlot className="article-ad" />}
                 </div>
               ))}
               <aside className="article-takeaway">
                 <span>PARA LEVAR COM VOCÊ</span>
-                <p>{article.takeaway}</p>
+                <p><ArticleText text={article.takeaway} /></p>
               </aside>
               <p className="editorial-note">
                 Este conteúdo é informativo e não representa promessa de ganhos ou aconselhamento financeiro,
