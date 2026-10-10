@@ -1,0 +1,14 @@
+import type { Article } from "./article-types";
+import { buildArticle } from "./build-article";
+export const articles3: Article[] = [
+  buildArticle("como-monetizar-blog-de-nicho","Conteúdo","Como monetizar um blog de nicho","Compare anúncios, afiliados e produtos próprios.","conteúdo para uma audiência específica","uma sequência de artigos","site, pesquisa e métricas","mint"),
+  buildArticle("como-ganhar-dinheiro-com-marketing-de-afiliados","Marketing digital","Como ganhar dinheiro com marketing de afiliados","Recomende produtos com transparência.","indicação comissionada relevante","um conteúdo comparativo","programa, aviso publicitário e métricas","yellow"),
+  buildArticle("como-ganhar-dinheiro-no-youtube","Conteúdo","Como ganhar dinheiro com um canal no YouTube","Conheça diferentes fontes de receita.","vídeos para uma audiência definida","uma série de três vídeos","roteiro, gravação e edição","lavender"),
+  buildArticle("como-monetizar-podcast","Conteúdo","Como monetizar um podcast","Explore patrocínios, apoio e produtos.","um programa em áudio","uma temporada curta","gravação, edição e hospedagem","peach"),
+  buildArticle("como-trabalhar-com-conteudo-ugc","Marketing digital","Como produzir conteúdo UGC para marcas","Crie vídeos para empresas usarem em seus canais.","conteúdo original para marcas","um vídeo demonstrativo","celular, luz e autorização de uso","mint"),
+  buildArticle("como-vender-fotos-e-videos-em-bancos-de-midia","Fotografia","Como vender fotos e vídeos em bancos de mídia","Entenda licenciamento e autorizações.","imagens licenciáveis","uma coleção coerente","câmera, edição e metadados","yellow"),
+  buildArticle("como-ganhar-dinheiro-com-fotografia-de-produtos","Fotografia","Como ganhar dinheiro com fotografia de produtos","Atenda lojas, restaurantes e artesãos.","fotografia comercial de produtos","uma sessão curta","câmera, luz, fundo e edição","lavender"),
+  buildArticle("como-vender-ilustracoes-e-arte-digital","Economia criativa","Como vender ilustrações e arte digital","Combine encomendas, arquivos e licenciamento.","arte digital original","uma pequena coleção","software, portfólio e licença","peach"),
+  buildArticle("como-ganhar-dinheiro-com-locucao","Economia criativa","Como ganhar dinheiro com locução","Prepare demonstrações para anúncios e cursos.","locução para projetos autorizados","uma gravação curta","microfone, ambiente e editor","mint"),
+  buildArticle("como-vender-produtos-personalizados","Comércio online","Como vender produtos personalizados sob encomenda","Valide a procura antes de comprar equipamentos.","produtos personalizados","um catálogo enxuto","fornecedor, mockups e pedidos","yellow")
+];
