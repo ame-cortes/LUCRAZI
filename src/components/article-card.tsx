@@ -15,7 +15,7 @@ export function ArticleCard({ article, featured = false, index }: ArticleCardPro
         <div className={`card-art-inner art-${article.accent}`}>
           <Image
             src={article.imageSrc}
-            alt=""
+            alt={article.imageAlt}
             fill
             sizes="(max-width: 720px) 100vw, (max-width: 1100px) 50vw, 33vw"
             className="card-photo"
