@@ -29,6 +29,34 @@ export const metadata: Metadata = {
     "Guias práticos para ganhar dinheiro na internet: trabalho freelancer, marketing digital, YouTube, produtos digitais e renda extra. Sem promessas de ganhos.",
   applicationName: "Lucrazi",
   category: "blog",
+  icons: {
+    icon: [
+      { url: "/images/articles/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/images/articles/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/images/articles/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+      { url: "/images/articles/android-icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/images/articles/favicon.ico", type: "image/x-icon" },
+    ],
+    apple: [
+      { url: "/images/articles/apple-icon-57x57.png", sizes: "57x57", type: "image/png" },
+      { url: "/images/articles/apple-icon-60x60.png", sizes: "60x60", type: "image/png" },
+      { url: "/images/articles/apple-icon-72x72.png", sizes: "72x72", type: "image/png" },
+      { url: "/images/articles/apple-icon-76x76.png", sizes: "76x76", type: "image/png" },
+      { url: "/images/articles/apple-icon-114x114.png", sizes: "114x114", type: "image/png" },
+      { url: "/images/articles/apple-icon-120x120.png", sizes: "120x120", type: "image/png" },
+      { url: "/images/articles/apple-icon-144x144.png", sizes: "144x144", type: "image/png" },
+      { url: "/images/articles/apple-icon-152x152.png", sizes: "152x152", type: "image/png" },
+      { url: "/images/articles/apple-icon-180x180.png", sizes: "180x180", type: "image/png" },
+      { url: "/images/articles/apple-icon.png", type: "image/png" },
+    ],
+    other: [
+      {
+        rel: "apple-touch-icon-precomposed",
+        url: "/images/articles/apple-icon-precomposed.png",
+      },
+    ],
+  },
+  manifest: "/images/articles/manifest.json",
   openGraph: {
     type: "website",
     locale: "pt_BR",
@@ -66,6 +94,11 @@ export const metadata: Metadata = {
       "msvalidate.01": "CD15A6F7F97724359059462F811F942D",
     },
   },
+  other: {
+    "msapplication-TileColor": "#ffffff",
+    "msapplication-TileImage": "/images/articles/ms-icon-144x144.png",
+    "msapplication-config": "/images/articles/browserconfig.xml",
+  },
   twitter: {
     card: "summary_large_image",
     title: "Lucrazi — como ganhar dinheiro na internet",
@@ -78,6 +111,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
