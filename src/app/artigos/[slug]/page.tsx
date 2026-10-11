@@ -21,26 +21,20 @@ type ArticlePageProps = {
   params: Promise<{ slug: string }>;
 };
 
-const articleSeoTitles: Record<string, string> = {
-  "como-ganhar-dinheiro-com-traducao": "Tradução freelancer: como começar e precificar",
-  "como-ganhar-dinheiro-criando-artes-no-canva": "Ganhar dinheiro com Canva: serviços e licenças",
-  "como-vender-produtos-personalizados": "Vender produtos personalizados: ideias e dicas",
-  "como-trabalhar-com-conteudo-ugc": "Conteúdo UGC: criar vídeos para marcas",
-  "como-monetizar-blog-de-nicho": "Como monetizar um blog de nicho",
-  "como-trabalhar-editando-videos-curtos": "Editar vídeos curtos para Reels, TikTok e Shorts",
-  "como-editar-podcasts-para-clientes": "Editar podcasts: serviço, áudio e preços",
-  "como-oferecer-pequenos-reparos-residenciais": "Pequenos reparos residenciais: como oferecer",
-  "como-trabalhar-como-assistente-virtual": "Assistente virtual: serviços, preços e clientes",
-  "como-trabalhar-com-organizacao-profissional": "Personal organizer: como trabalhar na área",
-  "como-gerenciar-redes-sociais": "Social media: gerir redes para pequenos negócios",
-  "como-dar-aulas-particulares-online": "Aulas particulares online: começar e cobrar",
-  "como-vender-modelos-editaveis": "Vender modelos editáveis: como começar",
-  "como-trabalhar-com-revisao-de-textos": "Revisão de textos online: serviço e preço",
-  "como-ganhar-dinheiro-como-redator-freelancer": "Redator freelancer: começar e conseguir clientes",
-  "como-ganhar-dinheiro-com-marketing-de-afiliados": "Marketing de afiliados: como começar",
-  "como-ganhar-dinheiro-no-youtube": "Ganhar dinheiro no YouTube: formas de monetizar",
-  "como-ganhar-dinheiro-como-pet-sitter": "Pet sitter: como começar e conquistar clientes",
-};
+const maxSeoTitleLength = 59;
+
+function getSeoTitle(title: string): string {
+  const normalizedTitle = title.trim().replace(/\s+/g, " ");
+  if (normalizedTitle.length <= maxSeoTitleLength) return normalizedTitle;
+
+  const truncatedTitle = normalizedTitle.slice(0, maxSeoTitleLength - 1);
+  const lastWordBoundary = truncatedTitle.lastIndexOf(" ");
+  const titleWithoutPartialWord = lastWordBoundary > 0
+    ? truncatedTitle.slice(0, lastWordBoundary)
+    : truncatedTitle;
+
+  return `${titleWithoutPartialWord}…`;
+}
 
 export const instant = false;
 
@@ -55,7 +49,7 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
     };
   }
 
-  const seoTitle = articleSeoTitles[article.slug] ?? article.title;
+  const seoTitle = getSeoTitle(article.title);
 
   return {
     title: seoTitle,
