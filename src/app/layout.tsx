@@ -10,7 +10,7 @@ if (adsenseClientId && !/^ca-pub-\d+$/.test(adsenseClientId)) {
 }
 
 const geistSans = Geist({
-  variable: "--font-geist-sans", 
+  variable: "--font-geist-sans",  
   subsets: ["latin"],
 });
 
