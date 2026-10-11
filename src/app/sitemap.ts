@@ -25,6 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(`${article.publishedAt}T00:00:00Z`),
       changeFrequency: "monthly" as const,
       priority: 0.8,
+      images: [new URL(article.imageSrc, siteUrl).toString()],
     })),
   ];
 }

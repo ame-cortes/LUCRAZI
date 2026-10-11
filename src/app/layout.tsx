@@ -33,6 +33,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "pt_BR",
     siteName: "Lucrazi",
+    url: siteUrl.toString(),
     title: "Lucrazi — como ganhar dinheiro na internet",
     description:
       "Blog com guias práticos de renda online, trabalho freelancer, marketing digital e produtos digitais — sem promessas de ganhos.",

@@ -30,14 +30,23 @@ const structuredData = {
       url: siteUrl.toString(),
     },
     {
-      "@type": "Blog",
+      "@type": "WebSite",
       "@id": `${siteUrl}#website`,
+      name: "Lucrazi",
+      url: siteUrl.toString(),
+      inLanguage: "pt-BR",
+      publisher: { "@id": `${siteUrl}#organization` },
+    },
+    {
+      "@type": "Blog",
+      "@id": `${siteUrl}#blog`,
       name: "Lucrazi",
       description:
         "Blog sobre como ganhar dinheiro na internet, com guias de trabalho freelancer, marketing digital, YouTube, produtos digitais e renda extra.",
       url: siteUrl.toString(),
       inLanguage: "pt-BR",
       publisher: { "@id": `${siteUrl}#organization` },
+      isPartOf: { "@id": `${siteUrl}#website` },
     },
   ],
 };

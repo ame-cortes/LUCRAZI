@@ -28,6 +28,7 @@ Abra [http://localhost:3000](http://localhost:3000).
 - `src/app/artigos/[slug]/page.tsx`: páginas dos artigos, sumário, artigos relacionados e dados estruturados.
 - `src/app/sobre/`, `src/app/contato/` e `src/app/privacidade/`: páginas institucionais.
 - `src/app/sitemap.ts` e `src/app/robots.ts`: recursos para rastreamento e indexação.
+- `src/app/llms.txt/route.ts`: índice textual atualizado com os artigos publicados para ferramentas de IA.
 
 Os artigos de exemplo são conteúdo inicial: revise os textos, atribua autoria correta e atualize as datas somente quando houver revisão editorial. Verifique informações variáveis em fontes oficiais antes da publicação.
 
@@ -76,4 +77,4 @@ O comando cria os 50 artigos com estado `published` e preserva documentos ou mar
 
 Antes de lançar, configure um domínio próprio, e-mail de contato e Google Search Console; revise o conteúdo e as páginas institucionais; confirme direitos de imagens e fontes; e confira os requisitos atuais do Google AdSense para seu público e região.
 
-O sitemap público fica em `/sitemap.xml` e é referenciado em `/robots.txt`. Depois de verificar a propriedade do domínio no Google Search Console, envie `https://www.lucrazi.com.br/sitemap.xml` em **Indexação > Sitemaps**. O envio ajuda o Google a descobrir URLs, mas não garante rastreamento, indexação ou posicionamento.
+O sitemap público fica em `/sitemap.xml`, inclui as imagens dos artigos e é referenciado em `/robots.txt`. O índice `/llms.txt` também é gerado a partir dos artigos publicados; é um formato complementar em evolução e não um fator de posicionamento confirmado no Google. Depois de verificar a propriedade do domínio no Google Search Console, envie `https://www.lucrazi.com.br/sitemap.xml` em **Indexação > Sitemaps**. O envio ajuda o Google a descobrir URLs, mas não garante rastreamento, indexação ou posicionamento.
