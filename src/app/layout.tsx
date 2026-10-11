@@ -10,7 +10,7 @@ if (adsenseClientId && !/^ca-pub-\d+$/.test(adsenseClientId)) {
 }
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
+  variable: "--font-geist-sans", 
   subsets: ["latin"],
 });
 
@@ -58,9 +58,14 @@ export const metadata: Metadata = {
       "max-video-preview": -1,
     },
   },
-  ...(process.env.GOOGLE_SITE_VERIFICATION
-    ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }
-    : {}),
+  verification: {
+    ...(process.env.GOOGLE_SITE_VERIFICATION
+      ? { google: process.env.GOOGLE_SITE_VERIFICATION }
+      : {}),
+    other: {
+      "msvalidate.01": "CD15A6F7F97724359059462F811F942D",
+    },
+  },
   twitter: {
     card: "summary_large_image",
     title: "Lucrazi — como ganhar dinheiro na internet",

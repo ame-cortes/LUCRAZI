@@ -39,6 +39,7 @@ Copie `.env.example` para `.env.local` e configure os valores para o seu domíni
 - `NEXT_PUBLIC_SITE_URL`: URL pública canônica do site, incluindo `https://`. É usada nos metadados, sitemap e dados estruturados.
 - `NEXT_PUBLIC_CONTACT_EMAIL`: e-mail real de contato editorial e privacidade.
 - `GOOGLE_SITE_VERIFICATION`: token opcional de verificação HTML do Google Search Console. Para verificação por DNS, não é necessário configurar esta variável.
+- A verificação HTML do Bing Webmaster Tools está configurada nos metadados globais do site.
 - `NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT_ID`: identificador de publicador fornecido pelo AdSense.
 - `NEXT_PUBLIC_GOOGLE_ADSENSE_SLOT_ID`: identificador de um bloco de anúncios aprovado.
 - `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID` e `NEXT_PUBLIC_FIREBASE_APP_ID`: configuração pública do app Firebase Web.
