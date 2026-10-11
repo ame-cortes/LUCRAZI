@@ -61,6 +61,8 @@ Para ativar o painel no projeto Firebase:
 
 O site continua apresentando os artigos iniciais enquanto eles ainda não foram importados. Operações administrativas são verificadas pelas regras do Firestore, não apenas pela tela de login. A configuração do projeto e a publicação das regras no Firebase Console são necessárias antes de usar o painel.
 
+Depois que um artigo é salvo no Firestore, esse conteúdo publicado prevalece sobre a versão inicial no código. O painel registra a data/hora real da última gravação em `updatedAt`; revisões publicadas mostram “Atualizado em” no fuso de Brasília, e essa data também alimenta o sitemap, o Open Graph e os dados estruturados. Para corrigir um artigo já publicado, edite-o em `/admin` e publique a revisão; importar os guias novamente não sobrescreve artigos existentes. Não altere datas para simular atualizações: revise o conteúdo e deixe o painel registrar a data real. Revise números, impostos e regras legais em fontes oficiais antes da publicação.
+
 #### Inicialização segura pelo terminal local (opcional)
 
 Para popular os documentos antes de publicar, o comando `npm run seed:firestore` usa o Firebase Admin SDK e a conta de serviço somente no seu computador. Ative primeiro a API do Firestore e crie o banco padrão. A conta de serviço precisa de permissões de leitura e escrita no Firestore (por exemplo, **Cloud Datastore User**) no projeto.

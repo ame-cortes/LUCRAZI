@@ -22,7 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
     ...articles.map((article) => ({
       url: new URL(`/artigos/${article.slug}`, siteUrl).toString(),
-      lastModified: new Date(`${article.publishedAt}T00:00:00Z`),
+      lastModified: new Date(article.updatedAt ?? `${article.publishedAt}T00:00:00Z`),
       changeFrequency: "monthly" as const,
       priority: 0.8,
       images: [new URL(article.imageSrc, siteUrl).toString()],

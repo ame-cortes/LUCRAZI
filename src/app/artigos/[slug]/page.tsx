@@ -8,7 +8,13 @@ import { AdSlot } from "@/components/ad-slot";
 import { ArticleCard } from "@/components/article-card";
 import { ArticleText } from "@/components/article-text";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
-import { formatArticleDate, loadArticle, loadPublishedArticles, getEstimatedReadTime } from "@/lib/articles";
+import {
+  formatArticleDate,
+  formatArticleUpdatedDate,
+  getEstimatedReadTime,
+  loadArticle,
+  loadPublishedArticles,
+} from "@/lib/articles";
 import { siteUrl } from "@/lib/site-config";
 
 type ArticlePageProps = {
@@ -38,6 +44,7 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
       description: article.description,
       url: new URL(`/artigos/${article.slug}`, siteUrl).toString(),
       publishedTime: new Date(article.publishedAt).toISOString(),
+      modifiedTime: article.updatedAt ? new Date(article.updatedAt).toISOString() : undefined,
       authors: [article.author],
       images: [
         {
@@ -90,7 +97,7 @@ async function ArticleContent({ params }: ArticlePageProps) {
         description: article.description,
         image: new URL(article.imageSrc, siteUrl).toString(),
         datePublished: article.publishedAt,
-        dateModified: article.publishedAt,
+        dateModified: article.updatedAt ?? article.publishedAt,
         inLanguage: "pt-BR",
         author: {
           "@type": "Organization",
@@ -144,6 +151,14 @@ async function ArticleContent({ params }: ArticlePageProps) {
                 <span>Por <strong>{article.author}</strong></span>
                 <span aria-hidden="true">·</span>
                 <time dateTime={article.publishedAt}>{formatArticleDate(article.publishedAt)}</time>
+                {article.updatedAt && (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <time dateTime={article.updatedAt}>
+                      Atualizado em {formatArticleUpdatedDate(article.updatedAt)}
+                    </time>
+                  </>
+                )}
                 <span aria-hidden="true">·</span>
                 <span>{getEstimatedReadTime(article)}</span>
               </div>

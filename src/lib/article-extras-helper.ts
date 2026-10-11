@@ -20,14 +20,14 @@ export const x = (
   description,
   lead: {
     heading: "Checklist para começar",
-    paragraphs: ["Use esta lista como roteiro das primeiras semanas. Os detalhes de cada etapa aparecem nas seções a seguir."],
+    paragraphs: [],
     bullets: checklist,
   },
   sections: [
     { heading: "Quanto custa começar e como definir o preço", paragraphs: price, note },
     {
       heading: "Onde encontrar clientes e divulgar",
-      paragraphs: ["Combine canais de alcance rápido com relacionamento direto e indicações. Confira taxas, regras e disponibilidade atuais de cada plataforma antes de se cadastrar."],
+      paragraphs: [],
       bullets: channels,
     },
     { heading: "Perguntas frequentes", paragraphs: faq.map(([q, a]) => `${q} ${a}`) },

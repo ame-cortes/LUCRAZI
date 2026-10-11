@@ -22,4 +22,5 @@ export type ArticleWithImage = Article & {
   imageSrc: string;
   imageAlt: string;
   imageCreditUrl: string;
+  updatedAt?: string;
 };

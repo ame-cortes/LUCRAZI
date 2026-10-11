@@ -68,8 +68,28 @@ function validateArticle(article: EditorArticle): string | null {
   if (!article.description.trim()) return "Informe a descrição para busca e compartilhamento.";
   if (!article.intro.trim() || !article.takeaway.trim()) return "Preencha a introdução e o resumo final.";
   if (!article.sections.length || article.sections.some((section) =>
-    !section.heading.trim() || !section.paragraphs.some((paragraph) => paragraph.trim()),
+    !section.heading.trim()
+    || (!section.paragraphs.some((paragraph) => paragraph.trim())
+      && !(section.bullets ?? []).some((bullet) => bullet.trim())),
   )) return "Cada seção precisa de título e ao menos um parágrafo.";
+  const articleBlocks = [
+    article.title,
+    article.description,
+    article.intro,
+    article.takeaway,
+    ...article.sections.flatMap((section) => [
+      section.heading,
+      ...section.paragraphs,
+      ...(section.bullets ?? []),
+      section.note ?? "",
+    ]),
+  ];
+  if (articleBlocks.some((block) => /\bR\s+\d/iu.test(block))) {
+    return "Revise valores em reais: use o símbolo R$ antes do valor e confirme dados financeiros ou tributários em fontes oficiais antes de publicar.";
+  }
+  if (articleBlocks.some((block) => (block.match(/\bteto de faturamento\b/giu) ?? []).length > 1)) {
+    return "Revise o artigo: a expressão “teto de faturamento” aparece repetida. Remova a duplicação e confirme qualquer valor em fonte oficial.";
+  }
   if (!article.imageAlt.trim() || !article.imageCreditUrl.trim()) return "Preencha o texto alternativo e a fonte da imagem.";
   if (!URL.canParse(article.imageCreditUrl) || new URL(article.imageCreditUrl).protocol !== "https:") {
     return "O crédito da imagem precisa ser um link HTTPS.";

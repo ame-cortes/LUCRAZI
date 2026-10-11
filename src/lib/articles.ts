@@ -105,7 +105,10 @@ function getStoredArticle(data: Record<string, unknown>, documentId: string): Ma
     console.error(`Documento Firestore ignorado por formato inválido: articles/${documentId}`);
     return null;
   }
-  return { ...data.article, status: data.status };
+  const updatedAt = typeof data.updatedAt === "string" && !Number.isNaN(Date.parse(data.updatedAt))
+    ? data.updatedAt
+    : undefined;
+  return { ...data.article, ...(updatedAt ? { updatedAt } : {}), status: data.status };
 }
 
 class FirestoreRestError extends Error {
@@ -123,6 +126,7 @@ function decodeFirestoreValue(value: unknown): unknown {
   if (!value || typeof value !== "object") return undefined;
   const fields = value as Record<string, unknown>;
   if (typeof fields.stringValue === "string") return fields.stringValue;
+  if (typeof fields.timestampValue === "string") return fields.timestampValue;
   if (typeof fields.integerValue === "string") return Number(fields.integerValue);
   if (typeof fields.doubleValue === "number") return fields.doubleValue;
   if (typeof fields.booleanValue === "boolean") return fields.booleanValue;
@@ -348,4 +352,13 @@ export function getEstimatedReadTime(article: Article) {
 
 export function formatArticleDate(date: string) {
   return new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(date));
+}
+
+export function formatArticleUpdatedDate(date: string) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "America/Sao_Paulo",
+  }).format(new Date(date));
 }

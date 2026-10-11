@@ -8,7 +8,7 @@ export const extras1: Record<string, ArticleExtra> = {
     ["Para começar bastam computador, internet e um editor de texto; ferramentas pagas de SEO podem esperar o primeiro cliente. Some custos mensais e a renda desejada e divida pelas horas que realmente pode trabalhar para chegar ao valor da sua hora.", "Exemplo ilustrativo: se a sua hora vale R$ 50 e um artigo de 1.200 palavras leva três horas entre pesquisa, escrita e revisão, o preço mínimo fica em torno de R$ 150. Cobrar por palavra ou por pacote mensal também é comum."],
     "Dica: reescreva um trecho real do site de um potencial cliente e mostre o antes e depois na abordagem.",
     ["Plataformas como Workana, 99Freelas e Upwork", "Agências de marketing de conteúdo", "Empresas do seu nicho com blog desatualizado", "Vagas e grupos de redação no LinkedIn", "Indicações de ex-colegas e clientes"],
-    [["Preciso de formação em Letras ou Jornalismo?", "Não é obrigatório. Portfólio, pesquisa bem feita e prazos cumpridos pesam mais."], ["Como receber pagamentos?", "Pix, transferência ou o sistema da plataforma. Peça parte adiantada nos primeiros trabalhos."], ["Preciso abrir MEI?", "Com renda recorrente, avalie a formalização e confira no Portal do Empreendedor se a atividade é permitida."]],
+    [["Preciso de formação em Letras ou Jornalismo?", "Não é obrigatório. Portfólio, pesquisa bem feita e prazos cumpridos pesam mais."], ["Como receber pagamentos?", "Pix, transferência ou o sistema da plataforma. Peça parte adiantada nos primeiros trabalhos."], ["Preciso abrir MEI?", "A formalização depende do serviço efetivamente prestado e das regras vigentes. Antes de abrir um CNPJ, confira as atividades permitidas e as condições atuais nos canais oficiais do Portal do Empreendedor e do Simples Nacional. Em caso de dúvida, procure orientação contábil."]],
   ),
   "como-trabalhar-com-revisao-de-textos": x(
     "Revisão de textos online: como oferecer o serviço e quanto cobrar",
@@ -38,7 +38,7 @@ export const extras1: Record<string, ArticleExtra> = {
     [["Que tarefas são mais pedidas?", "Agenda, e-mails, atendimento inicial, planilhas, publicação de conteúdo e cobranças."], ["Preciso trabalhar em horário comercial?", "Combine janelas de atendimento e prazo de resposta no contrato."], ["Como lidar com dados sensíveis?", "Use só ferramentas aprovadas pelo cliente e observe a LGPD."]],
   ),
   "como-gerenciar-redes-sociais": x(
-    "Social media freelancer: como gerenciar redes sociais de pequenos negócios",
+    "Como gerenciar redes sociais para pequenos negócios",
     "Pacotes, calendário de conteúdo, preço e primeiros clientes.",
     ["Escolher um nicho local (restaurantes, clínicas, salões)", "Criar pacote com número fixo de posts", "Montar modelo de calendário editorial", "Preparar relatório mensal simples", "Oferecer diagnóstico gratuito de perfil"],
     ["É possível começar com celular, Canva, CapCut e os agendadores nativos das plataformas.", "Exemplo ilustrativo: 12 posts por mês levam cerca de 15 horas entre planejamento, criação, aprovação e relatório. A R$ 50 por hora, o pacote fica em R$ 750. Moderação diária e anúncios pagos são cobrados à parte."],
