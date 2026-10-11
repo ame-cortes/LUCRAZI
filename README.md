@@ -44,9 +44,11 @@ Copie `.env.example` para `.env.local` e configure os valores para o seu domíni
 - `NEXT_PUBLIC_GOOGLE_ADSENSE_SLOT_ID`: identificador de um bloco de anúncios aprovado.
 - `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID` e `NEXT_PUBLIC_FIREBASE_APP_ID`: configuração pública do app Firebase Web.
 - `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`, `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` e `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID`: valores adicionais da configuração Firebase.
-- `NEXT_PUBLIC_FIREBASE_APPCHECK_SITE_KEY`: chave pública do provedor reCAPTCHA v3 usado pelo Firebase App Check para proteger as inscrições da lista de novidades.
+- `NEXT_PUBLIC_FIREBASE_APPCHECK_SITE_KEY`: chave pública do reCAPTCHA Enterprise/Fraud Defense usado pelo Firebase App Check.
 - `NEXT_PUBLIC_NEWSLETTER_SIGNUP_ENABLED`: defina como `true` somente depois de configurar a chave App Check e a credencial Firebase de servidor.
-- `FIREBASE_SERVICE_ACCOUNT_JSON`: JSON privado da conta de serviço, usado somente pela rota de inscrição no servidor; nunca use o prefixo `NEXT_PUBLIC_` nem o envie ao Git.
+- `FIREBASE_SERVICE_ACCOUNT_JSON`: JSON privado da conta de serviço, usado somente por rotas de servidor; nunca use o prefixo `NEXT_PUBLIC_` nem o envie ao Git.
+- `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME`, `BREVO_SENDER_ADDRESS` e `BREVO_NEWSLETTER_LIST_ID`: credenciais e dados do remetente para envio e sincronização com uma lista Brevo exclusiva do Lucrazi. O endereço postal configurado é exibido no rodapé das campanhas.
+- `NEWSLETTER_UNSUBSCRIBE_SECRET`: segredo privado aleatório de pelo menos 32 caracteres, usado para assinar links individuais de cancelamento; nunca o envie ao Git.
 
 Os anúncios não são carregados enquanto cliente ou bloco não estiverem configurados. Os blocos ficam somente no meio dos artigos, depois de uma parte substancial do conteúdo, e são identificados como publicidade. O endpoint `/ads.txt` é gerado com o ID de publicador configurado. Use somente identificadores da sua conta e configure os avisos, consentimento e políticas aplicáveis antes de veicular anúncios. A aprovação no AdSense, o tráfego e a receita não são garantidos. Nunca clique nos próprios anúncios nem incentive cliques.
 
@@ -65,11 +67,20 @@ Para ativar o painel no projeto Firebase:
 
 O site continua apresentando os artigos iniciais enquanto eles ainda não foram importados. Operações administrativas são verificadas pelas regras do Firestore, não apenas pela tela de login. A configuração do projeto e a publicação das regras no Firebase Console são necessárias antes de usar o painel.
 
-### Lista de novidades
+### Lista de novidades e integração Brevo
 
-O formulário da página inicial envia o e-mail e o consentimento para `/api/newsletter`. A rota exige um token Firebase App Check válido e usa a credencial privada Firebase Admin apenas no servidor para gravar na coleção `newsletterSubscribers`; o navegador não tem acesso de leitura ou escrita à coleção. Os documentos usam o hash SHA-256 do e-mail como ID para evitar duplicatas sem expor o endereço no caminho. As inscrições ficam com status `awaiting_confirmation`: o site ainda não envia mensagens e a integração de automação com a Brevo não está ativa.
+O formulário da página inicial exige consentimento explícito e um token Firebase App Check válido. O servidor grava as inscrições em `newsletterSubscribers`, com o e-mail e os registros de consentimento; o ID do documento é o hash SHA-256 do endereço. O navegador não tem acesso à coleção. Com a integração configurada, a Brevo recebe o contato, envia uma mensagem de boas-vindas e processa campanhas criadas na aba **E-mails** do painel `/admin`. Campanhas incluem o link de cancelamento gerenciado pela Brevo; as boas-vindas incluem um link individual assinado pelo site. O cancelamento no painel também marca o contato como bloqueado na Brevo.
 
-Antes de habilitar o formulário em produção, registre o app no Firebase App Check usando o provedor reCAPTCHA v3, configure nele a site key e a secret key fornecidas pelo reCAPTCHA e autorize os domínios do site. Configure somente a site key em `NEXT_PUBLIC_FIREBASE_APPCHECK_SITE_KEY`; não coloque a secret key em variáveis do app, no Git ou no Vercel. Adicione `FIREBASE_SERVICE_ACCOUNT_JSON` como variável privada no ambiente de hospedagem, com uma conta de serviço de privilégio mínimo para gravar no Firestore. Defina `NEXT_PUBLIC_NEWSLETTER_SIGNUP_ENABLED=true` somente depois de confirmar as credenciais e a validação App Check. Não habilite a aplicação global do App Check para o Firestore por causa desta funcionalidade: as páginas atuais leem artigos com o SDK Web no servidor. Não importe inscrições para uma ferramenta de envio nem envie campanhas antes de implementar a confirmação e a retirada de consentimento.
+Para ativar os envios:
+
+1. Na Brevo, autentique o domínio remetente e confirme os registros DNS recomendados (SPF/DKIM e DMARC, conforme orientado pela Brevo). Cadastre e valide o endereço remetente.
+2. Crie uma lista de contatos **exclusiva do Lucrazi** e copie o ID numérico dessa lista. Não use uma lista com contatos não registrados pelo formulário do site.
+3. Crie uma chave API da Brevo com permissões para contatos e campanhas/e-mails. Guarde-a como variável secreta `BREVO_API_KEY`; nunca a coloque em `NEXT_PUBLIC_*`, no código ou neste repositório.
+4. Separe o endereço postal que aparecerá no rodapé das campanhas. Configure no Vercel, em Production e Preview, `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME`, `BREVO_SENDER_ADDRESS`, `BREVO_NEWSLETTER_LIST_ID` e `NEWSLETTER_UNSUBSCRIBE_SECRET`. Gere o último valor com `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"` e mantenha-o privado.
+5. Confirme que `FIREBASE_SERVICE_ACCOUNT_JSON`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_APP_ID`, `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`, `NEXT_PUBLIC_FIREBASE_APPCHECK_SITE_KEY` e `NEXT_PUBLIC_NEWSLETTER_SIGNUP_ENABLED=true` estão corretos. Depois de alterar variáveis no Vercel, faça um novo deploy.
+6. Entre em `/admin` e abra a aba **E-mails**. Confira os assinantes ativos, envie uma mensagem de boas-vindas de teste para o seu próprio e-mail e confirme o cancelamento pelo link recebido antes de fazer campanhas para todos.
+
+O painel lista e pesquisa assinantes, permite reenviar boas-vindas e cancelar inscrição, cria campanhas para os contatos consentidos, pede confirmação antes do envio e registra o resultado. A lista Brevo é sincronizada antes da campanha. O conteúdo de campanhas é texto simples formatado pelo sistema; o rodapé inclui cancelamento. Se as variáveis de envio não estiverem configuradas, as inscrições continuam registradas e a interface informa que a mensagem automática não foi enviada. Não divulgue segredos em mensagens ou capturas de tela.
 
 Depois que um artigo é salvo no Firestore, esse conteúdo publicado prevalece sobre a versão inicial no código. O painel registra a data/hora real da última gravação em `updatedAt`; revisões publicadas mostram “Atualizado em” no fuso de Brasília, e essa data também alimenta o sitemap, o Open Graph e os dados estruturados. Para corrigir um artigo já publicado, edite-o em `/admin` e publique a revisão; importar os guias novamente não sobrescreve artigos existentes. Não altere datas para simular atualizações: revise o conteúdo e deixe o painel registrar a data real. Revise números, impostos e regras legais em fontes oficiais antes da publicação.
 

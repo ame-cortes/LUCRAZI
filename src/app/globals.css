@@ -1842,6 +1842,160 @@ button:focus-visible {
   padding-block: 48px 80px;
 }
 
+.admin-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-tabs button {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 12px 16px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 650;
+}
+
+.admin-tabs button.active {
+  border-bottom-color: #607d3b;
+  color: var(--ink);
+}
+
+.newsletter-admin {
+  display: grid;
+  gap: 36px;
+}
+
+.newsletter-setup-note {
+  border: 1px solid #ead8a8;
+  border-radius: 10px;
+  padding: 16px 18px;
+  background: #fff9e9;
+  color: #5e4c20;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.newsletter-setup-note p {
+  margin: 4px 0 0;
+}
+
+.newsletter-campaign-panel {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr);
+  gap: 28px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 24px;
+  background: var(--paper);
+}
+
+.newsletter-campaign-panel h2,
+.newsletter-section-heading h2,
+.newsletter-campaign-history h2 {
+  margin: 8px 0;
+  font-size: 22px;
+  letter-spacing: -0.5px;
+}
+
+.newsletter-campaign-panel > div > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.newsletter-campaign-form,
+.newsletter-campaign-form label {
+  display: grid;
+  gap: 8px;
+}
+
+.newsletter-campaign-form {
+  gap: 16px;
+}
+
+.newsletter-campaign-form label {
+  color: #41443a;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.newsletter-campaign-form input,
+.newsletter-campaign-form textarea {
+  width: 100%;
+  border: 1px solid #d8d8cf;
+  border-radius: 8px;
+  padding: 11px 12px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 400;
+}
+
+.newsletter-campaign-form input:focus,
+.newsletter-campaign-form textarea:focus {
+  outline: 2px solid #789a3f;
+  outline-offset: 2px;
+}
+
+.newsletter-campaign-form textarea {
+  resize: vertical;
+}
+
+.newsletter-campaign-actions,
+.newsletter-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.newsletter-campaign-actions span,
+.newsletter-section-heading > span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.newsletter-campaign-actions .button {
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.newsletter-campaign-actions .button:disabled,
+.newsletter-section-heading button:disabled,
+.newsletter-subscriber-row button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.newsletter-subscribers,
+.newsletter-campaign-history {
+  display: grid;
+  gap: 14px;
+}
+
+.newsletter-subscriber-row h3,
+.newsletter-campaign-history h3 {
+  margin: 6px 0 3px;
+  font-size: 15px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.newsletter-empty {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 22px;
+  background: var(--paper);
+  color: var(--muted);
+}
+
 .admin-heading {
   display: flex;
   align-items: end;
@@ -2136,6 +2290,17 @@ button:focus-visible {
 
   .admin-toolbar > span {
     padding-bottom: 0;
+  }
+
+  .newsletter-campaign-panel {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+
+  .newsletter-campaign-actions,
+  .newsletter-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .admin-article-row {

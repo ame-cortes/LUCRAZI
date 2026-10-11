@@ -1,70 +1,16 @@
 import { createHash } from "node:crypto";
-import { cert, getApps, initializeApp, type ServiceAccount } from "firebase-admin/app";
-import { FieldValue, getFirestore } from "firebase-admin/firestore";
+import { FieldValue } from "firebase-admin/firestore";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { NextResponse } from "next/server";
+import { getFirebaseAdminDb } from "@/lib/firebase-admin";
+import { isBrevoConfigured, sendWelcomeEmail, syncBrevoSubscriber } from "@/lib/newsletter-email";
 
 const appCheckJwks = createRemoteJWKSet(
   new URL("https://firebaseappcheck.googleapis.com/v1/jwks"),
 );
 
-type ServiceAccountJson = {
-  project_id?: unknown;
-  client_email?: unknown;
-  private_key?: unknown;
-};
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
-}
-
-function getAdminApp() {
-  const rawServiceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-  if (!rawServiceAccount) {
-    throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON não está configurada.");
-  }
-
-  let account: ServiceAccountJson;
-  try {
-    const parsed: unknown = JSON.parse(rawServiceAccount);
-    if (!isRecord(parsed)) {
-      throw new Error("A credencial precisa ser um objeto JSON.");
-    }
-    account = parsed;
-  } catch (error) {
-    console.error("FIREBASE_SERVICE_ACCOUNT_JSON não contém JSON válido.", error);
-    throw new Error("A credencial Firebase do servidor está inválida.");
-  }
-
-  if (
-    typeof account.project_id !== "string"
-    || typeof account.client_email !== "string"
-    || typeof account.private_key !== "string"
-  ) {
-    throw new Error("A credencial Firebase do servidor não contém os campos necessários.");
-  }
-
-  const expectedProjectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-  if (!expectedProjectId) {
-    throw new Error("NEXT_PUBLIC_FIREBASE_PROJECT_ID não está configurada.");
-  }
-  if (account.project_id !== expectedProjectId) {
-    throw new Error("A credencial Firebase do servidor pertence a outro projeto.");
-  }
-
-  const existingApp = getApps().find((app) => app.name === "newsletter-server");
-  if (existingApp) return existingApp;
-
-  const serviceAccount: ServiceAccount = {
-    projectId: account.project_id,
-    clientEmail: account.client_email,
-    privateKey: account.private_key,
-  };
-
-  return initializeApp(
-    { credential: cert(serviceAccount), projectId: account.project_id },
-    "newsletter-server",
-  );
 }
 
 export async function POST(request: Request) {
@@ -97,9 +43,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Token App Check inválido." }, { status: 401 });
   }
 
-  let app;
+  let db;
   try {
-    app = getAdminApp();
+    db = getFirebaseAdminDb();
   } catch (error) {
     console.error("Não foi possível inicializar o Firebase Admin para inscrições.", error);
     return NextResponse.json({ error: "O cadastro está temporariamente indisponível." }, { status: 503 });
@@ -122,18 +68,36 @@ export async function POST(request: Request) {
   }
 
   const emailHash = createHash("sha256").update(email).digest("hex");
-  const subscriber = getFirestore(app).collection("newsletterSubscribers").doc(emailHash);
-
+  const subscriber = db.collection("newsletterSubscribers").doc(emailHash);
+  let resubscribed = false;
   try {
-    await subscriber.create({
-      email,
-      consent: true,
-      consentTextVersion: "2026-10-11",
-      consentAt: FieldValue.serverTimestamp(),
-      createdAt: FieldValue.serverTimestamp(),
-      source: "homepage",
-      status: "awaiting_confirmation",
-    });
+    const existing = await subscriber.get();
+    if (existing.exists) {
+      if (existing.data()?.status !== "unsubscribed") {
+        return NextResponse.json({ error: "Este e-mail já está cadastrado." }, { status: 409 });
+      }
+      resubscribed = true;
+      await subscriber.update({
+        consent: true,
+        consentTextVersion: "2026-10-11",
+        consentAt: FieldValue.serverTimestamp(),
+        status: "subscribed",
+        unsubscribedAt: FieldValue.delete(),
+        welcomeEmailStatus: "pending",
+        brevoSyncedAt: FieldValue.delete(),
+      });
+    } else {
+      await subscriber.create({
+        email,
+        consent: true,
+        consentTextVersion: "2026-10-11",
+        consentAt: FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
+        source: "homepage",
+        status: "subscribed",
+        welcomeEmailStatus: "pending",
+      });
+    }
   } catch (error) {
     if (
       isRecord(error)
@@ -146,5 +110,37 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Não foi possível registrar a inscrição." }, { status: 500 });
   }
 
-  return NextResponse.json({ status: "awaiting_confirmation" }, { status: 201 });
+  let brevoSynced = false;
+  let welcomeSent = false;
+  try {
+    brevoSynced = await syncBrevoSubscriber(email, resubscribed);
+    if (brevoSynced) {
+      await subscriber.update({ brevoSyncedAt: FieldValue.serverTimestamp() });
+    }
+  } catch (error) {
+    console.error("A inscrição foi gravada, mas não foi sincronizada com a lista Brevo.", error);
+  }
+  try {
+    welcomeSent = await sendWelcomeEmail(email, emailHash);
+    if (welcomeSent) {
+      await subscriber.update({
+        welcomeEmailStatus: "sent",
+        welcomeEmailSentAt: FieldValue.serverTimestamp(),
+      });
+    }
+  } catch (error) {
+    console.error("A inscrição foi gravada, mas o e-mail de boas-vindas não foi enviado.", error);
+    try {
+      await subscriber.update({ welcomeEmailStatus: "failed" });
+    } catch (updateError) {
+      console.error("Não foi possível registrar a falha do e-mail de boas-vindas.", updateError);
+    }
+  }
+
+  return NextResponse.json({
+    status: "subscribed",
+    welcomeSent,
+    emailConfigured: isBrevoConfigured(),
+    brevoSynced,
+  }, { status: 201 });
 }

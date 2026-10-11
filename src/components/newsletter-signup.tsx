@@ -35,6 +35,7 @@ export function NewsletterSignup() {
         },
         body: JSON.stringify({ email, consent: consented }),
       });
+      const result: unknown = await response.json();
       if (response.status === 409) {
         setMessage("Este e-mail já está cadastrado na lista de novidades.");
         return;
@@ -44,7 +45,23 @@ export function NewsletterSignup() {
       }
       setEmail("");
       setConsented(false);
-      setMessage("Inscrição registrada. O Lucrazi ainda está preparando o envio de novidades.");
+      if (
+        typeof result === "object"
+        && result !== null
+        && "welcomeSent" in result
+        && result.welcomeSent === true
+      ) {
+        setMessage("Inscrição concluída! Enviamos uma mensagem de boas-vindas para o seu e-mail.");
+      } else if (
+        typeof result === "object"
+        && result !== null
+        && "emailConfigured" in result
+        && result.emailConfigured === true
+      ) {
+        setMessage("Inscrição concluída, mas não conseguimos enviar as boas-vindas agora. Tente novamente mais tarde ou fale com a redação.");
+      } else {
+        setMessage("Inscrição concluída. O envio de e-mails está sendo configurado e as boas-vindas ainda não puderam ser enviadas.");
+      }
     } catch (error) {
       console.error("Não foi possível registrar a inscrição da newsletter.", error);
       setMessage("Não foi possível concluir a inscrição. Tente novamente mais tarde ou fale com a redação.");
@@ -94,7 +111,7 @@ export function NewsletterSignup() {
                 type="checkbox"
               />
               <span>
-                Aceito receber novidades por e-mail. Posso retirar meu consentimento pelo{" "}
+                Aceito receber novidades por e-mail. Posso cancelar pelo link em cada mensagem ou pelo{" "}
                 <Link href="/contato">canal de contato</Link>.
               </span>
             </label>

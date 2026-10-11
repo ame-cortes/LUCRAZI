@@ -90,17 +90,19 @@ export default function PrivacyPage() {
           <p>
             Se você optar por receber novidades, o e-mail e os registros de consentimento e data
             serão armazenados no Firebase/Cloud Firestore, serviço do Google, para organizar essa
-            lista. O acesso aos documentos é restrito às ferramentas administrativas do projeto;
-            eles não são consultáveis publicamente. No momento, o formulário apenas registra
-            inscrições e não dispara mensagens automatizadas. A integração de envio será informada
-            nesta política antes de ser ativada. A base legal para esse cadastro é o consentimento,
-            que pode ser retirado pelo canal de contato indicado nesta página.
+            lista. Quando a integração de envio estiver habilitada, os dados necessários serão
+            compartilhados com a Brevo para entregar a mensagem de boas-vindas e as campanhas.
+            O acesso aos documentos é restrito às ferramentas administrativas do projeto; eles não
+            são consultáveis publicamente. A base legal para o envio é o consentimento, que pode
+            ser retirado pelo link de cancelamento em cada mensagem ou pelo canal de contato.
           </p>
           <h2>Lista de novidades</h2>
           <p>
-            O cadastro é opcional e exige uma autorização explícita. Os dados são mantidos enquanto
-            a inscrição estiver ativa ou até você solicitar a exclusão. Para retirar o consentimento
-            ou pedir acesso, correção ou exclusão, escreva pelo{" "}
+            O cadastro é opcional e exige uma autorização explícita. Ao assinar, você receberá uma
+            mensagem de boas-vindas e poderá receber campanhas editoriais. Cada mensagem inclui um
+            link para cancelar a inscrição; o pedido atualiza a lista do Lucrazi e a supressão de
+            envios na Brevo. O registro de cancelamento é mantido para evitar novos envios
+            acidentais. Para pedir acesso, correção ou exclusão dos dados, escreva pelo{" "}
             <Link href="/contato">canal de contato</Link>. O formulário não solicita outros dados
             pessoais.
           </p>
@@ -126,8 +128,7 @@ export default function PrivacyPage() {
           </p>
           <p>
             Este site não mantém conta de usuário nem formulário de contato próprio. O cadastro
-            opcional de novidades é descrito acima; qualquer integração futura com serviços de envio
-            será informada antes de sua ativação.
+            opcional de novidades e o uso da Brevo para envio de e-mails são descritos acima.
           </p>
         </article>
       </main>

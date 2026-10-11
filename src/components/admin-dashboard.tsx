@@ -25,6 +25,7 @@ import {
 } from "@/lib/articles";
 import { getFirebaseAuth, getFirebaseDb, isFirebaseConfigured } from "@/lib/firebase";
 import type { ArticleSection } from "@/lib/article-types";
+import NewsletterManager from "@/components/newsletter-manager";
 
 type EditorArticle = ManagedArticle;
 
@@ -132,6 +133,7 @@ export default function AdminDashboard() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [activeTab, setActiveTab] = useState<"articles" | "newsletter">("articles");
 
   const refreshArticles = useCallback(async () => {
     setArticles(await loadManagedArticles());
@@ -336,31 +338,49 @@ export default function AdminDashboard() {
         <div><span>{user.email}</span><button type="button" onClick={() => void signOut(getFirebaseAuth())}>Sair</button></div>
       </header>
       <section className="admin-content">
-        <div className="admin-heading">
-          <div><span className="eyebrow">CONTEÚDO LUCraZI</span><h1>Artigos</h1><p>Gerencie rascunhos e publicações do blog.</p></div>
-          <div className="admin-heading-actions">
-            <button className="admin-secondary-button" disabled={busy} onClick={() => void importStarterArticles()} type="button">Importar os 50 guias</button>
-            <button className="button button-dark" onClick={() => { setSelected(newArticle()); setError(""); }} type="button">Novo artigo <span aria-hidden="true">+</span></button>
-          </div>
-        </div>
-        {error && <p className="admin-message admin-error" role="alert">{error}</p>}
-        {notice && <p className="admin-message" role="status">{notice}</p>}
-        <div className="admin-toolbar">
-          <label className="admin-search">Buscar<input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Título ou slug" /></label>
-          <label>Estado<select value={filter} onChange={(event) => setFilter(event.target.value as "all" | ArticleStatus)}><option value="all">Todos</option><option value="published">Publicados</option><option value="draft">Rascunhos</option><option value="deleted">Excluídos</option></select></label>
-          <span>{filteredArticles.length} artigos</span>
-        </div>
-        <div className="admin-list">
-          {filteredArticles.map((article) => (
-            <article className="admin-article-row" key={article.slug}>
-              <div><span className={`admin-status status-${article.status}`}>{statusLabel(article.status)}</span><h2>{article.title}</h2><p>/{article.slug}</p></div>
-              <div className="admin-row-actions">
-                <button type="button" onClick={() => { setSelected(article); setError(""); }}>{article.status === "deleted" ? "Editar/restaurar" : "Editar"}</button>
-                {article.status !== "deleted" && <button className="admin-delete-button" disabled={busy} onClick={() => void deleteArticle(article)} type="button">Excluir</button>}
+        <nav className="admin-tabs" aria-label="Seções administrativas">
+          <button
+            aria-current={activeTab === "articles" ? "page" : undefined}
+            className={activeTab === "articles" ? "active" : ""}
+            onClick={() => setActiveTab("articles")}
+            type="button"
+          >Artigos</button>
+          <button
+            aria-current={activeTab === "newsletter" ? "page" : undefined}
+            className={activeTab === "newsletter" ? "active" : ""}
+            onClick={() => setActiveTab("newsletter")}
+            type="button"
+          >E-mails</button>
+        </nav>
+        {activeTab === "newsletter" ? <NewsletterManager /> : (
+          <>
+            <div className="admin-heading">
+              <div><span className="eyebrow">CONTEÚDO LUCRAZI</span><h1>Artigos</h1><p>Gerencie rascunhos e publicações do blog.</p></div>
+              <div className="admin-heading-actions">
+                <button className="admin-secondary-button" disabled={busy} onClick={() => void importStarterArticles()} type="button">Importar os 50 guias</button>
+                <button className="button button-dark" onClick={() => { setSelected(newArticle()); setError(""); }} type="button">Novo artigo <span aria-hidden="true">+</span></button>
               </div>
-            </article>
-          ))}
-        </div>
+            </div>
+            {error && <p className="admin-message admin-error" role="alert">{error}</p>}
+            {notice && <p className="admin-message" role="status">{notice}</p>}
+            <div className="admin-toolbar">
+              <label className="admin-search">Buscar<input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Título ou slug" /></label>
+              <label>Estado<select value={filter} onChange={(event) => setFilter(event.target.value as "all" | ArticleStatus)}><option value="all">Todos</option><option value="published">Publicados</option><option value="draft">Rascunhos</option><option value="deleted">Excluídos</option></select></label>
+              <span>{filteredArticles.length} artigos</span>
+            </div>
+            <div className="admin-list">
+              {filteredArticles.map((article) => (
+                <article className="admin-article-row" key={article.slug}>
+                  <div><span className={`admin-status status-${article.status}`}>{statusLabel(article.status)}</span><h2>{article.title}</h2><p>/{article.slug}</p></div>
+                  <div className="admin-row-actions">
+                    <button type="button" onClick={() => { setSelected(article); setError(""); }}>{article.status === "deleted" ? "Editar/restaurar" : "Editar"}</button>
+                    {article.status !== "deleted" && <button className="admin-delete-button" disabled={busy} onClick={() => void deleteArticle(article)} type="button">Excluir</button>}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </>
+        )}
       </section>
       {selected && (
         <ArticleEditor
