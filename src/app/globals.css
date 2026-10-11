@@ -1417,7 +1417,29 @@ button:focus-visible {
   }
 
   .newsletter-form {
-    grid-column: 2;
+    grid-column: 1 / -1;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .newsletter-consent {
+    min-width: 0;
+  }
+
+  .newsletter-input-row,
+  .newsletter-privacy {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .newsletter-consent > span,
+  .newsletter-form .newsletter-privacy {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .newsletter-consent > span {
+    flex: 1 1 0%;
   }
 
   .footer-main {
@@ -1459,6 +1481,16 @@ button:focus-visible {
 @media (max-width: 460px) {
   .wrap {
     width: calc(100% - 36px);
+  }
+
+  .newsletter-input-row {
+    flex-direction: column;
+  }
+
+  .newsletter-input-row input,
+  .newsletter-input-row .button {
+    width: 100%;
+    min-height: 48px;
   }
 
   .header-inner {
