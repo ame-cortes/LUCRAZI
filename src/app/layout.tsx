@@ -22,11 +22,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: siteUrl,
   title: {
-    default: "Lucrazi — como ganhar dinheiro na internet",
+    default: "Lucrazi — renda extra online com os pés no chão",
     template: "%s | Lucrazi",
   },
   description:
-    "Guias práticos para ganhar dinheiro na internet: trabalho freelancer, marketing digital, YouTube, produtos digitais e renda extra. Sem promessas de ganhos.",
+    "Primeiros passos para renda extra online, trabalho freelancer e projetos digitais, com informação prática e sem promessas de ganhos.",
   applicationName: "Lucrazi",
   category: "blog",
   icons: {
@@ -62,9 +62,9 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     siteName: "Lucrazi",
     url: siteUrl.toString(),
-    title: "Lucrazi — como ganhar dinheiro na internet",
+    title: "Lucrazi — renda extra online com os pés no chão",
     description:
-      "Blog com guias práticos de renda online, trabalho freelancer, marketing digital e produtos digitais — sem promessas de ganhos.",
+      "Primeiros passos para renda extra online, trabalho freelancer e projetos digitais, com informação prática e sem promessas de ganhos.",
     images: [
       {
         url: homeShareImage,

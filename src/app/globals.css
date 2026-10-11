@@ -228,9 +228,25 @@ button:focus-visible {
   display: flex;
   align-items: center;
   gap: 9px;
-  margin-top: 35px;
+  margin-top: 20px;
   color: #6a6c64;
   font-size: 13px;
+  line-height: 1.6;
+}
+
+.hero-byline {
+  margin: 10px 0 0 !important;
+  color: #77796f !important;
+  font-size: 12px !important;
+  line-height: 1.6 !important;
+}
+
+.hero-byline a {
+  color: #4f6934;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: #a8bf84;
+  text-underline-offset: 3px;
 }
 
 .note-star {
@@ -761,8 +777,8 @@ button:focus-visible {
 
 .newsletter-section {
   display: grid;
-  grid-template-columns: 76px 1fr auto;
-  align-items: center;
+  grid-template-columns: 76px minmax(0, 0.9fr) minmax(320px, 1.1fr);
+  align-items: start;
   gap: 25px;
   padding-block: 66px;
 }
@@ -792,6 +808,75 @@ button:focus-visible {
   color: #73756e;
   font-size: 14px;
   line-height: 1.75;
+}
+
+.newsletter-form {
+  display: grid;
+  gap: 12px;
+}
+
+.newsletter-input-row {
+  display: flex;
+  gap: 9px;
+}
+
+.newsletter-input-row input {
+  min-width: 0;
+  flex: 1;
+  border: 1px solid #d7d8cf;
+  border-radius: 99px;
+  padding: 0 16px;
+  background: white;
+  color: var(--ink);
+  font: inherit;
+}
+
+.newsletter-input-row .button {
+  flex: 0 0 auto;
+  gap: 10px;
+  margin: 0;
+}
+
+.newsletter-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #6a6c64;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.newsletter-consent input {
+  flex: 0 0 auto;
+  margin: 3px 0 0;
+  accent-color: #789a3f;
+}
+
+.newsletter-consent a,
+.newsletter-privacy a {
+  text-decoration: underline;
+  text-decoration-color: #a8bf84;
+  text-underline-offset: 3px;
+}
+
+.newsletter-form .newsletter-privacy,
+.newsletter-form .newsletter-message {
+  margin: 0;
+  font-size: 12px;
+}
+
+.newsletter-form .newsletter-message {
+  color: #4f6934;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
 }
 
 .text-link {
@@ -1312,7 +1397,7 @@ button:focus-visible {
   }
 
   .newsletter-section {
-    grid-template-columns: 54px 1fr;
+    grid-template-columns: 54px minmax(0, 1fr);
     gap: 17px;
     padding-block: 47px;
   }
@@ -1331,7 +1416,7 @@ button:focus-visible {
     font-size: 13px;
   }
 
-  .newsletter-section > .text-link {
+  .newsletter-form {
     grid-column: 2;
   }
 

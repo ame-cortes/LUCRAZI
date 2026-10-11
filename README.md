@@ -44,6 +44,9 @@ Copie `.env.example` para `.env.local` e configure os valores para o seu domíni
 - `NEXT_PUBLIC_GOOGLE_ADSENSE_SLOT_ID`: identificador de um bloco de anúncios aprovado.
 - `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID` e `NEXT_PUBLIC_FIREBASE_APP_ID`: configuração pública do app Firebase Web.
 - `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`, `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` e `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID`: valores adicionais da configuração Firebase.
+- `NEXT_PUBLIC_FIREBASE_APPCHECK_SITE_KEY`: chave pública do provedor reCAPTCHA v3 usado pelo Firebase App Check para proteger as inscrições da lista de novidades.
+- `NEXT_PUBLIC_NEWSLETTER_SIGNUP_ENABLED`: defina como `true` somente depois de configurar a chave App Check e a credencial Firebase de servidor.
+- `FIREBASE_SERVICE_ACCOUNT_JSON`: JSON privado da conta de serviço, usado somente pela rota de inscrição no servidor; nunca use o prefixo `NEXT_PUBLIC_` nem o envie ao Git.
 
 Os anúncios não são carregados enquanto cliente ou bloco não estiverem configurados. Os blocos ficam somente no meio dos artigos, depois de uma parte substancial do conteúdo, e são identificados como publicidade. O endpoint `/ads.txt` é gerado com o ID de publicador configurado. Use somente identificadores da sua conta e configure os avisos, consentimento e políticas aplicáveis antes de veicular anúncios. A aprovação no AdSense, o tráfego e a receita não são garantidos. Nunca clique nos próprios anúncios nem incentive cliques.
 
@@ -61,6 +64,12 @@ Para ativar o painel no projeto Firebase:
 6. Entre em `/admin` e use **Importar os 50 guias** para gravar os artigos atuais no Firestore. Depois disso, alterações publicadas aparecem nas páginas do site; rascunhos ficam privados e exclusões são registradas apenas como slugs numa coleção separada para não expor o texto removido nem fazer um artigo inicial reaparecer.
 
 O site continua apresentando os artigos iniciais enquanto eles ainda não foram importados. Operações administrativas são verificadas pelas regras do Firestore, não apenas pela tela de login. A configuração do projeto e a publicação das regras no Firebase Console são necessárias antes de usar o painel.
+
+### Lista de novidades
+
+O formulário da página inicial envia o e-mail e o consentimento para `/api/newsletter`. A rota exige um token Firebase App Check válido e usa a credencial privada Firebase Admin apenas no servidor para gravar na coleção `newsletterSubscribers`; o navegador não tem acesso de leitura ou escrita à coleção. Os documentos usam o hash SHA-256 do e-mail como ID para evitar duplicatas sem expor o endereço no caminho. As inscrições ficam com status `awaiting_confirmation`: o site ainda não envia mensagens e a integração de automação com a Brevo não está ativa.
+
+Antes de habilitar o formulário em produção, registre o app no Firebase App Check usando o provedor reCAPTCHA v3, configure nele a site key e a secret key fornecidas pelo reCAPTCHA e autorize os domínios do site. Configure somente a site key em `NEXT_PUBLIC_FIREBASE_APPCHECK_SITE_KEY`; não coloque a secret key em variáveis do app, no Git ou no Vercel. Adicione `FIREBASE_SERVICE_ACCOUNT_JSON` como variável privada no ambiente de hospedagem, com uma conta de serviço de privilégio mínimo para gravar no Firestore. Defina `NEXT_PUBLIC_NEWSLETTER_SIGNUP_ENABLED=true` somente depois de confirmar as credenciais e a validação App Check. Não habilite a aplicação global do App Check para o Firestore por causa desta funcionalidade: as páginas atuais leem artigos com o SDK Web no servidor. Não importe inscrições para uma ferramenta de envio nem envie campanhas antes de implementar a confirmação e a retirada de consentimento.
 
 Depois que um artigo é salvo no Firestore, esse conteúdo publicado prevalece sobre a versão inicial no código. O painel registra a data/hora real da última gravação em `updatedAt`; revisões publicadas mostram “Atualizado em” no fuso de Brasília, e essa data também alimenta o sitemap, o Open Graph e os dados estruturados. Para corrigir um artigo já publicado, edite-o em `/admin` e publique a revisão; importar os guias novamente não sobrescreve artigos existentes. Não altere datas para simular atualizações: revise o conteúdo e deixe o painel registrar a data real. Revise números, impostos e regras legais em fontes oficiais antes da publicação.
 

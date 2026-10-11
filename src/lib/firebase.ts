@@ -1,6 +1,13 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
+import {
+  initializeAppCheck,
+  ReCaptchaEnterpriseProvider,
+  type AppCheck,
+} from "firebase/app-check";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+
+let appCheck: AppCheck | undefined;
 
 function getFirebaseConfig() {
   const values = {
@@ -46,4 +53,24 @@ export function getFirebaseAuth() {
 
 export function getFirebaseDb() {
   return getFirestore(getFirebaseApp());
+}
+
+export async function getFirebaseAppCheck() {
+  if (typeof window === "undefined") {
+    throw new Error("A proteção do formulário só pode ser inicializada no navegador.");
+  }
+
+  const siteKey = process.env.NEXT_PUBLIC_FIREBASE_APPCHECK_SITE_KEY;
+  if (!siteKey) {
+    throw new Error("Configure NEXT_PUBLIC_FIREBASE_APPCHECK_SITE_KEY antes de habilitar inscrições.");
+  }
+
+  if (!appCheck) {
+    appCheck = initializeAppCheck(getFirebaseApp(), {
+      provider: new ReCaptchaEnterpriseProvider(siteKey),
+      isTokenAutoRefreshEnabled: true,
+    });
+  }
+
+  return appCheck;
 }

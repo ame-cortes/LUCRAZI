@@ -2,6 +2,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { loadPublishedArticles } from "@/lib/articles";
 import { ArticleCard } from "@/components/article-card";
+import { NewsletterSignup } from "@/components/newsletter-signup";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { siteUrl } from "@/lib/site-config";
 
@@ -28,6 +29,15 @@ const structuredData = {
       description:
         "Projeto editorial independente com guias práticos sobre renda online, trabalho freelancer, marketing digital e pequenos negócios.",
       url: siteUrl.toString(),
+      founder: { "@id": `${siteUrl}#mateus-ferreira` },
+    },
+    {
+      "@type": "Person",
+      "@id": `${siteUrl}#mateus-ferreira`,
+      name: "Mateus Ferreira",
+      jobTitle: "Empreendedor digital e fundador do Lucrazi",
+      url: `${siteUrl}sobre#mateus-ferreira`,
+      sameAs: ["https://www.instagram.com/mateusprodev/"],
     },
     {
       "@type": "WebSite",
@@ -72,9 +82,10 @@ export default async function Home() {
         <div className="hero-copy">
           <span className="eyebrow"><span className="eyebrow-dot" /> DINHEIRO, COM OS PÉS NO CHÃO</span>
           <h1>Como ganhar dinheiro<br /><span>na internet.</span></h1>
-          <p>Guias práticos de renda online, trabalho freelancer, marketing digital e produtos digitais. Também exploramos serviços e pequenos negócios, sem promessas de ganhos.</p>
+          <p>Ideias e orientações para quem está começando: renda extra online, trabalho freelancer, marketing digital e pequenos negócios, sem fórmula mágica.</p>
           <Link className="button button-dark" href="#guias-iniciais">Conheça os guias <span aria-hidden="true">↘</span></Link>
-          <div className="hero-note"><span className="note-star" aria-hidden="true">✳</span><span>Teste pequeno. Aprenda. Só depois invista mais.</span></div>
+          <div className="hero-note"><span className="note-star" aria-hidden="true">✳</span><span>Resultados variam. Comece pequeno e não comprometa despesas essenciais.</span></div>
+          <p className="hero-byline">Criado por <Link href="/sobre#mateus-ferreira">Mateus Ferreira</Link>, empreendedor digital.</p>
         </div>
         <div className="hero-art" aria-hidden="true">
           <div className="art-sun" /><div className="art-ring art-ring-one" /><div className="art-ring art-ring-two" /><div className="art-orbit" />
@@ -94,7 +105,7 @@ export default async function Home() {
           </div>
         </div>
       </section>
-      <section className="newsletter-section wrap"><div className="newsletter-mark" aria-hidden="true">L.</div><div><span className="eyebrow">UMA NOTA IMPORTANTE</span><h2>Possibilidade não é promessa.</h2><p>Os resultados dependem de procura, preço, custos, experiência e região. Pesquise as regras da atividade e não arrisque dinheiro reservado para despesas essenciais.</p></div><Link className="text-link" href="/sobre">Conheça o Lucrazi <span aria-hidden="true">↗</span></Link></section>
+      <NewsletterSignup />
     </main>
     <script
       type="application/ld+json"

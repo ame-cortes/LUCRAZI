@@ -18,7 +18,7 @@ export default function PrivacyPage() {
         <article className="info-page-content">
           <span className="eyebrow">TRANSPARÊNCIA</span>
           <h1>Política de privacidade.</h1>
-          <p className="info-lead">Última atualização: 10 de outubro de 2026.</p>
+          <p className="info-lead">Última atualização: 11 de outubro de 2026.</p>
           <p>
             Esta página explica, em linguagem simples, como o site Lucrazi pode tratar
             informações quando você navega por seus artigos. A configuração efetiva pode
@@ -37,8 +37,8 @@ export default function PrivacyPage() {
             tratar dados do dispositivo, cookies e informações de interação com anúncios para
             exibir, medir e, conforme as opções disponíveis e as regras aplicáveis, personalizar
             publicidade. Esses fornecedores aplicam suas próprias políticas e prazos de retenção.
-            Atualmente, o site não oferece cadastro de usuário nem formulário próprio de coleta
-            de dados.
+            O formulário de novidades coleta o e-mail e o registro do consentimento informado para
+            manter uma lista de pessoas interessadas no conteúdo do Lucrazi.
           </p>
           <h2>Cookies e anúncios</h2>
           <p>
@@ -87,6 +87,23 @@ export default function PrivacyPage() {
             finalidades descritas ou ao cumprimento de obrigações aplicáveis e, depois, eliminados
             ou anonimizados quando cabível. Cada fornecedor define também seus próprios prazos.
           </p>
+          <p>
+            Se você optar por receber novidades, o e-mail e os registros de consentimento e data
+            serão armazenados no Firebase/Cloud Firestore, serviço do Google, para organizar essa
+            lista. O acesso aos documentos é restrito às ferramentas administrativas do projeto;
+            eles não são consultáveis publicamente. No momento, o formulário apenas registra
+            inscrições e não dispara mensagens automatizadas. A integração de envio será informada
+            nesta política antes de ser ativada. A base legal para esse cadastro é o consentimento,
+            que pode ser retirado pelo canal de contato indicado nesta página.
+          </p>
+          <h2>Lista de novidades</h2>
+          <p>
+            O cadastro é opcional e exige uma autorização explícita. Os dados são mantidos enquanto
+            a inscrição estiver ativa ou até você solicitar a exclusão. Para retirar o consentimento
+            ou pedir acesso, correção ou exclusão, escreva pelo{" "}
+            <Link href="/contato">canal de contato</Link>. O formulário não solicita outros dados
+            pessoais.
+          </p>
           <h2>Links de terceiros</h2>
           <p>
             Os artigos podem apontar para sites externos, inclusive fontes oficiais. Esses sites
@@ -108,10 +125,9 @@ export default function PrivacyPage() {
             {contactEmail ? <> ou escreva para <a href={`mailto:${contactEmail}`}>{contactEmail}</a>.</> : "."}
           </p>
           <p>
-            Este site não mantém conta de usuário nem formulário de contato próprio. Se isso mudar,
-            ou se novas ferramentas de análise, publicidade ou outros serviços forem adicionados,
-            esta política e as opções de privacidade devem ser atualizadas antes da coleta
-            correspondente.
+            Este site não mantém conta de usuário nem formulário de contato próprio. O cadastro
+            opcional de novidades é descrito acima; qualquer integração futura com serviços de envio
+            será informada antes de sua ativação.
           </p>
         </article>
       </main>
