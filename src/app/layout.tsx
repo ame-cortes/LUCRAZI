@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     template: "%s | Lucrazi",
   },
   description:
-    "Blog com guias práticos sobre como ganhar dinheiro na internet: trabalho freelancer, marketing digital, YouTube, produtos digitais e renda extra. Sem promessas de ganhos.",
+    "Guias práticos para ganhar dinheiro na internet: trabalho freelancer, marketing digital, YouTube, produtos digitais e renda extra. Sem promessas de ganhos.",
   applicationName: "Lucrazi",
   category: "blog",
   openGraph: {
