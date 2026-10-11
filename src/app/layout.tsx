@@ -79,6 +79,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="pt-BR" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <head>
+        <meta property="og:logo" content={new URL("/icon.svg", siteUrl).toString()} />
         {adsenseClientId && (
           <script
             async
