@@ -409,7 +409,13 @@ export default function AdminDashboard() {
             type="button"
           >E-mails</button>
         </nav>
-        {activeTab === "newsletter" ? <NewsletterManager /> : (
+        {activeTab === "newsletter" ? (
+          <NewsletterManager
+            articles={articles
+              .filter((article) => article.status === "published")
+              .map(({ slug, title, description }) => ({ slug, title, description }))}
+          />
+        ) : (
           <>
             <div className="admin-heading">
               <div><span className="eyebrow">CONTEÚDO LUCRAZI</span><h1>Artigos</h1><p>Gerencie rascunhos e publicações do blog.</p></div>

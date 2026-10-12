@@ -1958,6 +1958,7 @@ button:focus-visible {
 }
 
 .newsletter-campaign-form input,
+.newsletter-campaign-form select,
 .newsletter-campaign-form textarea {
   width: 100%;
   border: 1px solid #d8d8cf;
@@ -1970,6 +1971,7 @@ button:focus-visible {
 }
 
 .newsletter-campaign-form input:focus,
+.newsletter-campaign-form select:focus,
 .newsletter-campaign-form textarea:focus {
   outline: 2px solid #789a3f;
   outline-offset: 2px;

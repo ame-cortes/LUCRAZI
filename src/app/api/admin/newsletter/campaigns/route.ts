@@ -33,6 +33,8 @@ export async function POST(request: Request) {
     || !/^[0-9a-f-]{36}$/i.test(body.campaignId)
     || typeof body.subject !== "string"
     || typeof body.message !== "string"
+    || (body.articleSlug !== undefined
+      && (typeof body.articleSlug !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(body.articleSlug)))
   ) {
     return NextResponse.json({ error: "Preencha o assunto e o conteúdo da campanha." }, { status: 400 });
   }
@@ -45,10 +47,36 @@ export async function POST(request: Request) {
   }
 
   const db = getFirebaseAdminDb();
+  let article: { slug: string; title: string; description: string } | undefined;
+  if (typeof body.articleSlug === "string") {
+    try {
+      const articleSnapshot = await db.collection("articles").doc(body.articleSlug).get();
+      const stored = articleSnapshot.data();
+      const content = stored?.article;
+      if (
+        !articleSnapshot.exists
+        || stored?.status !== "published"
+        || !isRecord(content)
+        || typeof content.title !== "string"
+        || typeof content.description !== "string"
+      ) {
+        return NextResponse.json({ error: "O artigo selecionado não está publicado. Atualize a lista e tente novamente." }, { status: 409 });
+      }
+      article = {
+        slug: body.articleSlug,
+        title: content.title,
+        description: content.description,
+      };
+    } catch (error) {
+      console.error("Não foi possível validar o artigo da campanha.", error);
+      return NextResponse.json({ error: "Não foi possível validar o artigo selecionado." }, { status: 500 });
+    }
+  }
   const campaign = db.collection("newsletterCampaigns").doc(body.campaignId);
   try {
     await campaign.create({
       subject,
+      ...(article ? { articleSlug: article.slug } : {}),
       status: "preparing",
       recipientCount: 0,
       createdAt: FieldValue.serverTimestamp(),
@@ -124,9 +152,12 @@ export async function POST(request: Request) {
     }
 
     await campaign.update({ status: "sending" });
-    providerCampaignId = await sendNewsletterCampaign(subject, message, async (createdId) => {
-      providerCampaignId = createdId;
-      await campaign.update({ status: "sending", providerCampaignId: createdId });
+    providerCampaignId = await sendNewsletterCampaign(subject, message, {
+      article,
+      onCreated: async (createdId) => {
+        providerCampaignId = createdId;
+        await campaign.update({ status: "sending", providerCampaignId: createdId });
+      },
     });
     await campaign.update({
       status: "sent",

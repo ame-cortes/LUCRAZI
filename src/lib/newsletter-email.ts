@@ -91,6 +91,10 @@ function escapeHtml(value: string) {
     .replaceAll("'", "&#39;");
 }
 
+function emailTemplate(content: string, unsubscribeHref: string, senderAddress: string) {
+  return `<!doctype html><html lang="pt-BR"><body style="margin:0;background:#f4f3ed;font-family:Arial,sans-serif;color:#25271f;line-height:1.6"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f3ed;padding:28px 12px"><tr><td align="center"><table role="presentation" width="600" cellspacing="0" cellpadding="0" style="width:100%;max-width:600px;background:#fff;border:1px solid #e6e5dc;border-radius:16px;overflow:hidden"><tr><td style="padding:22px 32px;background:#28351f"><a href="${escapeHtml(siteUrl())}" style="color:#fff;font-size:22px;font-weight:bold;text-decoration:none">lucrazi<span style="color:#b8d58b">.</span></a></td></tr><tr><td style="padding:32px">${content}</td></tr><tr><td style="padding:20px 32px;background:#f8f8f4;border-top:1px solid #e6e5dc;color:#666;font-size:12px;line-height:1.6"><p style="margin:0 0 8px">Você recebe este e-mail porque se inscreveu para receber novidades do Lucrazi. <a href="${escapeHtml(unsubscribeHref)}" style="color:#4e6c2d">Cancelar inscrição</a>.</p><p style="margin:0">${escapeHtml(senderAddress)}</p></td></tr></table></td></tr></table></body></html>`;
+}
+
 async function brevoRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
   const config = getBrevoConfig();
   if (!config) throw new Error("A integração Brevo não está configurada.");
@@ -142,7 +146,11 @@ export async function sendWelcomeEmail(email: string, subscriberId: string) {
   if (!config) return false;
 
   const link = unsubscribeUrl(subscriberId);
-  const htmlContent = `<!doctype html><html lang="pt-BR"><body style="font-family:Arial,sans-serif;color:#25271f;line-height:1.6"><main style="max-width:600px;margin:32px auto;padding:24px"><h1>Que bom ter você por aqui!</h1><p>Obrigado por assinar as novidades do Lucrazi. Enviaremos novos guias e ideias práticas para ajudar você a explorar possibilidades de renda, sempre sem promessas de ganhos.</p><p>Até breve,<br>Equipe Lucrazi</p><hr><p style="font-size:12px;color:#666">Você recebeu este e-mail porque se inscreveu para receber novidades do Lucrazi. <a href="${escapeHtml(link)}">Cancelar inscrição</a>.</p><p style="font-size:12px;color:#666">${escapeHtml(config.senderAddress)}</p></main></body></html>`;
+  const htmlContent = emailTemplate(
+    `<p style="margin:0 0 8px;color:#668241;font-size:12px;font-weight:bold;letter-spacing:1px">BOAS-VINDAS</p><h1 style="margin:0 0 16px;font-size:28px;line-height:1.25">Que bom ter você por aqui!</h1><p style="margin:0 0 16px">Obrigado por assinar as novidades do Lucrazi. Vamos compartilhar guias e ideias práticas para ajudar você a explorar possibilidades de renda, sem promessas de ganhos.</p><p style="margin:0 0 24px">Até breve,<br><strong>Equipe Lucrazi</strong></p><a href="${escapeHtml(`${siteUrl()}/artigos`)}" style="display:inline-block;padding:12px 18px;border-radius:8px;background:#4e6c2d;color:#fff;font-weight:bold;text-decoration:none">Explorar os artigos</a>`,
+    link,
+    config.senderAddress,
+  );
 
   await brevoRequest("/smtp/email", {
     method: "POST",
@@ -151,17 +159,26 @@ export async function sendWelcomeEmail(email: string, subscriberId: string) {
       to: [{ email }],
       subject: "Boas-vindas ao Lucrazi",
       htmlContent,
-      textContent: `Obrigado por assinar as novidades do Lucrazi. Enviaremos novos guias e ideias práticas, sem promessas de ganhos.\n\nCancelar inscrição: ${link}\n${config.senderAddress}`,
+      textContent: `Que bom ter você por aqui!\n\nObrigado por assinar as novidades do Lucrazi. Vamos compartilhar guias e ideias práticas para ajudar você a explorar possibilidades de renda, sem promessas de ganhos.\n\nExplore os artigos: ${siteUrl()}/artigos\n\nCancelar inscrição: ${link}\n${config.senderAddress}`,
       tags: ["lucrazi-welcome"],
     }),
   });
   return true;
 }
 
+type NewsletterArticle = {
+  slug: string;
+  title: string;
+  description: string;
+};
+
 export async function sendNewsletterCampaign(
   subject: string,
   message: string,
-  onCreated?: (campaignId: number) => Promise<void>,
+  options: {
+    article?: NewsletterArticle;
+    onCreated?: (campaignId: number) => Promise<void>;
+  } = {},
 ) {
   const config = getBrevoConfig();
   if (!config) throw new Error("A integração Brevo não está configurada.");
@@ -172,7 +189,17 @@ export async function sendNewsletterCampaign(
     .filter(Boolean)
     .map((line) => `<p>${escapeHtml(line)}</p>`)
     .join("");
-  const htmlContent = `<!doctype html><html lang="pt-BR"><body style="font-family:Arial,sans-serif;color:#25271f;line-height:1.6"><main style="max-width:600px;margin:32px auto;padding:24px"><a href="${siteUrl()}" style="color:#4e6c2d;font-weight:bold">Lucrazi</a>${paragraphs}<hr><p style="font-size:12px;color:#666">Você recebe esta mensagem porque autorizou o envio de novidades do Lucrazi. <a href="{{ unsubscribe }}">Cancelar inscrição</a>.</p><p style="font-size:12px;color:#666">${escapeHtml(config.senderAddress)}</p></main></body></html>`;
+  const articleUrl = options.article
+    ? new URL(`/artigos/${encodeURIComponent(options.article.slug)}`, siteUrl()).toString()
+    : null;
+  const articleContent = options.article && articleUrl
+    ? `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:24px;border:1px solid #e6e5dc;border-radius:12px"><tr><td style="padding:22px"><p style="margin:0 0 8px;color:#668241;font-size:12px;font-weight:bold;letter-spacing:1px">NOVO GUIA</p><h2 style="margin:0 0 10px;font-size:21px;line-height:1.3">${escapeHtml(options.article.title)}</h2><p style="margin:0 0 20px;color:#555">${escapeHtml(options.article.description)}</p><a href="${escapeHtml(articleUrl)}" style="display:inline-block;padding:12px 18px;border-radius:8px;background:#4e6c2d;color:#fff;font-weight:bold;text-decoration:none">Ler o artigo</a></td></tr></table>`
+    : "";
+  const htmlContent = emailTemplate(
+    `${paragraphs}${articleContent}`,
+    "{{ unsubscribe }}",
+    config.senderAddress,
+  );
 
   const created = await brevoRequest<{ id?: number }>("/emailCampaigns", {
     method: "POST",
@@ -188,7 +215,7 @@ export async function sendNewsletterCampaign(
   if (!Number.isSafeInteger(created.id) || !created.id) {
     throw new Error("A Brevo criou a campanha sem retornar um identificador válido.");
   }
-  await onCreated?.(created.id);
+  await options.onCreated?.(created.id);
   await brevoRequest(`/emailCampaigns/${created.id}/sendNow`, { method: "POST" });
   return created.id;
 }

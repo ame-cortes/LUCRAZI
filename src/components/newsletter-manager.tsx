@@ -2,6 +2,9 @@
 
 import { getFirebaseAuth } from "@/lib/firebase";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { ManagedArticle } from "@/lib/articles";
+
+type NewsletterArticle = Pick<ManagedArticle, "slug" | "title" | "description">;
 
 type Subscriber = {
   id: string;
@@ -67,11 +70,12 @@ const campaignStatus: Record<string, string> = {
   provider_error: "Erro na Brevo",
 };
 
-export default function NewsletterManager() {
+export default function NewsletterManager({ articles }: { articles: NewsletterArticle[] }) {
   const [data, setData] = useState<NewsletterData | null>(null);
   const [search, setSearch] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [articleSlug, setArticleSlug] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
@@ -150,10 +154,12 @@ export default function NewsletterManager() {
           campaignId: crypto.randomUUID(),
           subject,
           message,
+          ...(articleSlug ? { articleSlug } : {}),
         }),
       }) as { recipientCount: number };
       setSubject("");
       setMessage("");
+      setArticleSlug("");
       setNotice(`Campanha enviada à Brevo para ${result.recipientCount} assinante(s). A entrega pode levar alguns minutos.`);
       await loadData();
     } catch (sendError) {
@@ -162,6 +168,14 @@ export default function NewsletterManager() {
     } finally {
       setSending(false);
     }
+  }
+
+  function prepareArticleCampaign(slug: string) {
+    setArticleSlug(slug);
+    const article = articles.find((item) => item.slug === slug);
+    if (!article) return;
+    setSubject(`Novo guia no Lucrazi: ${article.title}`.slice(0, 150));
+    setMessage("Publicamos um novo guia no Lucrazi, com orientações práticas para você explorar essa possibilidade com mais clareza.");
   }
 
   return (
@@ -183,6 +197,18 @@ export default function NewsletterManager() {
         </div>
         <form className="newsletter-campaign-form" onSubmit={(event) => void sendCampaign(event)}>
           <label>
+            Modelo
+            <select
+              onChange={(event) => prepareArticleCampaign(event.target.value)}
+              value={articleSlug}
+            >
+              <option value="">Campanha livre</option>
+              {articles.map((article) => (
+                <option key={article.slug} value={article.slug}>Aviso de artigo: {article.title}</option>
+              ))}
+            </select>
+          </label>
+          <label>
             Assunto
             <input
               maxLength={150}
@@ -196,7 +222,7 @@ export default function NewsletterManager() {
             <textarea
               maxLength={8000}
               onChange={(event) => setMessage(event.target.value)}
-              placeholder="Escreva a mensagem da campanha. Cada linha será formatada como um parágrafo."
+              placeholder="Revise ou escreva a mensagem. Cada linha será formatada como um parágrafo."
               required
               rows={7}
               value={message}
