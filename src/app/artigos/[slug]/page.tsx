@@ -8,6 +8,7 @@ import { AdSlot } from "@/components/ad-slot";
 import { ArticleCard } from "@/components/article-card";
 import { ArticleText } from "@/components/article-text";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
+import { getArticleCluster, getClusterArticles } from "@/lib/article-clusters";
 import {
   formatArticleDate,
   formatArticleUpdatedDate,
@@ -96,15 +97,10 @@ async function ArticleContent({ params }: ArticlePageProps) {
   const article = articles.find((item) => item.slug === slug);
   if (!article) notFound();
 
-  const sameCategory = articles.filter(
-    (item) => item.slug !== article.slug && item.category === article.category,
-  );
-  const relatedArticles = [
-    ...sameCategory,
-    ...articles.filter(
-      (item) => item.slug !== article.slug && item.category !== article.category,
-    ),
-  ].slice(0, 2);
+  const articleCluster = getArticleCluster(article.slug);
+  const relatedArticles = articleCluster
+    ? getClusterArticles(articleCluster, articles, article.slug).slice(0, 3)
+    : articles.filter((item) => item.slug !== article.slug && item.category === article.category).slice(0, 3);
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -241,8 +237,16 @@ async function ArticleContent({ params }: ArticlePageProps) {
         <section className="related-section">
           <div className="wrap">
             <div className="section-heading">
-              <div><span className="eyebrow">CONTINUE EXPLORANDO</span><h2>Mais ideias para você.</h2></div>
-              <Link className="text-link" href="/artigos">Todos os guias <span aria-hidden="true">↗</span></Link>
+              <div>
+                <span className="eyebrow">CONTINUE EXPLORANDO</span>
+                <h2>{articleCluster ? articleCluster.title : "Mais ideias para você."}</h2>
+              </div>
+              <Link
+                className="text-link"
+                href={articleCluster ? `/artigos/temas/${articleCluster.slug}` : "/artigos"}
+              >
+                {articleCluster ? "Ver esta coleção" : "Todos os guias"} <span aria-hidden="true">↗</span>
+              </Link>
             </div>
             <div className="article-grid related-grid">
               {relatedArticles.map((related, index) => (

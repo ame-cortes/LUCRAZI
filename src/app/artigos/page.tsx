@@ -3,6 +3,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { ArticleCard } from "@/components/article-card";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
+import { articleClusters } from "@/lib/article-clusters";
 import { loadPublishedArticles } from "@/lib/articles";
 
 export const metadata: Metadata = {
@@ -38,6 +39,24 @@ export default async function ArticlesPage() {
             </div>
           </div>
         </header>
+        <section className="catalog-topics" aria-labelledby="catalog-topics-heading">
+          <div className="wrap">
+            <div className="catalog-section-heading">
+              <h2 id="catalog-topics-heading">Explore por tema</h2>
+              <span>5 coleções editoriais</span>
+            </div>
+            <div className="catalog-topic-grid">
+              {articleClusters.map((cluster) => (
+                <Link className="catalog-topic-card" href={`/artigos/temas/${cluster.slug}`} key={cluster.slug}>
+                  <span className="eyebrow">{cluster.articleSlugs.length} GUIAS</span>
+                  <h3>{cluster.title}</h3>
+                  <p>{cluster.description}</p>
+                  <span className="text-link">Explorar tema <span aria-hidden="true">↗</span></span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
         <section className="catalog-section">
           <div className="wrap">
             <div className="catalog-section-heading">

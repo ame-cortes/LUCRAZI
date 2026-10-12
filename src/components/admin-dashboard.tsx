@@ -120,6 +120,17 @@ function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Ocorreu um erro inesperado.";
 }
 
+function stableJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+  if (typeof value === "object" && value !== null) {
+    const entries = Object.entries(value as Record<string, unknown>).sort(([left], [right]) =>
+      left.localeCompare(right),
+    );
+    return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${stableJson(item)}`).join(",")}}`;
+  }
+  return JSON.stringify(value) ?? "undefined";
+}
+
 export default function AdminDashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -339,6 +350,52 @@ export default function AdminDashboard() {
     }
   }
 
+  async function updatePublishedGuideContent() {
+    setBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      const db = getFirebaseDb();
+      const snapshot = await getDocs(collection(db, "articles"));
+      const storedBySlug = new Map(snapshot.docs.map((item) => [item.id, item.data()]));
+      const updates = starterArticles.flatMap((article) => {
+        const stored = storedBySlug.get(article.slug);
+        if (!stored || stored.status !== "published") return [];
+        const content = articleWithoutStatus({ ...article, status: "published" });
+        if (stableJson(stored.article) === stableJson(content)) return [];
+        return [{ article, content }];
+      });
+
+      if (!updates.length) {
+        setNotice("Os artigos publicados já estão alinhados com as versões editoriais atuais.");
+        return;
+      }
+      const confirmed = window.confirm(
+        `Atualizar o conteúdo de ${updates.length} artigo(s) publicado(s) com as versões editoriais atuais? Rascunhos e artigos excluídos serão preservados.`,
+      );
+      if (!confirmed) return;
+
+      const batch = writeBatch(db);
+      for (const { article, content } of updates) {
+        batch.set(doc(db, "articles", article.slug), {
+          slug: article.slug,
+          status: "published",
+          article: content,
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+        batch.delete(doc(db, "deletedArticles", article.slug));
+      }
+      await batch.commit();
+      setNotice(`Conteúdo de ${updates.length} artigo(s) publicado(s) atualizado.`);
+      await refreshArticles();
+      await notifyIndexNow(updates.map(({ article }) => article.slug));
+    } catch (updateError) {
+      setError(errorMessage(updateError));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (!isFirebaseConfigured()) {
     return (
       <main className="admin-shell">
@@ -421,6 +478,7 @@ export default function AdminDashboard() {
               <div><span className="eyebrow">CONTEÚDO LUCRAZI</span><h1>Artigos</h1><p>Gerencie rascunhos e publicações do blog.</p></div>
               <div className="admin-heading-actions">
                 <button className="admin-secondary-button" disabled={busy} onClick={() => void importStarterArticles()} type="button">Importar os 50 guias</button>
+                <button className="admin-secondary-button" disabled={busy} onClick={() => void updatePublishedGuideContent()} type="button">Atualizar conteúdo dos publicados</button>
                 <button className="button button-dark" onClick={() => { setSelected(newArticle()); setError(""); }} type="button">Novo artigo <span aria-hidden="true">+</span></button>
               </div>
             </div>

@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { connection } from "next/server";
+import { articleClusters } from "@/lib/article-clusters";
 import { loadPublishedArticles } from "@/lib/articles";
 import { siteUrl } from "@/lib/site-config";
 
@@ -19,6 +20,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: new URL(page.path, siteUrl).toString(),
       changeFrequency: page.changeFrequency,
       priority: page.priority,
+    })),
+    ...articleClusters.map((cluster) => ({
+      url: new URL(`/artigos/temas/${cluster.slug}`, siteUrl).toString(),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
     })),
     ...articles.map((article) => ({
       url: new URL(`/artigos/${article.slug}`, siteUrl).toString(),
