@@ -49,6 +49,7 @@ Copie `.env.example` para `.env.local` e configure os valores para o seu domíni
 - `FIREBASE_SERVICE_ACCOUNT_JSON`: JSON privado da conta de serviço, usado somente por rotas de servidor; nunca use o prefixo `NEXT_PUBLIC_` nem o envie ao Git.
 - `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME`, `BREVO_SENDER_ADDRESS` e `BREVO_NEWSLETTER_LIST_ID`: credenciais e dados do remetente para envio e sincronização com uma lista Brevo exclusiva do Lucrazi. O endereço postal configurado é exibido no rodapé das campanhas.
 - `NEWSLETTER_UNSUBSCRIBE_SECRET`: segredo privado aleatório de pelo menos 32 caracteres, usado para assinar links individuais de cancelamento; nunca o envie ao Git.
+- `INDEXNOW_API_KEY`: chave IndexNow usada no envio automático de URLs publicadas e no arquivo público `/indexnow-key.txt`. A chave é pública por definição do protocolo; configure o mesmo valor no ambiente local e na hospedagem.
 
 Os anúncios não são carregados enquanto cliente ou bloco não estiverem configurados. Os blocos ficam somente no meio dos artigos, depois de uma parte substancial do conteúdo, e são identificados como publicidade. O endpoint `/ads.txt` é gerado com o ID de publicador configurado. Use somente identificadores da sua conta e configure os avisos, consentimento e políticas aplicáveis antes de veicular anúncios. A aprovação no AdSense, o tráfego e a receita não são garantidos. Nunca clique nos próprios anúncios nem incentive cliques.
 
@@ -64,6 +65,7 @@ Para ativar o painel no projeto Firebase:
 4. No Firestore, crie o documento `admins/{UID}` e defina o campo booleano `allowAdmin` como `true`. A regra permite que cada usuário leia somente o documento com o próprio UID; as regras bloqueiam alterações a essa lista pelo painel.
 5. Copie os valores do app Web para as variáveis Firebase em `.env.local` e para as variáveis de ambiente da hospedagem. Reinicie o servidor depois de alterar `.env.local`.
 6. Entre em `/admin` e use **Importar os 50 guias** para gravar os artigos atuais no Firestore. Depois disso, alterações publicadas aparecem nas páginas do site; rascunhos ficam privados e exclusões são registradas apenas como slugs numa coleção separada para não expor o texto removido nem fazer um artigo inicial reaparecer.
+7. Configure `INDEXNOW_API_KEY` com a chave fornecida pelo IndexNow em `.env.local` e nas variáveis de ambiente da hospedagem. O site publica essa chave em `/indexnow-key.txt` e envia automaticamente ao IndexNow as URLs de artigos publicados, atualizados, despublicados, excluídos ou importados pelo painel. Confirme que `https://www.lucrazi.com.br/indexnow-key.txt` exibe somente a chave antes de publicar artigos. O envio informa os mecanismos de busca, mas não garante rastreamento nem indexação.
 
 O site continua apresentando os artigos iniciais enquanto eles ainda não foram importados. Operações administrativas são verificadas pelas regras do Firestore, não apenas pela tela de login. A configuração do projeto e a publicação das regras no Firebase Console são necessárias antes de usar o painel.
 

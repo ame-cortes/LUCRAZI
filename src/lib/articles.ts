@@ -302,6 +302,7 @@ export async function loadManagedArticles(): Promise<ManagedArticle[]> {
       continue;
     }
     const existing = managed.get(slug);
+    if (existing?.status === "draft") continue;
     const baseline = articles.find((article) => article.slug === slug);
     const template = existing ?? baseline ?? {
       ...articles[0],

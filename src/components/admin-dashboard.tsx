@@ -181,6 +181,47 @@ export default function AdminDashboard() {
     }
   }
 
+  async function notifyIndexNow(slugs: string[]) {
+    if (!slugs.length) return;
+
+    try {
+      const currentUser = getFirebaseAuth().currentUser;
+      if (!currentUser) throw new Error("Sua sessão expirou. Entre novamente.");
+      const response = await fetch("/api/admin/indexnow", {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${await currentUser.getIdToken()}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ slugs }),
+        cache: "no-store",
+      });
+      const body: unknown = await response.json();
+      if (!response.ok) {
+        const message = typeof body === "object" && body !== null && "error" in body
+          && typeof body.error === "string"
+          ? body.error
+          : `Falha ao enviar URLs para IndexNow (HTTP ${response.status}).`;
+        throw new Error(message);
+      }
+      if (
+        typeof body !== "object"
+        || body === null
+        || !("submitted" in body)
+        || body.submitted !== true
+        || !("urlCount" in body)
+        || typeof body.urlCount !== "number"
+      ) {
+        throw new Error("O servidor retornou uma confirmação inválida do IndexNow.");
+      }
+      const urlCount = body.urlCount;
+      setNotice((current) => `${current} ${urlCount} URLs avisadas ao IndexNow. A indexação depende do buscador.`);
+    } catch (indexNowError) {
+      console.error("O conteúdo foi salvo, mas a notificação IndexNow falhou.", indexNowError);
+      setError(`O conteúdo foi salvo, mas não foi possível avisar o IndexNow: ${errorMessage(indexNowError)}`);
+    }
+  }
+
   async function saveArticle(article: EditorArticle, status: ArticleStatus) {
     const validationError = validateArticle(article);
     if (validationError) {
@@ -198,6 +239,14 @@ export default function AdminDashboard() {
         setError("Esse slug já está em uso. Escolha outro para o novo artigo.");
         return;
       }
+      const indexNowSlugs = new Set<string>();
+      if (status === "published") indexNowSlugs.add(article.slug);
+      if (
+        selected?.status === "published"
+        && (status !== "published" || selected.slug !== article.slug)
+      ) {
+        indexNowSlugs.add(selected.slug);
+      }
       const content = articleWithoutStatus(article);
       const batch = writeBatch(db);
       if (selected && selected.slug !== article.slug) {
@@ -209,6 +258,11 @@ export default function AdminDashboard() {
       }
       if (status === "published") {
         batch.delete(doc(db, "deletedArticles", article.slug));
+      } else {
+        batch.set(doc(db, "deletedArticles", article.slug), {
+          slug: article.slug,
+          updatedAt: serverTimestamp(),
+        });
       }
       batch.set(destination, {
         slug: article.slug,
@@ -220,6 +274,7 @@ export default function AdminDashboard() {
       setNotice(status === "published" ? "Artigo publicado." : "Rascunho salvo.");
       setSelected(null);
       await refreshArticles();
+      await notifyIndexNow([...indexNowSlugs]);
     } catch (saveError) {
       setError(errorMessage(saveError));
     } finally {
@@ -237,6 +292,7 @@ export default function AdminDashboard() {
       setSelected(null);
       setNotice("Artigo excluído. Apenas o marcador do slug é mantido, para não expor conteúdo e evitar que o guia original reapareça.");
       await refreshArticles();
+      if (article.status === "published") await notifyIndexNow([article.slug]);
     } catch (deleteError) {
       setError(errorMessage(deleteError));
     } finally {
@@ -275,6 +331,7 @@ export default function AdminDashboard() {
       await batch.commit();
       setNotice(`${missing.length} guias importados e publicados no Firestore.`);
       await refreshArticles();
+      await notifyIndexNow(missing.map((article) => article.slug));
     } catch (importError) {
       setError(errorMessage(importError));
     } finally {
