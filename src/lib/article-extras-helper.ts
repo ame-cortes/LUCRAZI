@@ -11,7 +11,6 @@ export const x = (
   title: string,
   description: string,
   checklist: string[],
-  price: [string, string],
   note: string,
   channels: string[],
   faq: [string, string][],
@@ -24,7 +23,7 @@ export const x = (
     bullets: checklist,
   },
   sections: [
-    { heading: "Quanto custa começar e como definir o preço", paragraphs: price, note },
+    { heading: "Quanto custa começar e como definir o preço", paragraphs: [], note },
     {
       heading: "Onde encontrar clientes e divulgar",
       paragraphs: [],

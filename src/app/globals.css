@@ -1222,6 +1222,26 @@ button:focus-visible {
   line-height: 1.75;
 }
 
+.article-sources {
+  margin-top: 20px;
+  color: #606558;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.article-sources ul {
+  display: grid;
+  gap: 4px;
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.article-sources a {
+  color: #557b2e;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .article-takeaway {
   margin-top: 40px;
   border-radius: 8px;

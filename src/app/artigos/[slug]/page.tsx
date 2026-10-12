@@ -219,6 +219,19 @@ async function ArticleContent({ params }: ArticlePageProps) {
                       </ul>
                     )}
                     {section.note && <aside className="article-note"><ArticleText text={section.note} /></aside>}
+                    {section.sources && (
+                      <aside className="article-sources" aria-label="Fontes dos dados">
+                        <strong>Fontes consultadas</strong>
+                        <ul>
+                          {section.sources.map((source) => (
+                            <li key={source.url}>
+                              <a href={source.url} target="_blank" rel="noopener noreferrer">{source.label}</a>
+                              <span> — consultado em {new Intl.DateTimeFormat("pt-BR").format(new Date(`${source.checkedAt}T12:00:00`))}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </aside>
+                    )}
                   </section>
                   {index === 2 && <AdSlot className="article-ad" />}
                 </div>

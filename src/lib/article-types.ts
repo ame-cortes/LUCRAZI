@@ -3,6 +3,13 @@ export type ArticleSection = {
   paragraphs: string[];
   bullets?: string[];
   note?: string;
+  sources?: ArticleSource[];
+};
+
+export type ArticleSource = {
+  label: string;
+  url: string;
+  checkedAt: string;
 };
 
 export type Article = {

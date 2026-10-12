@@ -14,6 +14,7 @@ import { practiceSections3 } from "./article-practice-sections-3";
 import { practiceSections4 } from "./article-practice-sections-4";
 import { practiceSections5 } from "./article-practice-sections-5";
 import { articleImageSources } from "./article-images";
+import { articlePricingGuidance } from "./article-pricing-guidance";
 import { getDocs, collection, doc, writeBatch, serverTimestamp } from "firebase/firestore";
 import { getFirebaseDb, isFirebaseConfigured } from "./firebase";
 import type { Article, ArticleSection, ArticleWithImage } from "./article-types";
@@ -34,12 +35,21 @@ function withExtras(article: Article): Article {
   if (!extra) return article;
   const practiceSection = articlePracticeSections[article.slug];
   if (!practiceSection) throw new Error(`Exemplo prático do artigo não encontrado: ${article.slug}`);
+  const pricingGuidance = articlePricingGuidance[article.slug];
+  if (!pricingGuidance) throw new Error(`Orientação de preço pesquisada não encontrada: ${article.slug}`);
 
   return {
     ...article,
     title: extra.title,
     description: extra.description,
-    sections: [extra.lead, ...article.sections, practiceSection, ...extra.sections],
+    sections: [
+      extra.lead,
+      ...article.sections,
+      practiceSection,
+      ...extra.sections.map((section) => section.heading === "Quanto custa começar e como definir o preço"
+        ? { ...section, ...pricingGuidance }
+        : section),
+    ],
   };
 }
 
@@ -69,7 +79,16 @@ function isArticleSection(value: unknown): value is ArticleSection {
     && section.paragraphs.every((paragraph) => typeof paragraph === "string")
     && (section.bullets === undefined
       || (Array.isArray(section.bullets) && section.bullets.every((bullet) => typeof bullet === "string")))
-    && (section.note === undefined || typeof section.note === "string");
+    && (section.note === undefined || typeof section.note === "string")
+    && (section.sources === undefined
+      || (Array.isArray(section.sources) && section.sources.every((source) =>
+        !!source
+        && typeof source.label === "string"
+        && typeof source.url === "string"
+        && URL.canParse(source.url)
+        && new URL(source.url).protocol === "https:"
+        && typeof source.checkedAt === "string"
+        && /^\d{4}-\d{2}-\d{2}$/.test(source.checkedAt))));
 }
 
 function isArticleWithImage(value: unknown): value is ArticleWithImage {
