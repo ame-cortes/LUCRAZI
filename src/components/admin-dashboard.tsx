@@ -20,6 +20,7 @@ import {
   articles as starterArticles,
   deleteManagedArticle,
   loadManagedArticles,
+  type ArticleActionCta,
   type ArticleStatus,
   type ManagedArticle,
 } from "@/lib/articles";
@@ -62,6 +63,10 @@ function isValidSlug(value: string) {
   return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value);
 }
 
+function hasActionCtaContent(actionCta?: ArticleActionCta) {
+  return !!actionCta && Object.values(actionCta).some((field) => field.trim().length > 0);
+}
+
 function validateArticle(article: EditorArticle): string | null {
   if (!article.title.trim()) return "Informe o título.";
   if (!isValidSlug(article.slug)) return "Use um slug com letras minúsculas, números e hífens.";
@@ -73,11 +78,23 @@ function validateArticle(article: EditorArticle): string | null {
     || (!section.paragraphs.some((paragraph) => paragraph.trim())
       && !(section.bullets ?? []).some((bullet) => bullet.trim())),
   )) return "Cada seção precisa de título e ao menos um parágrafo.";
+  const actionCta = hasActionCtaContent(article.actionCta) ? article.actionCta : undefined;
+  if (actionCta && (
+    !actionCta.title.trim()
+    || !actionCta.description.trim()
+    || !actionCta.buttonLabel.trim()
+    || !actionCta.url.trim()
+  )) return "Preencha título, texto, rótulo do botão e link da chamada para ação, ou deixe todos vazios.";
+  if (actionCta && !(
+    (actionCta.url.startsWith("/") && !actionCta.url.startsWith("//"))
+    || (URL.canParse(actionCta.url) && new URL(actionCta.url).protocol === "https:")
+  )) return "O link da chamada para ação precisa ser um caminho interno ou uma URL HTTPS.";
   const articleBlocks = [
     article.title,
     article.description,
     article.intro,
     article.takeaway,
+    ...(actionCta ? [actionCta.title, actionCta.description, actionCta.buttonLabel] : []),
     ...article.sections.flatMap((section) => [
       section.heading,
       ...section.paragraphs,
@@ -530,6 +547,7 @@ function articleWithoutStatus(article: ManagedArticle): Omit<ManagedArticle, "st
     imageSrc: article.imageSrc,
     imageAlt: article.imageAlt,
     imageCreditUrl: article.imageCreditUrl,
+    ...(hasActionCtaContent(article.actionCta) ? { actionCta: article.actionCta } : {}),
   };
 }
 
@@ -552,6 +570,19 @@ function ArticleEditor({
   const [slugTouched, setSlugTouched] = useState(Boolean(article.slug));
   const setField = <K extends keyof EditorArticle>(key: K, nextValue: EditorArticle[K]) => {
     setValue((current) => ({ ...current, [key]: nextValue }));
+  };
+  const setActionCtaField = <K extends keyof ArticleActionCta>(key: K, nextValue: ArticleActionCta[K]) => {
+    setValue((current) => ({
+      ...current,
+      actionCta: {
+        title: "",
+        description: "",
+        buttonLabel: "",
+        url: "",
+        ...current.actionCta,
+        [key]: nextValue,
+      },
+    }));
   };
   const updateSection = (index: number, section: ArticleSection) => {
     setValue((current) => ({
@@ -579,6 +610,13 @@ function ArticleEditor({
             <label>Autor<input value={value.author} onChange={(event) => setField("author", event.target.value)} /></label>
             <label>Data de publicação<input type="date" value={value.publishedAt} onChange={(event) => setField("publishedAt", event.target.value)} /></label>
             <label className="admin-field-wide">Introdução<textarea rows={3} value={value.intro} onChange={(event) => setField("intro", event.target.value)} /></label>
+            <div className="admin-field-wide admin-action-cta-fields">
+              <div><h3>Chamada para ação (opcional)</h3><p>Adicione um convite e um link específicos para este artigo. O botão aparece ao final do conteúdo.</p></div>
+              <label>Título<input value={value.actionCta?.title ?? ""} onChange={(event) => setActionCtaField("title", event.target.value)} /></label>
+              <label>Texto de apoio<textarea rows={2} value={value.actionCta?.description ?? ""} onChange={(event) => setActionCtaField("description", event.target.value)} /></label>
+              <label>Texto do botão<input value={value.actionCta?.buttonLabel ?? ""} onChange={(event) => setActionCtaField("buttonLabel", event.target.value)} /></label>
+              <label>Link de destino<input inputMode="url" placeholder="https:// ou /caminho" value={value.actionCta?.url ?? ""} onChange={(event) => setActionCtaField("url", event.target.value)} /></label>
+            </div>
             <label>Imagem de capa<select value={value.imageSrc} onChange={(event) => {
               const image = starterArticles.find((candidate) => candidate.imageSrc === event.target.value);
               setValue((current) => ({

@@ -1256,6 +1256,35 @@ button:focus-visible {
   line-height: 1.7;
 }
 
+.article-action-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 24px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 24px;
+  background: #f7f8f3;
+}
+
+.article-action-cta h2 {
+  margin: 0 0 8px;
+  font-size: clamp(20px, 3vw, 26px);
+}
+
+.article-action-cta p {
+  max-width: 600px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.article-action-cta-button {
+  flex: 0 0 auto;
+  text-align: center;
+}
+
 .editorial-note {
   margin-top: 25px !important;
   color: #6a6c64;
@@ -2307,6 +2336,30 @@ button:focus-visible {
   grid-column: 1 / -1;
 }
 
+.admin-action-cta-fields {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px;
+  background: #fafaf7;
+}
+
+.admin-action-cta-fields h3,
+.admin-action-cta-fields p {
+  margin: 0;
+}
+
+.admin-action-cta-fields h3 {
+  font-size: 18px;
+}
+
+.admin-action-cta-fields p {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .admin-sections-heading {
   display: flex;
   align-items: center;
@@ -2431,6 +2484,16 @@ button:focus-visible {
 
   .admin-field-wide {
     grid-column: auto;
+  }
+
+  .article-action-cta {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 18px;
+  }
+
+  .article-action-cta-button {
+    align-self: flex-start;
   }
 
   .admin-editor-body {

@@ -17,9 +17,9 @@ import { articleImageSources } from "./article-images";
 import { articlePricingGuidance } from "./article-pricing-guidance";
 import { getDocs, collection, doc, writeBatch, serverTimestamp } from "firebase/firestore";
 import { getFirebaseDb, isFirebaseConfigured } from "./firebase";
-import type { Article, ArticleSection, ArticleWithImage } from "./article-types";
+import type { Article, ArticleActionCta, ArticleSection, ArticleWithImage } from "./article-types";
 
-export type { Article, ArticleSection, ArticleWithImage } from "./article-types";
+export type { Article, ArticleActionCta, ArticleSection, ArticleWithImage } from "./article-types";
 const articleContent = [...articles1, ...articles2, ...articles3, ...articles4, ...articles5];
 const articleExtras = { ...extras1, ...extras2, ...extras3, ...extras4, ...extras5 };
 const articlePracticeSections = {
@@ -28,6 +28,15 @@ const articlePracticeSections = {
   ...practiceSections3,
   ...practiceSections4,
   ...practiceSections5,
+};
+
+const articleActionCtas: Partial<Record<string, ArticleActionCta>> = {
+  "como-criar-e-vender-ebook": {
+    title: "Quer dar os primeiros passos para faturar na internet?",
+    description: "Baixe grátis o e-book “Como faturar seus primeiros R$ 1.000 na internet”. Informe seu e-mail na página para liberar o PDF. O material é educativo e não garante resultados financeiros.",
+    buttonLabel: "Acessar e liberar o e-book grátis",
+    url: "https://ebook.lucrazi.com.br",
+  },
 };
 
 function withExtras(article: Article): Article {
@@ -62,6 +71,7 @@ export const articles: ArticleWithImage[] = articleContent.map(withExtras).map((
     imageSrc: `/images/articles/${article.slug}.jpg`,
     imageAlt: image.alt,
     imageCreditUrl: image.creditUrl,
+    ...(articleActionCtas[article.slug] ? { actionCta: articleActionCtas[article.slug] } : {}),
   };
 });
 
@@ -91,6 +101,19 @@ function isArticleSection(value: unknown): value is ArticleSection {
         && /^\d{4}-\d{2}-\d{2}$/.test(source.checkedAt))));
 }
 
+function isArticleActionCta(value: unknown): value is ArticleActionCta {
+  if (!value || typeof value !== "object") return false;
+  const cta = value as Partial<ArticleActionCta>;
+  return typeof cta.title === "string"
+    && typeof cta.description === "string"
+    && typeof cta.buttonLabel === "string"
+    && typeof cta.url === "string"
+    && (
+      (cta.url.startsWith("/") && !cta.url.startsWith("//"))
+      || (URL.canParse(cta.url) && new URL(cta.url).protocol === "https:")
+    );
+}
+
 function isArticleWithImage(value: unknown): value is ArticleWithImage {
   if (!value || typeof value !== "object") return false;
   const article = value as Partial<ArticleWithImage>;
@@ -109,6 +132,7 @@ function isArticleWithImage(value: unknown): value is ArticleWithImage {
     && typeof article.imageCreditUrl === "string"
     && URL.canParse(article.imageCreditUrl)
     && new URL(article.imageCreditUrl).protocol === "https:"
+    && (article.actionCta === undefined || isArticleActionCta(article.actionCta))
     && ["mint", "yellow", "lavender", "peach"].includes(article.accent ?? "")
     && /^\d{4}-\d{2}-\d{2}$/.test(article.publishedAt)
     && Array.isArray(article.sections)
@@ -149,8 +173,9 @@ function decodeFirestoreValue(value: unknown): unknown {
   if (typeof fields.integerValue === "string") return Number(fields.integerValue);
   if (typeof fields.doubleValue === "number") return fields.doubleValue;
   if (typeof fields.booleanValue === "boolean") return fields.booleanValue;
-  if (Array.isArray((fields.arrayValue as { values?: unknown[] } | undefined)?.values)) {
-    return ((fields.arrayValue as { values: unknown[] }).values).map(decodeFirestoreValue);
+  const arrayValue = fields.arrayValue as { values?: unknown[] } | undefined;
+  if (arrayValue && typeof arrayValue === "object") {
+    return (Array.isArray(arrayValue.values) ? arrayValue.values : []).map(decodeFirestoreValue);
   }
   const nested = (fields.mapValue as { fields?: Record<string, unknown> } | undefined)?.fields;
   if (nested && typeof nested === "object") {
@@ -265,7 +290,12 @@ export async function loadPublishedArticles(): Promise<ArticleWithImage[]> {
     .filter((article) => !deletedSlugs.has(article.slug))
     .map((article) => {
       const override = overrides.get(article.slug);
-      return override ?? article;
+      if (!override) return article;
+      return {
+        ...article,
+        ...override,
+        ...(!override.actionCta && article.actionCta ? { actionCta: article.actionCta } : {}),
+      };
     });
   const knownSlugs = new Set(articles.map((article) => article.slug));
 
@@ -294,10 +324,18 @@ export async function loadArticle(slug: string): Promise<ArticleWithImage | unde
   if (!snapshots) return articles.find((article) => article.slug === slug);
   const [snapshot, deletedDoc] = snapshots;
   if (deletedDoc.length > 0) return undefined;
-  if (snapshot.length === 0) return articles.find((article) => article.slug === slug);
+  const fallbackArticle = articles.find((article) => article.slug === slug);
+  if (snapshot.length === 0) return fallbackArticle;
 
   const storedArticle = getStoredArticle(snapshot[0].data, snapshot[0].id);
-  return storedArticle ?? articles.find((article) => article.slug === slug);
+  if (!storedArticle) return fallbackArticle;
+  return {
+    ...fallbackArticle,
+    ...storedArticle,
+    ...(!storedArticle.actionCta && fallbackArticle?.actionCta
+      ? { actionCta: fallbackArticle.actionCta }
+      : {}),
+  };
 }
 
 export async function loadManagedArticles(): Promise<ManagedArticle[]> {
@@ -312,7 +350,12 @@ export async function loadManagedArticles(): Promise<ManagedArticle[]> {
   const managed = new Map(stored.map((article) => [article.slug, article]));
 
   for (const article of articles) {
-    if (!managed.has(article.slug)) managed.set(article.slug, { ...article, status: "published" });
+    const existing = managed.get(article.slug);
+    if (!existing) {
+      managed.set(article.slug, { ...article, status: "published" });
+    } else if (!existing.actionCta && article.actionCta) {
+      managed.set(article.slug, { ...existing, actionCta: article.actionCta });
+    }
   }
   for (const deletedDoc of deletedSnapshot.docs) {
     const slug = deletedDoc.data().slug;

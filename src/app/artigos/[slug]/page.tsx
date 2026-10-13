@@ -40,7 +40,6 @@ function getSeoTitle(title: string): string {
 export const instant = false;
 
 export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
-  await connection();
   const { slug } = await params;
   const article = await loadArticle(slug);
   if (!article) {
@@ -240,6 +239,22 @@ async function ArticleContent({ params }: ArticlePageProps) {
                 <span>PARA LEVAR COM VOCÊ</span>
                 <p><ArticleText text={article.takeaway} /></p>
               </aside>
+              {article.actionCta && (
+                <aside className="article-action-cta" aria-labelledby="article-action-cta-title">
+                  <div>
+                    <h2 id="article-action-cta-title">{article.actionCta.title}</h2>
+                    <p>{article.actionCta.description}</p>
+                  </div>
+                  <a
+                    className="button button-dark article-action-cta-button"
+                    href={article.actionCta.url}
+                    rel={article.actionCta.url.startsWith("https://") ? "noopener noreferrer" : undefined}
+                    target={article.actionCta.url.startsWith("https://") ? "_blank" : undefined}
+                  >
+                    {article.actionCta.buttonLabel}<span aria-hidden="true">↗</span>
+                  </a>
+                </aside>
+              )}
               <p className="editorial-note">
                 Este conteúdo é informativo e não representa promessa de ganhos ou aconselhamento financeiro,
                 jurídico ou contábil. Pesquise as condições e regras aplicáveis à sua realidade antes de tomar decisões.

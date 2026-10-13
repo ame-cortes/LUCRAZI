@@ -25,9 +25,17 @@ export type Article = {
   takeaway: string;
 };
 
+export type ArticleActionCta = {
+  title: string;
+  description: string;
+  buttonLabel: string;
+  url: string;
+};
+
 export type ArticleWithImage = Article & {
   imageSrc: string;
   imageAlt: string;
   imageCreditUrl: string;
+  actionCta?: ArticleActionCta;
   updatedAt?: string;
 };
