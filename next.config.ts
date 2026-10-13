@@ -8,7 +8,9 @@ const nextConfig: NextConfig = {
     inlineCss: true,
   },
   images: {
+    formats: ["image/avif", "image/webp"],
     qualities: [55, 65, 75],
+    minimumCacheTTL: 604800,
   },
   serverExternalPackages: ["firebase-admin"],
   outputFileTracingIncludes: {

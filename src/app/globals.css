@@ -159,7 +159,7 @@ button:focus-visible {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: #6e7167;
+  color: #5f6159;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 1.45px;
@@ -530,7 +530,7 @@ button:focus-visible {
   position: absolute;
   bottom: 19px;
   left: 25px;
-  color: #6d7864;
+  color: #fff;
   font-size: 8px;
   font-weight: 700;
   letter-spacing: 1.5px;
@@ -732,7 +732,7 @@ button:focus-visible {
   align-items: center;
   gap: 10px;
   margin-top: 24px;
-  color: #73756d;
+  color: #5f6159;
   font-size: 13px;
 }
 
@@ -775,7 +775,7 @@ button:focus-visible {
 }
 
 .catalog-topic-card > .eyebrow {
-  color: #668241;
+  color: #4f6934;
   font-size: 11px;
 }
 
@@ -861,7 +861,7 @@ button:focus-visible {
 .newsletter-section p {
   max-width: 590px;
   margin: 0;
-  color: #73756e;
+  color: #6a6c64;
   font-size: 14px;
   line-height: 1.75;
 }
@@ -1035,7 +1035,7 @@ button:focus-visible {
 }
 
 .article-category {
-  color: #628040;
+  color: #4f6934;
   font-size: 13px;
   font-weight: 700;
 }
@@ -1177,7 +1177,7 @@ button:focus-visible {
   gap: 12px;
   margin: 14px 0 0;
   padding-left: 19px;
-  color: #73756e;
+  color: #6a6c64;
   font-size: 15px;
   line-height: 1.55;
 }
