@@ -4,8 +4,11 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
+  experimental: {
+    inlineCss: true,
+  },
   images: {
-    qualities: [65, 75],
+    qualities: [55, 65, 75],
   },
   serverExternalPackages: ["firebase-admin"],
   outputFileTracingIncludes: {

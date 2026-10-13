@@ -17,7 +17,7 @@ export function ArticleCard({ article, featured = false, index }: ArticleCardPro
             src={article.imageSrc}
             alt={article.imageAlt}
             fill
-            quality={65}
+            quality={55}
             sizes="(max-width: 720px) 100vw, (max-width: 1100px) 50vw, 33vw"
             className="card-photo"
           />
