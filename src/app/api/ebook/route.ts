@@ -5,6 +5,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { NextResponse } from "next/server";
 import { getFirebaseAdminDb } from "@/lib/firebase-admin";
+import { subscribeNewsletterSubscriber } from "@/lib/newsletter-subscription";
 
 const ebookPath = join(
   process.cwd(),
@@ -24,7 +25,7 @@ function isAlreadyExists(error: unknown) {
   return isRecord(error) && (error.code === 6 || error.code === "already-exists");
 }
 
-function createEbookResponse(ebook: Uint8Array) {
+function createEbookResponse(ebook: Uint8Array, marketingStatus: string) {
   const body = new ArrayBuffer(ebook.byteLength);
   new Uint8Array(body).set(ebook);
 
@@ -34,6 +35,7 @@ function createEbookResponse(ebook: Uint8Array) {
       "Content-Disposition": 'attachment; filename="como-faturar-seus-primeiros-1000-na-internet.pdf"',
       "Content-Length": String(ebook.byteLength),
       "Content-Type": "application/pdf",
+      "X-Lucrazi-Marketing-Status": marketingStatus,
       "X-Content-Type-Options": "nosniff",
     },
   });
@@ -76,10 +78,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "O corpo da solicitação precisa ser JSON válido." }, { status: 400 });
   }
 
-  if (!isRecord(body) || typeof body.email !== "string" || body.consent !== true) {
+  if (
+    !isRecord(body)
+    || typeof body.email !== "string"
+    || body.consent !== true
+    || (body.marketingConsent !== undefined && typeof body.marketingConsent !== "boolean")
+  ) {
     return NextResponse.json({ error: "Informe um e-mail e autorize o uso dos dados para liberar o e-book." }, { status: 400 });
   }
 
+  const marketingConsent = body.marketingConsent === true;
   const email = body.email.trim().toLowerCase();
   if (email.length > 254 || !/^[^ @]+@[^ @]+\.[^ @]+$/.test(email)) {
     return NextResponse.json({ error: "Informe um endereço de e-mail válido." }, { status: 400 });
@@ -105,24 +113,75 @@ export async function POST(request: Request) {
   const lead = db.collection("ebookLeads").doc(emailHash);
 
   try {
-    await lead.create({
+    const ebookLead = {
       email,
       ebook: "como-faturar-seus-primeiros-1000-na-internet",
       consent: true,
-      consentTextVersion: "2026-10-12",
+      consentTextVersion: "2026-10-13",
       consentAt: FieldValue.serverTimestamp(),
       createdAt: FieldValue.serverTimestamp(),
       source: "ebook.lucrazi.com.br",
       purpose: "ebook_delivery",
-    });
+    };
+    const existing = await lead.get();
+    if (existing.exists) {
+      if (marketingConsent) {
+        await lead.update({
+          marketingConsent: true,
+          marketingConsentTextVersion: "2026-10-13",
+          marketingConsentAt: FieldValue.serverTimestamp(),
+        });
+      }
+    } else {
+      await lead.create({
+        ...ebookLead,
+        marketingConsent,
+        ...(marketingConsent
+          ? {
+              marketingConsentTextVersion: "2026-10-13",
+              marketingConsentAt: FieldValue.serverTimestamp(),
+            }
+          : {}),
+      });
+    }
   } catch (error) {
     if (isAlreadyExists(error)) {
-      return createEbookResponse(ebook);
+      if (marketingConsent) {
+        try {
+          await lead.update({
+            marketingConsent: true,
+            marketingConsentTextVersion: "2026-10-13",
+            marketingConsentAt: FieldValue.serverTimestamp(),
+          });
+        } catch (updateError) {
+          console.error("Não foi possível registrar o consentimento para campanhas do pedido do e-book.", updateError);
+          return NextResponse.json({ error: "Não foi possível registrar sua autorização para campanhas." }, { status: 500 });
+        }
+      }
+    } else {
+      console.error("Não foi possível registrar o pedido do e-book no Firestore.", error);
+      return NextResponse.json({ error: "Não foi possível liberar o e-book. Tente novamente mais tarde." }, { status: 500 });
     }
-
-    console.error("Não foi possível registrar o pedido do e-book no Firestore.", error);
-    return NextResponse.json({ error: "Não foi possível liberar o e-book. Tente novamente mais tarde." }, { status: 500 });
   }
 
-  return createEbookResponse(ebook);
+  let marketingStatus = "not-requested";
+  if (marketingConsent) {
+    if (process.env.NEXT_PUBLIC_NEWSLETTER_SIGNUP_ENABLED !== "true") {
+      console.warn("Um pedido de e-book autorizou campanhas, mas a integração da lista de novidades está desativada.");
+      marketingStatus = "unavailable";
+    } else {
+      try {
+        const subscription = await subscribeNewsletterSubscriber(email, emailHash, {
+          source: "ebook.lucrazi.com.br",
+          consentTextVersion: "2026-10-13",
+        });
+        marketingStatus = subscription.status;
+      } catch (error) {
+        console.error("O pedido do e-book foi gravado, mas não foi possível inscrever o contato nas campanhas.", error);
+        marketingStatus = "failed";
+      }
+    }
+  }
+
+  return createEbookResponse(ebook, marketingStatus);
 }

@@ -2624,6 +2624,11 @@ button:focus-visible {
     accent-color: #789a3f;
   }
 
+  .ebook-campaign-consent {
+    border-top: 1px solid #eeede6;
+    padding-top: 11px;
+  }
+
   .ebook-submit {
     display: inline-flex;
     width: 100%;
@@ -2712,6 +2717,16 @@ button:focus-visible {
     display: block;
     margin: 4px 0 5px;
     font-size: 15px;
+  }
+
+  .ebook-marketing-notice {
+    margin: 12px 0 0 !important;
+    border-left: 2px solid #9ab569;
+    padding: 8px 10px;
+    background: #f3f5ed;
+    color: #55644a !important;
+    font-size: 11px !important;
+    line-height: 1.55 !important;
   }
 
   .ebook-success .ebook-submit {

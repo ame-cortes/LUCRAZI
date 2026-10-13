@@ -18,7 +18,7 @@ export default function PrivacyPage() {
         <article className="info-page-content">
           <span className="eyebrow">TRANSPARÊNCIA</span>
           <h1>Política de privacidade.</h1>
-          <p className="info-lead">Última atualização: 11 de outubro de 2026.</p>
+          <p className="info-lead">Última atualização: 13 de outubro de 2026.</p>
           <p>
             Esta página explica, em linguagem simples, como o site Lucrazi pode tratar
             informações quando você navega por seus artigos. A configuração efetiva pode
@@ -110,10 +110,16 @@ export default function PrivacyPage() {
           <p>
             Ao solicitar o e-book gratuito, seu e-mail, a confirmação de autorização, a data e a
             origem do pedido são armazenados no Firebase/Cloud Firestore para registrar a
-            solicitação e liberar o download. Esses dados não são usados para inscrever você na
-            lista de novidades ou enviar campanhas. Para solicitar acesso, correção ou exclusão,
-            use o <Link href="/contato">canal de contato</Link>. O formulário não solicita outros
-            dados pessoais.
+            solicitação e liberar o download. Separadamente, você pode autorizar o recebimento de
+            guias, novidades e campanhas editoriais do Lucrazi. Essa escolha é opcional, não é
+            necessária para baixar o e-book e fica registrada com o texto autorizado e a data.
+            Quando autorizado, seu e-mail é adicionado à lista de novidades no Firebase/Cloud
+            Firestore e, se a integração estiver habilitada, sincronizado com a Brevo para o envio
+            de mensagens. Você pode cancelar pelo link incluído em cada mensagem. Sem essa
+            autorização opcional, o endereço é usado somente para registrar o pedido do e-book e
+            liberar o download. Para solicitar acesso, correção ou exclusão, use o{" "}
+            <Link href="/contato">canal de contato</Link>. O formulário não solicita outros dados
+            pessoais.
           </p>
           <h2>Links de terceiros</h2>
           <p>

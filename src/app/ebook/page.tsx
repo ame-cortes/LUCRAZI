@@ -27,6 +27,7 @@ export const metadata: Metadata = {
 export default function EbookPage() {
   const privacyUrl = new URL("/privacidade#ebook", siteUrl).toString();
   const signupEnabled = process.env.NEXT_PUBLIC_EBOOK_SIGNUP_ENABLED === "true";
+  const campaignsEnabled = process.env.NEXT_PUBLIC_NEWSLETTER_SIGNUP_ENABLED === "true";
 
   return (
     <div className="ebook-page">
@@ -58,6 +59,7 @@ export default function EbookPage() {
             </p>
 
             <EbookSignupForm
+              campaignsEnabled={campaignsEnabled}
               privacyUrl={privacyUrl}
               signupEnabled={signupEnabled}
             />

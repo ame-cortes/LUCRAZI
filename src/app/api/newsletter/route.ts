@@ -1,9 +1,7 @@
 import { createHash } from "node:crypto";
-import { FieldValue } from "firebase-admin/firestore";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { NextResponse } from "next/server";
-import { getFirebaseAdminDb } from "@/lib/firebase-admin";
-import { isBrevoConfigured, sendWelcomeEmail, syncBrevoSubscriber } from "@/lib/newsletter-email";
+import { subscribeNewsletterSubscriber } from "@/lib/newsletter-subscription";
 
 const appCheckJwks = createRemoteJWKSet(
   new URL("https://firebaseappcheck.googleapis.com/v1/jwks"),
@@ -43,14 +41,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Token App Check inválido." }, { status: 401 });
   }
 
-  let db;
-  try {
-    db = getFirebaseAdminDb();
-  } catch (error) {
-    console.error("Não foi possível inicializar o Firebase Admin para inscrições.", error);
-    return NextResponse.json({ error: "O cadastro está temporariamente indisponível." }, { status: 503 });
-  }
-
   let body: unknown;
   try {
     body = await request.json();
@@ -68,79 +58,25 @@ export async function POST(request: Request) {
   }
 
   const emailHash = createHash("sha256").update(email).digest("hex");
-  const subscriber = db.collection("newsletterSubscribers").doc(emailHash);
-  let resubscribed = false;
+  let result: Awaited<ReturnType<typeof subscribeNewsletterSubscriber>>;
   try {
-    const existing = await subscriber.get();
-    if (existing.exists) {
-      if (existing.data()?.status !== "unsubscribed") {
-        return NextResponse.json({ error: "Este e-mail já está cadastrado." }, { status: 409 });
-      }
-      resubscribed = true;
-      await subscriber.update({
-        consent: true,
-        consentTextVersion: "2026-10-11",
-        consentAt: FieldValue.serverTimestamp(),
-        status: "subscribed",
-        unsubscribedAt: FieldValue.delete(),
-        welcomeEmailStatus: "pending",
-        brevoSyncedAt: FieldValue.delete(),
-      });
-    } else {
-      await subscriber.create({
-        email,
-        consent: true,
-        consentTextVersion: "2026-10-11",
-        consentAt: FieldValue.serverTimestamp(),
-        createdAt: FieldValue.serverTimestamp(),
-        source: "homepage",
-        status: "subscribed",
-        welcomeEmailStatus: "pending",
-      });
-    }
+    result = await subscribeNewsletterSubscriber(email, emailHash, {
+      source: "homepage",
+      consentTextVersion: "2026-10-11",
+    });
   } catch (error) {
-    if (
-      isRecord(error)
-      && (error.code === 6 || error.code === "already-exists")
-    ) {
-      return NextResponse.json({ error: "Este e-mail já está cadastrado." }, { status: 409 });
-    }
-
-    console.error("Não foi possível gravar a inscrição no Firestore.", error);
+    console.error("Não foi possível registrar a inscrição na lista de novidades.", error);
     return NextResponse.json({ error: "Não foi possível registrar a inscrição." }, { status: 500 });
   }
 
-  let brevoSynced = false;
-  let welcomeSent = false;
-  try {
-    brevoSynced = await syncBrevoSubscriber(email, resubscribed);
-    if (brevoSynced) {
-      await subscriber.update({ brevoSyncedAt: FieldValue.serverTimestamp() });
-    }
-  } catch (error) {
-    console.error("A inscrição foi gravada, mas não foi sincronizada com a lista Brevo.", error);
-  }
-  try {
-    welcomeSent = await sendWelcomeEmail(email, emailHash);
-    if (welcomeSent) {
-      await subscriber.update({
-        welcomeEmailStatus: "sent",
-        welcomeEmailSentAt: FieldValue.serverTimestamp(),
-      });
-    }
-  } catch (error) {
-    console.error("A inscrição foi gravada, mas o e-mail de boas-vindas não foi enviado.", error);
-    try {
-      await subscriber.update({ welcomeEmailStatus: "failed" });
-    } catch (updateError) {
-      console.error("Não foi possível registrar a falha do e-mail de boas-vindas.", updateError);
-    }
+  if (result.status === "already-subscribed") {
+    return NextResponse.json({ error: "Este e-mail já está cadastrado." }, { status: 409 });
   }
 
   return NextResponse.json({
     status: "subscribed",
-    welcomeSent,
-    emailConfigured: isBrevoConfigured(),
-    brevoSynced,
+    welcomeSent: result.welcomeSent,
+    emailConfigured: result.emailConfigured,
+    brevoSynced: result.brevoSynced,
   }, { status: 201 });
 }
