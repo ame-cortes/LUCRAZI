@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import { siteUrl } from "@/lib/site-config";
 import "./globals.css";
 
@@ -119,15 +120,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="pt-BR" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <head>
         <meta property="og:logo" content={new URL("/icon.svg", siteUrl).toString()} />
+      </head>
+      <body className="min-h-full flex flex-col">
+        {children}
         {adsenseClientId && (
-          <script
-            async
+          <Script
             src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}`}
+            strategy="lazyOnload"
             crossOrigin="anonymous"
           />
         )}
-      </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      </body>
     </html>
   );
 }

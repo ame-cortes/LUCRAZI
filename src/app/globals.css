@@ -236,7 +236,7 @@ button:focus-visible {
 
 .hero-byline {
   margin: 10px 0 0 !important;
-  color: #77796f !important;
+  color: #6a6c64 !important;
   font-size: 12px !important;
   line-height: 1.6 !important;
 }
@@ -564,7 +564,7 @@ button:focus-visible {
 }
 
 .card-meta > span:first-child {
-  color: #5e7d3e;
+  color: #4f6934;
   font-weight: 600;
 }
 
@@ -582,7 +582,7 @@ button:focus-visible {
 
 .card-copy > p {
   margin: 0;
-  color: #72736d;
+  color: #6a6c64;
   font-size: 15px;
   line-height: 1.75;
 }

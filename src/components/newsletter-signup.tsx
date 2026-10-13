@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import { getFirebaseAppCheck } from "@/lib/firebase";
-import { getToken } from "firebase/app-check";
 
 export function NewsletterSignup() {
   const [email, setEmail] = useState("");
@@ -25,6 +23,10 @@ export function NewsletterSignup() {
 
     setIsSubmitting(true);
     try {
+      const [{ getFirebaseAppCheck }, { getToken }] = await Promise.all([
+        import("@/lib/firebase"),
+        import("firebase/app-check"),
+      ]);
       const appCheck = await getFirebaseAppCheck();
       const { token } = await getToken(appCheck);
       const response = await fetch("/api/newsletter", {
