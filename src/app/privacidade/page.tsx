@@ -115,9 +115,12 @@ export default function PrivacyPage() {
             necessária para baixar o e-book e fica registrada com o texto autorizado e a data.
             Quando autorizado, seu e-mail é adicionado à lista de novidades no Firebase/Cloud
             Firestore e, se a integração estiver habilitada, sincronizado com a Brevo para o envio
-            de mensagens. Você pode cancelar pelo link incluído em cada mensagem. Sem essa
-            autorização opcional, o endereço é usado somente para registrar o pedido do e-book e
-            liberar o download. Para solicitar acesso, correção ou exclusão, use o{" "}
+            da mensagem de boas-vindas e de campanhas. Você pode cancelar pelo link incluído em
+            cada mensagem. Independentemente dessa opção, a mensagem de entrega do e-book pode ser
+            enviada pela Brevo com o arquivo solicitado anexado; ela é usada somente para atender
+            ao pedido e não inscreve você em campanhas. Sem a autorização opcional, o endereço é
+            usado somente para registrar o pedido, liberar o download e enviar essa mensagem de
+            entrega. Para solicitar acesso, correção ou exclusão, use o{" "}
             <Link href="/contato">canal de contato</Link>. O formulário não solicita outros dados
             pessoais.
           </p>

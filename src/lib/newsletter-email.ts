@@ -3,6 +3,7 @@ import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 const BREVO_API = "https://api.brevo.com/v3";
+const ebookFilename = "como-faturar-seus-primeiros-1000-na-internet.pdf";
 
 type BrevoConfig = {
   apiKey: string;
@@ -141,13 +142,18 @@ export async function suppressBrevoSubscriber(email: string) {
   return true;
 }
 
-export async function sendWelcomeEmail(email: string, subscriberId: string) {
+export async function sendWelcomeEmail(
+  email: string,
+  subscriberId: string,
+  ebookPdf?: Uint8Array,
+) {
   const config = getBrevoConfig();
   if (!config) return false;
 
   const link = unsubscribeUrl(subscriberId);
+  const ebookAttached = ebookPdf !== undefined;
   const htmlContent = emailTemplate(
-    `<p style="margin:0 0 8px;color:#668241;font-size:12px;font-weight:bold;letter-spacing:1px">BOAS-VINDAS</p><h1 style="margin:0 0 16px;font-size:28px;line-height:1.25">Que bom ter você por aqui!</h1><p style="margin:0 0 16px">Obrigado por assinar as novidades do Lucrazi. Vamos compartilhar guias e ideias práticas para ajudar você a explorar possibilidades de renda, sem promessas de ganhos.</p><p style="margin:0 0 24px">Até breve,<br><strong>Equipe Lucrazi</strong></p><a href="${escapeHtml(`${siteUrl()}/artigos`)}" style="display:inline-block;padding:12px 18px;border-radius:8px;background:#4e6c2d;color:#fff;font-weight:bold;text-decoration:none">Explorar os artigos</a>`,
+    `<p style="margin:0 0 8px;color:#668241;font-size:12px;font-weight:bold;letter-spacing:1px">BOAS-VINDAS</p><h1 style="margin:0 0 16px;font-size:28px;line-height:1.25">Que bom ter você por aqui!</h1><p style="margin:0 0 16px">Obrigado por assinar as novidades do Lucrazi. Vamos compartilhar guias e ideias práticas para ajudar você a explorar possibilidades de renda, sem promessas de ganhos.</p>${ebookAttached ? '<p style="margin:0 0 16px">Como prometido, anexamos seu e-book gratuito <strong>Como faturar seus primeiros R$ 1.000 na internet</strong>.</p>' : ""}<p style="margin:0 0 24px">Até breve,<br><strong>Equipe Lucrazi</strong></p><a href="${escapeHtml(`${siteUrl()}/artigos`)}" style="display:inline-block;padding:12px 18px;border-radius:8px;background:#4e6c2d;color:#fff;font-weight:bold;text-decoration:none">Explorar os artigos</a>`,
     link,
     config.senderAddress,
   );
@@ -159,8 +165,30 @@ export async function sendWelcomeEmail(email: string, subscriberId: string) {
       to: [{ email }],
       subject: "Boas-vindas ao Lucrazi",
       htmlContent,
-      textContent: `Que bom ter você por aqui!\n\nObrigado por assinar as novidades do Lucrazi. Vamos compartilhar guias e ideias práticas para ajudar você a explorar possibilidades de renda, sem promessas de ganhos.\n\nExplore os artigos: ${siteUrl()}/artigos\n\nCancelar inscrição: ${link}\n${config.senderAddress}`,
+      textContent: `Que bom ter você por aqui!\n\nObrigado por assinar as novidades do Lucrazi. Vamos compartilhar guias e ideias práticas para ajudar você a explorar possibilidades de renda, sem promessas de ganhos.${ebookAttached ? "\n\nComo prometido, anexamos seu e-book gratuito Como faturar seus primeiros R$ 1.000 na internet." : ""}\n\nExplore os artigos: ${siteUrl()}/artigos\n\nCancelar inscrição: ${link}\n${config.senderAddress}`,
       tags: ["lucrazi-welcome"],
+      ...(ebookPdf
+        ? { attachment: [{ name: ebookFilename, content: Buffer.from(ebookPdf).toString("base64") }] }
+        : {}),
+    }),
+  });
+  return true;
+}
+
+export async function sendEbookDeliveryEmail(email: string, ebookPdf: Uint8Array) {
+  const config = getBrevoConfig();
+  if (!config) return false;
+
+  await brevoRequest("/smtp/email", {
+    method: "POST",
+    body: JSON.stringify({
+      sender: { email: config.senderEmail, name: config.senderName },
+      to: [{ email }],
+      subject: "Seu e-book gratuito do Lucrazi",
+      htmlContent: `<html lang="pt-BR"><body style="margin:0;background:#f4f3ed;font-family:Arial,sans-serif;color:#25271f;line-height:1.6"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f3ed;padding:28px 12px"><tr><td align="center"><table role="presentation" width="600" cellspacing="0" cellpadding="0" style="width:100%;max-width:600px;background:#fff;border:1px solid #e6e5dc;border-radius:16px;overflow:hidden"><tr><td style="padding:22px 32px;background:#28351f"><span style="color:#fff;font-size:22px;font-weight:bold">lucrazi<span style="color:#b8d58b">.</span></span></td></tr><tr><td style="padding:32px"><p style="margin:0 0 8px;color:#668241;font-size:12px;font-weight:bold;letter-spacing:1px">SEU E-BOOK</p><h1 style="margin:0 0 16px;font-size:26px;line-height:1.25">Seu guia está aqui.</h1><p style="margin:0 0 16px">Conforme solicitado, anexamos <strong>Como faturar seus primeiros R$ 1.000 na internet</strong> a este e-mail.</p><p style="margin:0">Boa leitura!<br><strong>Equipe Lucrazi</strong></p></td></tr><tr><td style="padding:18px 32px;background:#f8f8f4;border-top:1px solid #e6e5dc;color:#666;font-size:12px;line-height:1.6">Você recebe esta mensagem porque solicitou o e-book gratuito do Lucrazi.<br>${escapeHtml(config.senderAddress)}</td></tr></table></td></tr></table></body></html>`,
+      textContent: `Seu e-book está aqui!\n\nConforme solicitado, anexamos "Como faturar seus primeiros R$ 1.000 na internet" a este e-mail.\n\nBoa leitura!\nEquipe Lucrazi\n\nVocê recebe esta mensagem porque solicitou o e-book gratuito do Lucrazi.\n${config.senderAddress}`,
+      attachment: [{ name: ebookFilename, content: Buffer.from(ebookPdf).toString("base64") }],
+      tags: ["lucrazi-ebook-delivery"],
     }),
   });
   return true;

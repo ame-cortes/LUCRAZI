@@ -2,12 +2,16 @@ import "server-only";
 
 import { FieldValue } from "firebase-admin/firestore";
 import { getFirebaseAdminDb } from "@/lib/firebase-admin";
-import { isBrevoConfigured, sendWelcomeEmail, syncBrevoSubscriber } from "@/lib/newsletter-email";
+import {
+  isBrevoConfigured,
+  sendWelcomeEmail,
+  syncBrevoSubscriber,
+} from "@/lib/newsletter-email";
 
 type SubscriberSource = "homepage" | "ebook.lucrazi.com.br";
 
 type NewsletterSubscriptionResult =
-  | { status: "already-subscribed" }
+  | { status: "already-subscribed"; welcomeSent: boolean }
   | {
       status: "subscribed";
       welcomeSent: boolean;
@@ -29,20 +33,44 @@ export async function subscribeNewsletterSubscriber(
   options: {
     source: SubscriberSource;
     consentTextVersion: string;
+    ebookAttachment?: Uint8Array;
   },
 ): Promise<NewsletterSubscriptionResult> {
   const db = getFirebaseAdminDb();
   const subscriber = db.collection("newsletterSubscribers").doc(emailHash);
   let resubscribed = false;
+  let skipWelcome = false;
 
   try {
     const existing = await subscriber.get();
     if (existing.exists) {
       if (existing.data()?.status !== "unsubscribed") {
-        return { status: "already-subscribed" };
+        const welcomeAlreadySent = existing.data()?.welcomeEmailStatus === "sent";
+        if (welcomeAlreadySent || !options.ebookAttachment) {
+          return { status: "already-subscribed", welcomeSent: false };
+        }
+
+        let welcomeSent = false;
+        try {
+          welcomeSent = await sendWelcomeEmail(email, emailHash, options.ebookAttachment);
+          if (welcomeSent) {
+            await subscriber.update({
+              welcomeEmailStatus: "sent",
+              welcomeEmailSentAt: FieldValue.serverTimestamp(),
+            });
+          }
+        } catch (error) {
+          console.error("Não foi possível enviar a mensagem de boas-vindas ao assinante existente.", error);
+          await subscriber.update({ welcomeEmailStatus: "failed" });
+        }
+
+        return { status: "already-subscribed", welcomeSent };
       }
 
       resubscribed = true;
+      skipWelcome =
+        options.ebookAttachment !== undefined
+        && existing.data()?.welcomeEmailStatus === "sent";
       await subscriber.update({
         consent: true,
         consentTextVersion: options.consentTextVersion,
@@ -50,7 +78,7 @@ export async function subscribeNewsletterSubscriber(
         status: "subscribed",
         source: options.source,
         unsubscribedAt: FieldValue.delete(),
-        welcomeEmailStatus: "pending",
+        welcomeEmailStatus: skipWelcome ? "sent" : "pending",
         brevoSyncedAt: FieldValue.delete(),
       });
     } else {
@@ -67,7 +95,7 @@ export async function subscribeNewsletterSubscriber(
     }
   } catch (error) {
     if (isAlreadyExists(error)) {
-      return { status: "already-subscribed" };
+      return { status: "already-subscribed", welcomeSent: false };
     }
     throw error;
   }
@@ -85,12 +113,14 @@ export async function subscribeNewsletterSubscriber(
   }
 
   try {
-    welcomeSent = await sendWelcomeEmail(email, emailHash);
-    if (welcomeSent) {
-      await subscriber.update({
-        welcomeEmailStatus: "sent",
-        welcomeEmailSentAt: FieldValue.serverTimestamp(),
-      });
+    if (!skipWelcome) {
+      welcomeSent = await sendWelcomeEmail(email, emailHash, options.ebookAttachment);
+      if (welcomeSent) {
+        await subscriber.update({
+          welcomeEmailStatus: "sent",
+          welcomeEmailSentAt: FieldValue.serverTimestamp(),
+        });
+      }
     }
   } catch (error) {
     console.error("A inscrição foi gravada, mas o e-mail de boas-vindas não foi enviado.", error);

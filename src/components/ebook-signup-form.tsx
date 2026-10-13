@@ -21,6 +21,7 @@ export function EbookSignupForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [marketingNotice, setMarketingNotice] = useState("");
+  const [ebookEmailNotice, setEbookEmailNotice] = useState("");
   const [isComplete, setIsComplete] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState("");
 
@@ -71,6 +72,17 @@ export function EbookSignupForm({
         throw new Error("A resposta do servidor não contém um arquivo PDF válido.");
       }
 
+      const ebookEmailStatus = response.headers.get("X-Lucrazi-Ebook-Email-Status");
+      if (ebookEmailStatus === "included-in-welcome") {
+        setEbookEmailNotice("Enviamos o e-book em anexo no seu e-mail de boas-vindas.");
+      } else if (ebookEmailStatus === "sent") {
+        setEbookEmailNotice("Enviamos o e-book para o seu e-mail. Confira também a caixa de spam.");
+      } else if (ebookEmailStatus === "unconfigured" || ebookEmailStatus === "failed") {
+        setEbookEmailNotice("Não conseguimos enviar o e-book por e-mail agora. O PDF está liberado para download abaixo.");
+      } else {
+        setEbookEmailNotice("");
+      }
+
       const marketingStatus = response.headers.get("X-Lucrazi-Marketing-Status");
       if (marketingStatus === "subscribed") {
         setMarketingNotice("Pronto! Seu e-mail também foi inscrito para receber novidades e campanhas do Lucrazi. Você pode cancelar quando quiser.");
@@ -108,6 +120,7 @@ export function EbookSignupForm({
           <div>
             <strong>Pronto. Seu e-book está liberado.</strong>
             <p>Obrigado! Clique para baixar o PDF no seu dispositivo.</p>
+            {ebookEmailNotice && <p aria-live="polite" className="ebook-marketing-notice" role="status">{ebookEmailNotice}</p>}
             {marketingNotice && <p aria-live="polite" className="ebook-marketing-notice" role="status">{marketingNotice}</p>}
             <a
               className="ebook-submit"

@@ -5,6 +5,10 @@ import { FieldValue } from "firebase-admin/firestore";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { NextResponse } from "next/server";
 import { getFirebaseAdminDb } from "@/lib/firebase-admin";
+import {
+  isBrevoConfigured,
+  sendEbookDeliveryEmail,
+} from "@/lib/newsletter-email";
 import { subscribeNewsletterSubscriber } from "@/lib/newsletter-subscription";
 
 const ebookPath = join(
@@ -25,7 +29,11 @@ function isAlreadyExists(error: unknown) {
   return isRecord(error) && (error.code === 6 || error.code === "already-exists");
 }
 
-function createEbookResponse(ebook: Uint8Array, marketingStatus: string) {
+function createEbookResponse(
+  ebook: Uint8Array,
+  marketingStatus: string,
+  ebookEmailStatus: string,
+) {
   const body = new ArrayBuffer(ebook.byteLength);
   new Uint8Array(body).set(ebook);
 
@@ -36,6 +44,7 @@ function createEbookResponse(ebook: Uint8Array, marketingStatus: string) {
       "Content-Length": String(ebook.byteLength),
       "Content-Type": "application/pdf",
       "X-Lucrazi-Marketing-Status": marketingStatus,
+      "X-Lucrazi-Ebook-Email-Status": ebookEmailStatus,
       "X-Content-Type-Options": "nosniff",
     },
   });
@@ -122,16 +131,23 @@ export async function POST(request: Request) {
       createdAt: FieldValue.serverTimestamp(),
       source: "ebook.lucrazi.com.br",
       purpose: "ebook_delivery",
+      ebookEmailStatus: "pending",
+      ebookEmailRequestedAt: FieldValue.serverTimestamp(),
     };
     const existing = await lead.get();
     if (existing.exists) {
-      if (marketingConsent) {
-        await lead.update({
-          marketingConsent: true,
-          marketingConsentTextVersion: "2026-10-13",
-          marketingConsentAt: FieldValue.serverTimestamp(),
-        });
-      }
+      await lead.update({
+        ebookEmailStatus: "pending",
+        ebookEmailRequestedAt: FieldValue.serverTimestamp(),
+        ebookEmailSentAt: FieldValue.delete(),
+        ...(marketingConsent
+          ? {
+            marketingConsent: true,
+            marketingConsentTextVersion: "2026-10-13",
+            marketingConsentAt: FieldValue.serverTimestamp(),
+          }
+          : {}),
+      });
     } else {
       await lead.create({
         ...ebookLead,
@@ -149,6 +165,9 @@ export async function POST(request: Request) {
       if (marketingConsent) {
         try {
           await lead.update({
+            ebookEmailStatus: "pending",
+            ebookEmailRequestedAt: FieldValue.serverTimestamp(),
+            ebookEmailSentAt: FieldValue.delete(),
             marketingConsent: true,
             marketingConsentTextVersion: "2026-10-13",
             marketingConsentAt: FieldValue.serverTimestamp(),
@@ -156,6 +175,17 @@ export async function POST(request: Request) {
         } catch (updateError) {
           console.error("Não foi possível registrar o consentimento para campanhas do pedido do e-book.", updateError);
           return NextResponse.json({ error: "Não foi possível registrar sua autorização para campanhas." }, { status: 500 });
+        }
+      } else {
+        try {
+          await lead.update({
+            ebookEmailStatus: "pending",
+            ebookEmailRequestedAt: FieldValue.serverTimestamp(),
+            ebookEmailSentAt: FieldValue.delete(),
+          });
+        } catch (updateError) {
+          console.error("Não foi possível atualizar o registro de entrega do e-book.", updateError);
+          return NextResponse.json({ error: "Não foi possível registrar o pedido do e-book." }, { status: 500 });
         }
       }
     } else {
@@ -165,6 +195,7 @@ export async function POST(request: Request) {
   }
 
   let marketingStatus = "not-requested";
+  let ebookIncludedInWelcome = false;
   if (marketingConsent) {
     if (process.env.NEXT_PUBLIC_NEWSLETTER_SIGNUP_ENABLED !== "true") {
       console.warn("Um pedido de e-book autorizou campanhas, mas a integração da lista de novidades está desativada.");
@@ -174,8 +205,10 @@ export async function POST(request: Request) {
         const subscription = await subscribeNewsletterSubscriber(email, emailHash, {
           source: "ebook.lucrazi.com.br",
           consentTextVersion: "2026-10-13",
+          ebookAttachment: ebook,
         });
         marketingStatus = subscription.status;
+        ebookIncludedInWelcome = subscription.welcomeSent;
       } catch (error) {
         console.error("O pedido do e-book foi gravado, mas não foi possível inscrever o contato nas campanhas.", error);
         marketingStatus = "failed";
@@ -183,5 +216,29 @@ export async function POST(request: Request) {
     }
   }
 
-  return createEbookResponse(ebook, marketingStatus);
+  let ebookEmailStatus = "unconfigured";
+  if (ebookIncludedInWelcome) {
+    ebookEmailStatus = "included-in-welcome";
+  } else if (isBrevoConfigured()) {
+    try {
+      const sent = await sendEbookDeliveryEmail(email, ebook);
+      ebookEmailStatus = sent ? "sent" : "unconfigured";
+    } catch (error) {
+      console.error("O pedido do e-book foi registrado, mas o e-mail com o PDF não foi enviado.", error);
+      ebookEmailStatus = "failed";
+    }
+  }
+
+  try {
+    await lead.update({
+      ebookEmailStatus,
+      ...(ebookEmailStatus === "sent" || ebookEmailStatus === "included-in-welcome"
+        ? { ebookEmailSentAt: FieldValue.serverTimestamp() }
+        : {}),
+    });
+  } catch (error) {
+    console.error("Não foi possível registrar o resultado do envio do e-book.", error);
+  }
+
+  return createEbookResponse(ebook, marketingStatus, ebookEmailStatus);
 }
