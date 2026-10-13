@@ -106,6 +106,15 @@ export default function PrivacyPage() {
             <Link href="/contato">canal de contato</Link>. O formulário não solicita outros dados
             pessoais.
           </p>
+          <h2 id="ebook">Pedidos do e-book</h2>
+          <p>
+            Ao solicitar o e-book gratuito, seu e-mail, a confirmação de autorização, a data e a
+            origem do pedido são armazenados no Firebase/Cloud Firestore para registrar a
+            solicitação e liberar o download. Esses dados não são usados para inscrever você na
+            lista de novidades ou enviar campanhas. Para solicitar acesso, correção ou exclusão,
+            use o <Link href="/contato">canal de contato</Link>. O formulário não solicita outros
+            dados pessoais.
+          </p>
           <h2>Links de terceiros</h2>
           <p>
             Os artigos podem apontar para sites externos, inclusive fontes oficiais. Esses sites
@@ -128,7 +137,8 @@ export default function PrivacyPage() {
           </p>
           <p>
             Este site não mantém conta de usuário nem formulário de contato próprio. O cadastro
-            opcional de novidades e o uso da Brevo para envio de e-mails são descritos acima.
+            opcional de novidades e os pedidos de e-book estão descritos acima. O uso da Brevo
+            para envio de e-mails também é descrito nesta política.
           </p>
         </article>
       </main>

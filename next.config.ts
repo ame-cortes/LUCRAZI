@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   serverExternalPackages: ["firebase-admin"],
+  outputFileTracingIncludes: {
+    "/api/ebook": ["./assets/ebooks/como-faturar-seus-primeiros-1000-na-internet.pdf"],
+  },
   turbopack: {
     rules: {
       "*.css": {
