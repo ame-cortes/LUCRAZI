@@ -2114,12 +2114,36 @@ button:focus-visible {
 }
 
 .newsletter-subscribers,
+.newsletter-qr-leads,
 .newsletter-campaign-history {
   display: grid;
   gap: 14px;
 }
 
+.newsletter-qr-leads-note {
+  max-width: 850px;
+  margin: -4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.newsletter-qr-source {
+  margin-left: 6px;
+  background: #e8eef6;
+  color: #395572;
+}
+
+.newsletter-qr-lead-row {
+  align-items: flex-start;
+}
+
+.newsletter-qr-lead-row > div > p + p {
+  margin-top: 5px;
+}
+
 .newsletter-subscriber-row h3,
+.newsletter-qr-lead-row h3,
 .newsletter-campaign-history h3 {
   margin: 6px 0 3px;
   font-size: 15px;
@@ -3209,3 +3233,354 @@ button:focus-visible {
       transition: none;
     }
   }
+
+.qr-page {
+  padding-block: 72px 100px;
+}
+
+.qr-page-heading {
+  max-width: 760px;
+  margin-bottom: 38px;
+}
+
+.qr-page-heading h1 {
+  margin: 19px 0 16px;
+  font-size: clamp(42px, 5vw, 64px);
+  font-weight: 500;
+  letter-spacing: -3.5px;
+  line-height: 1.05;
+}
+
+.qr-page-heading h1 span {
+  color: #789a3f;
+}
+
+.qr-page-heading > p {
+  max-width: 650px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.qr-tool {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.82fr);
+  align-items: start;
+  gap: 24px;
+}
+
+.qr-settings,
+.qr-preview-card,
+.qr-email-card {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 10px 36px rgb(36 38 32 / 4%);
+}
+
+.qr-settings {
+  display: grid;
+  gap: 22px;
+  padding: 26px;
+}
+
+.qr-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.qr-field > label,
+.qr-email-form > label:not(.qr-email-consent) {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.qr-field select,
+.qr-field textarea,
+.qr-email-form > input {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #dcded5;
+  border-radius: 9px;
+  padding: 12px 14px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+}
+
+.qr-field textarea {
+  min-height: 75px;
+  resize: vertical;
+}
+
+.qr-field select:focus,
+.qr-field textarea:focus,
+.qr-email-form > input:focus {
+  border-color: #789a3f;
+  outline: 3px solid rgb(120 154 63 / 20%);
+}
+
+.qr-field-hint,
+.qr-preview-hint {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.qr-color-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.qr-color-fields legend {
+  padding-inline: 5px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.qr-color-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 7px 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.qr-color-row input {
+  width: 39px;
+  height: 32px;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 2px;
+  background: #fff;
+}
+
+.qr-color-row output {
+  grid-column: 1 / -1;
+  color: var(--ink);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.qr-field input[type="file"] {
+  width: 100%;
+  min-height: 46px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.qr-field input[type="file"]::file-selector-button {
+  min-height: 38px;
+  margin-right: 12px;
+  border: 1px solid #dcded5;
+  border-radius: 8px;
+  padding: 0 12px;
+  background: #f8f8f4;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.qr-preview-card {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  padding: 26px;
+  text-align: center;
+}
+
+.qr-preview-label {
+  color: #6b7d50;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 1.2px;
+}
+
+.qr-preview-canvas {
+  display: block;
+  width: min(100%, 360px);
+  height: auto;
+  margin-block: 21px 13px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  image-rendering: pixelated;
+}
+
+.qr-preview-hint {
+  max-width: 300px;
+  margin: 0;
+}
+
+.qr-download-actions {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.qr-download-actions .button {
+  min-height: 46px;
+  gap: 11px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.qr-secondary-button {
+  min-height: 46px;
+  border: 1px solid #d7d8cf;
+  border-radius: 99px;
+  padding: 0 19px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.qr-secondary-button:hover {
+  border-color: var(--green);
+  background: #f5f8ed;
+}
+
+.qr-email-card {
+  grid-column: 1 / -1;
+  padding: 28px;
+}
+
+.qr-email-card h2 {
+  margin: 10px 0 18px;
+  font-size: clamp(22px, 2.6vw, 30px);
+  font-weight: 500;
+  letter-spacing: -1px;
+}
+
+.qr-email-form {
+  display: grid;
+  max-width: 670px;
+  gap: 12px;
+}
+
+.qr-email-form .button {
+  justify-self: start;
+  min-height: 48px;
+  gap: 12px;
+  margin: 3px 0 0;
+}
+
+.qr-email-form .button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.qr-email-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #62645c;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.qr-email-consent input {
+  flex: 0 0 auto;
+  margin: 3px 0 0;
+  accent-color: #789a3f;
+}
+
+.qr-privacy {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.qr-privacy a {
+  color: #4f6934;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.qr-error,
+.qr-success,
+.qr-delivery-notice {
+  border-radius: 9px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.qr-error {
+  margin: 0;
+  background: #fff1ed;
+  color: #8a2e19;
+}
+
+.qr-success {
+  margin: 0;
+  background: #eff6e5;
+  color: #3d5b22;
+}
+
+.qr-delivery-notice {
+  max-width: 670px;
+  margin: 0;
+  background: #f5f5ef;
+  color: #62645c;
+}
+
+@media (max-width: 760px) {
+  .qr-page {
+    padding-block: 48px 72px;
+  }
+
+  .qr-tool {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .qr-preview-card {
+    position: static;
+    grid-row: 1;
+  }
+
+  .qr-email-card {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .qr-page-heading h1 {
+    font-size: 42px;
+    letter-spacing: -2.7px;
+  }
+
+  .qr-settings,
+  .qr-preview-card,
+  .qr-email-card {
+    padding: 19px;
+  }
+
+  .qr-color-fields {
+    gap: 11px;
+    padding: 13px;
+  }
+}

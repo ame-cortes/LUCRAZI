@@ -13,20 +13,29 @@ type BrevoConfig = {
   listId: number;
 }
 
+type BrevoEmailConfig = Pick<BrevoConfig, "apiKey" | "senderEmail" | "senderName">;
+
+function getBrevoEmailConfig(): BrevoEmailConfig | null {
+  const { BREVO_API_KEY, BREVO_SENDER_EMAIL, BREVO_SENDER_NAME } = process.env;
+  if (!BREVO_API_KEY || !BREVO_SENDER_EMAIL || !BREVO_SENDER_NAME) return null;
+
+  return {
+    apiKey: BREVO_API_KEY,
+    senderEmail: BREVO_SENDER_EMAIL,
+    senderName: BREVO_SENDER_NAME,
+  };
+}
+
 function getBrevoConfig(): BrevoConfig | null {
   const {
-    BREVO_API_KEY,
-    BREVO_SENDER_EMAIL,
-    BREVO_SENDER_NAME,
     BREVO_SENDER_ADDRESS,
     BREVO_NEWSLETTER_LIST_ID,
     NEWSLETTER_UNSUBSCRIBE_SECRET,
   } = process.env;
+  const emailConfig = getBrevoEmailConfig();
   const listId = Number(BREVO_NEWSLETTER_LIST_ID);
   if (
-    !BREVO_API_KEY
-    || !BREVO_SENDER_EMAIL
-    || !BREVO_SENDER_NAME
+    !emailConfig
     || !BREVO_SENDER_ADDRESS
     || !NEWSLETTER_UNSUBSCRIBE_SECRET
     || NEWSLETTER_UNSUBSCRIBE_SECRET.length < 32
@@ -35,12 +44,14 @@ function getBrevoConfig(): BrevoConfig | null {
   ) return null;
 
   return {
-    apiKey: BREVO_API_KEY,
-    senderEmail: BREVO_SENDER_EMAIL,
-    senderName: BREVO_SENDER_NAME,
+    ...emailConfig,
     senderAddress: BREVO_SENDER_ADDRESS,
     listId,
   };
+}
+
+export function isBrevoEmailConfigured() {
+  return getBrevoEmailConfig() !== null;
 }
 
 export function isBrevoConfigured() {
@@ -97,7 +108,7 @@ function emailTemplate(content: string, unsubscribeHref: string, senderAddress: 
 }
 
 async function brevoRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const config = getBrevoConfig();
+  const config = getBrevoEmailConfig();
   if (!config) throw new Error("A integração Brevo não está configurada.");
 
   const response = await fetch(`${BREVO_API}${path}`, {
@@ -115,6 +126,28 @@ async function brevoRequest<T>(path: string, init: RequestInit = {}): Promise<T>
   }
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
+}
+
+export async function sendQrCodeEmail(email: string, qrSvg: string) {
+  const config = getBrevoEmailConfig();
+  if (!config) throw new Error("A integração de e-mail da Brevo não está configurada.");
+
+  const baseUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://www.lucrazi.com.br").origin;
+  await brevoRequest("/smtp/email", {
+    method: "POST",
+    body: JSON.stringify({
+      sender: { email: config.senderEmail, name: config.senderName },
+      to: [{ email }],
+      subject: "Seu QR Code personalizado do Lucrazi",
+      htmlContent: `<!doctype html><html lang="pt-BR"><body style="margin:0;background:#f4f3ed;font-family:Arial,sans-serif;color:#25271f;line-height:1.6"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f3ed;padding:28px 12px"><tr><td align="center"><table role="presentation" width="600" cellspacing="0" cellpadding="0" style="width:100%;max-width:600px;background:#fff;border:1px solid #e6e5dc;border-radius:16px;overflow:hidden"><tr><td style="padding:22px 32px;background:#28351f"><a href="${baseUrl}" style="color:#fff;font-size:22px;font-weight:bold;text-decoration:none">lucrazi<span style="color:#b8d58b">.</span></a></td></tr><tr><td style="padding:32px"><h1 style="margin:0 0 16px;font-size:26px;line-height:1.25">Seu QR Code está pronto.</h1><p style="margin:0 0 16px">Como solicitado, anexamos o arquivo SVG do seu QR Code personalizado. Você também pode baixar a versão PNG diretamente na página do gerador.</p><p style="margin:0;color:#555">Este e-mail atende somente ao seu pedido e não inscreve seu endereço em campanhas.</p></td></tr></table></td></tr></table></body></html>`,
+      textContent: `Seu QR Code personalizado está pronto.\n\nComo solicitado, anexamos o arquivo SVG do seu QR Code. Você também pode baixar a versão PNG em ${baseUrl}/gerador-qr.\n\nEste e-mail atende somente ao seu pedido e não inscreve seu endereço em campanhas.`,
+      tags: ["lucrazi-qr-code"],
+      attachment: [{
+        name: "qr-code-lucrazi.svg",
+        content: Buffer.from(qrSvg, "utf8").toString("base64"),
+      }],
+    }),
+  });
 }
 
 export async function syncBrevoSubscriber(email: string, reactivate = false) {

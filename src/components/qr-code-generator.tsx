@@ -1,0 +1,426 @@
+"use client";
+
+import { getToken } from "firebase/app-check";
+import QRCode from "qrcode";
+import Link from "next/link";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { getFirebaseAppCheck } from "@/lib/firebase";
+
+type QrCodeGeneratorProps = {
+  emailDeliveryEnabled: boolean;
+};
+
+const qrOptions = {
+  errorCorrectionLevel: "H" as const,
+  margin: 4,
+  width: 360,
+};
+
+function downloadFile(filename: string, content: BlobPart, type: string) {
+  const url = window.URL.createObjectURL(new Blob([content], { type }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+}
+
+async function createSvg(content: string, foregroundColor: string, backgroundColor: string, logoDataUrl: string) {
+  const svg = await QRCode.toString(content, {
+    type: "svg",
+    ...qrOptions,
+    color: { dark: foregroundColor, light: backgroundColor },
+  });
+  if (!logoDataUrl) return svg;
+
+  const document = new DOMParser().parseFromString(svg, "image/svg+xml");
+  const root = document.documentElement;
+  if (root.localName !== "svg" || document.querySelector("parsererror")) {
+    throw new Error("Não foi possível preparar o arquivo SVG.");
+  }
+
+  const viewBox = root.getAttribute("viewBox")?.trim().split(/\s+/).map(Number);
+  if (!viewBox || viewBox.length !== 4 || viewBox.some((value) => !Number.isFinite(value))) {
+    throw new Error("O gerador retornou um SVG sem dimensões válidas.");
+  }
+
+  const [, , width, height] = viewBox;
+  const logoSize = Math.min(width, height) * 0.2;
+  const backingSize = logoSize * 1.25;
+  const namespace = "http://www.w3.org/2000/svg";
+  const backing = document.createElementNS(namespace, "rect");
+  backing.setAttribute("x", String((width - backingSize) / 2));
+  backing.setAttribute("y", String((height - backingSize) / 2));
+  backing.setAttribute("width", String(backingSize));
+  backing.setAttribute("height", String(backingSize));
+  backing.setAttribute("rx", String(backingSize * 0.12));
+  backing.setAttribute("fill", backgroundColor);
+
+  const image = document.createElementNS(namespace, "image");
+  image.setAttribute("href", logoDataUrl);
+  image.setAttribute("x", String((width - logoSize) / 2));
+  image.setAttribute("y", String((height - logoSize) / 2));
+  image.setAttribute("width", String(logoSize));
+  image.setAttribute("height", String(logoSize));
+  image.setAttribute("preserveAspectRatio", "xMidYMid meet");
+  root.append(backing, image);
+  return new XMLSerializer().serializeToString(document);
+}
+
+export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [contentType, setContentType] = useState<"url" | "text">("url");
+  const [content, setContent] = useState("https://www.lucrazi.com.br");
+  const [foregroundColor, setForegroundColor] = useState("#243B2B");
+  const [backgroundColor, setBackgroundColor] = useState("#FFFFFF");
+  const [logoDataUrl, setLogoDataUrl] = useState("");
+  const [email, setEmail] = useState("");
+  const [consented, setConsented] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previewError, setPreviewError] = useState("");
+  const [formMessage, setFormMessage] = useState("");
+  const [formError, setFormError] = useState("");
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const value = content.trim() || " ";
+    if (!canvas) return;
+
+    let cancelled = false;
+    setPreviewError("");
+    QRCode.toCanvas(canvas, value, {
+      ...qrOptions,
+      color: { dark: foregroundColor, light: backgroundColor },
+    }).then(() => {
+      if (cancelled || !logoDataUrl) return;
+
+      const image = new Image();
+      image.onload = () => {
+        if (cancelled) return;
+        const context = canvas.getContext("2d");
+        if (!context) {
+          setPreviewError("Seu navegador não conseguiu desenhar a prévia.");
+          return;
+        }
+        const logoSize = canvas.width * 0.2;
+        const backingSize = logoSize * 1.25;
+        const center = canvas.width / 2;
+        context.fillStyle = backgroundColor;
+        context.beginPath();
+        context.roundRect(
+          center - backingSize / 2,
+          center - backingSize / 2,
+          backingSize,
+          backingSize,
+          backingSize * 0.12,
+        );
+        context.fill();
+        context.drawImage(
+          image,
+          center - logoSize / 2,
+          center - logoSize / 2,
+          logoSize,
+          logoSize,
+        );
+      };
+      image.onerror = () => {
+        if (!cancelled) setPreviewError("Não foi possível carregar o logo escolhido.");
+      };
+      image.src = logoDataUrl;
+    }).catch((error: unknown) => {
+      if (cancelled) return;
+      console.error("Não foi possível gerar a prévia do QR Code.", error);
+      setPreviewError("Não foi possível gerar a prévia. Confira o conteúdo informado.");
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [backgroundColor, content, foregroundColor, logoDataUrl]);
+
+  async function handleLogoChange(event: ChangeEvent<HTMLInputElement>) {
+    setPreviewError("");
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) {
+      setLogoDataUrl("");
+      return;
+    }
+
+    if (file.size > 256 * 1024 || !["image/png", "image/jpeg"].includes(file.type)) {
+      setLogoDataUrl("");
+      setPreviewError("Escolha um logo PNG ou JPEG de até 256 KB.");
+      input.value = "";
+      return;
+    }
+
+    let bytes: Uint8Array;
+    try {
+      bytes = new Uint8Array(await file.arrayBuffer());
+    } catch (error) {
+      console.error("Não foi possível ler o arquivo do logo.", error);
+      setPreviewError("Não foi possível ler o arquivo do logo. Tente novamente.");
+      input.value = "";
+      return;
+    }
+    const isPng = bytes.length >= 8
+      && [137, 80, 78, 71, 13, 10, 26, 10].every((byte, index) => bytes[index] === byte);
+    const isJpeg = bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+    if ((file.type === "image/png" && !isPng) || (file.type === "image/jpeg" && !isJpeg)) {
+      setLogoDataUrl("");
+      setPreviewError("O arquivo não corresponde a uma imagem PNG ou JPEG válida.");
+      input.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== "string") {
+        setPreviewError("Não foi possível ler o arquivo do logo.");
+        return;
+      }
+      const dataUrl = reader.result;
+      const image = new Image();
+      image.onload = () => {
+        if (image.naturalWidth > 2048 || image.naturalHeight > 2048) {
+          setPreviewError("O logo precisa ter dimensões de até 2048 x 2048 pixels.");
+          input.value = "";
+          return;
+        }
+        setLogoDataUrl(dataUrl);
+      };
+      image.onerror = () => setPreviewError("O arquivo não contém uma imagem PNG ou JPEG válida.");
+      image.src = dataUrl;
+    };
+    reader.onerror = () => setPreviewError("Não foi possível ler o arquivo do logo.");
+    reader.readAsDataURL(file);
+  }
+
+  async function handleDownloadPng() {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    try {
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((result) => {
+          if (result) resolve(result);
+          else reject(new Error("O navegador não conseguiu criar o arquivo PNG."));
+        }, "image/png");
+      });
+      downloadFile("qr-code-lucrazi.png", blob, "image/png");
+    } catch (error) {
+      console.error("Não foi possível exportar o QR Code como PNG.", error);
+      setPreviewError("Não foi possível baixar o PNG. Tente novamente.");
+    }
+  }
+
+  async function handleDownloadSvg() {
+    try {
+      const svg = await createSvg(content.trim() || " ", foregroundColor, backgroundColor, logoDataUrl);
+      downloadFile("qr-code-lucrazi.svg", svg, "image/svg+xml;charset=utf-8");
+    } catch (error) {
+      console.error("Não foi possível exportar o QR Code como SVG.", error);
+      setPreviewError("Não foi possível baixar o SVG. Tente novamente.");
+    }
+  }
+
+  async function handleEmailDelivery(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setFormError("");
+    setFormMessage("");
+    if (!consented) {
+      setFormError("Autorize o uso do e-mail para receber o arquivo solicitado.");
+      return;
+    }
+    if (contentType === "url") {
+      try {
+        const url = new URL(content.trim());
+        if (url.protocol !== "http:" && url.protocol !== "https:") throw new Error("invalid protocol");
+      } catch {
+        setFormError("Informe um endereço web válido começando com http:// ou https://.");
+        return;
+      }
+    }
+
+    setIsSubmitting(true);
+    try {
+      const appCheck = await getFirebaseAppCheck();
+      const { token } = await getToken(appCheck);
+      const response = await fetch("/api/qr-code", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Firebase-AppCheck": token,
+        },
+        body: JSON.stringify({
+          email,
+          content: content.trim(),
+          contentType,
+          foregroundColor,
+          backgroundColor,
+          ...(logoDataUrl ? { logoDataUrl } : {}),
+          consent: consented,
+        }),
+      });
+
+      const result: unknown = await response.json();
+      if (!response.ok) {
+        const errorMessage = typeof result === "object"
+          && result !== null
+          && "error" in result
+          && typeof result.error === "string"
+          ? result.error
+          : "Não foi possível enviar seu QR Code.";
+        throw new Error(errorMessage);
+      }
+
+      setEmail("");
+      setConsented(false);
+      setFormMessage("QR Code enviado! Confira sua caixa de entrada e a pasta de spam.");
+    } catch (error) {
+      console.error("Não foi possível solicitar a entrega do QR Code.", error);
+      setFormError(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível enviar seu QR Code. Tente novamente mais tarde.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="qr-tool">
+      <section aria-label="Personalização do QR Code" className="qr-settings">
+        <div className="qr-field">
+          <label htmlFor="qr-content-type">Tipo de conteúdo</label>
+          <select
+            id="qr-content-type"
+            onChange={(event) => setContentType(event.target.value === "text" ? "text" : "url")}
+            value={contentType}
+          >
+            <option value="url">Link (URL)</option>
+            <option value="text">Texto</option>
+          </select>
+        </div>
+
+        <div className="qr-field">
+          <label htmlFor="qr-content">{contentType === "url" ? "Endereço do site" : "Texto para incluir"}</label>
+          <textarea
+            id="qr-content"
+            maxLength={2048}
+            onChange={(event) => setContent(event.target.value)}
+            placeholder={contentType === "url" ? "https://exemplo.com" : "Digite o texto"}
+            required
+            rows={contentType === "url" ? 2 : 4}
+            value={content}
+          />
+          <span className="qr-field-hint">{content.length}/2048 caracteres. O conteúdo fica no QR Code.</span>
+        </div>
+
+        <fieldset className="qr-color-fields">
+          <legend>Cores do QR Code</legend>
+          <div className="qr-color-row">
+            <label htmlFor="qr-foreground">Código</label>
+            <input
+              id="qr-foreground"
+              onChange={(event) => setForegroundColor(event.target.value)}
+              type="color"
+              value={foregroundColor}
+            />
+            <output htmlFor="qr-foreground">{foregroundColor}</output>
+          </div>
+          <div className="qr-color-row">
+            <label htmlFor="qr-background">Fundo</label>
+            <input
+              id="qr-background"
+              onChange={(event) => setBackgroundColor(event.target.value)}
+              type="color"
+              value={backgroundColor}
+            />
+            <output htmlFor="qr-background">{backgroundColor}</output>
+          </div>
+        </fieldset>
+
+        <div className="qr-field">
+          <label htmlFor="qr-logo">Logo (opcional)</label>
+          <input
+            accept="image/png,image/jpeg"
+            id="qr-logo"
+            onChange={(event) => void handleLogoChange(event)}
+            type="file"
+          />
+          <span className="qr-field-hint">PNG ou JPEG, até 256 KB. O arquivo é processado no navegador e não é armazenado.</span>
+        </div>
+      </section>
+
+      <section aria-label="Prévia e exportação do QR Code" className="qr-preview-card">
+        <span className="qr-preview-label">PRÉVIA EM TEMPO REAL</span>
+        <canvas
+          aria-label="Prévia do QR Code"
+          className="qr-preview-canvas"
+          height={360}
+          ref={canvasRef}
+          role="img"
+          width={360}
+        />
+        <p className="qr-preview-hint">Escaneie o código com a câmera antes de imprimir ou compartilhar.</p>
+        <div className="qr-download-actions">
+          <button className="button button-dark" onClick={() => void handleDownloadPng()} type="button">
+            Baixar PNG <span aria-hidden="true">↓</span>
+          </button>
+          <button className="qr-secondary-button" onClick={() => void handleDownloadSvg()} type="button">
+            Baixar SVG
+          </button>
+        </div>
+        {previewError && <p aria-live="polite" className="qr-error" role="alert">{previewError}</p>}
+      </section>
+
+      <section aria-labelledby="qr-email-heading" className="qr-email-card">
+        <span className="qr-preview-label">ENTREGA POR E-MAIL</span>
+        <h2 id="qr-email-heading">Receba o SVG na sua caixa de entrada.</h2>
+        {emailDeliveryEnabled ? (
+          <form className="qr-email-form" onSubmit={(event) => void handleEmailDelivery(event)}>
+            <label htmlFor="qr-email">Seu e-mail</label>
+            <input
+              autoComplete="email"
+              disabled={isSubmitting}
+              id="qr-email"
+              maxLength={254}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="voce@exemplo.com"
+              required
+              type="email"
+              value={email}
+            />
+            <label className="qr-email-consent">
+              <input
+                checked={consented}
+                disabled={isSubmitting}
+                onChange={(event) => setConsented(event.target.checked)}
+                required
+                type="checkbox"
+              />
+              <span>
+                Autorizo o uso do meu e-mail para registrar este pedido e enviar o QR Code solicitado.
+                Isso não me inscreve em campanhas.
+              </span>
+            </label>
+            <button className="button button-dark" disabled={isSubmitting} type="submit">
+              {isSubmitting ? "Enviando..." : "Enviar meu QR Code"} <span aria-hidden="true">↗</span>
+            </button>
+            {formError && <p aria-live="polite" className="qr-error" role="alert">{formError}</p>}
+            {formMessage && <p aria-live="polite" className="qr-success" role="status">{formMessage}</p>}
+            <p className="qr-privacy">
+              Consulte a <Link href="/privacidade">política de privacidade</Link>. Você também pode baixar o arquivo sem informar o e-mail.
+            </p>
+          </form>
+        ) : (
+          <p aria-live="polite" className="qr-delivery-notice" role="status">
+            A entrega por e-mail está temporariamente indisponível. Você ainda pode personalizar e baixar o QR Code acima.
+          </p>
+        )}
+      </section>
+    </div>
+  );
+}

@@ -47,6 +47,7 @@ Copie `.env.example` para `.env.local` e configure os valores para o seu domíni
 - `NEXT_PUBLIC_FIREBASE_APPCHECK_SITE_KEY`: chave pública do reCAPTCHA Enterprise/Fraud Defense usado pelo Firebase App Check.
 - `NEXT_PUBLIC_NEWSLETTER_SIGNUP_ENABLED`: defina como `true` somente depois de configurar a chave App Check e a credencial Firebase de servidor.
 - `NEXT_PUBLIC_EBOOK_SIGNUP_ENABLED`: defina como `true` somente depois de configurar a chave App Check, autorizar o domínio `ebook.lucrazi.com.br` no Firebase App Check e configurar a credencial Firebase de servidor. Os pedidos do e-book são armazenados separadamente em `ebookLeads`; eles não inscrevem o endereço na lista de novidades.
+- A entrega de QR Code por e-mail usa as credenciais SMTP da Brevo existentes e a configuração Firebase/App Check do site. Os pedidos são registrados em `qrCodeLeads`, separados da lista de novidades; o conteúdo do QR e o logo não são armazenados.
 - `FIREBASE_SERVICE_ACCOUNT_JSON`: JSON privado da conta de serviço, usado somente por rotas de servidor; nunca use o prefixo `NEXT_PUBLIC_` nem o envie ao Git.
 - `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME`, `BREVO_SENDER_ADDRESS` e `BREVO_NEWSLETTER_LIST_ID`: credenciais e dados do remetente para envio e sincronização com uma lista Brevo exclusiva do Lucrazi. O endereço postal configurado é exibido no rodapé das campanhas.
 - `NEWSLETTER_UNSUBSCRIBE_SECRET`: segredo privado aleatório de pelo menos 32 caracteres, usado para assinar links individuais de cancelamento; nunca o envie ao Git.
@@ -84,6 +85,10 @@ Para ativar os envios:
 6. Entre em `/admin` e abra a aba **E-mails**. Confira os assinantes ativos, envie uma mensagem de boas-vindas de teste para o seu próprio e-mail e confirme o cancelamento pelo link recebido antes de fazer campanhas para todos.
 
 O painel lista e pesquisa assinantes, permite reenviar boas-vindas e cancelar inscrição, cria campanhas para os contatos consentidos, pede confirmação antes do envio e registra o resultado. A lista Brevo é sincronizada antes da campanha. Na aba **E-mails**, escolha um artigo publicado no modelo **Aviso de artigo** para preparar o assunto, a mensagem e o botão para leitura; revise o conteúdo e confirme o envio. A publicação do artigo, por si só, nunca dispara uma campanha. O rodapé inclui cancelamento. Se as variáveis de envio não estiverem configuradas, as inscrições continuam registradas e a interface informa que a mensagem automática não foi enviada. Não divulgue segredos em mensagens ou capturas de tela.
+
+### Gerador de QR Code
+
+A ferramenta pública fica em `/gerador-qr`. A biblioteca `qrcode` gera a prévia no navegador, sem enviar o conteúdo a um serviço externo; permite criar QR Codes de links e textos, personalizar as cores, adicionar um logo PNG/JPEG de até 256 KB e baixar PNG ou SVG. O SVG também pode ser solicitado por e-mail: o servidor verifica App Check, registra o pedido em `qrCodeLeads` e entrega o anexo usando as mesmas credenciais da API transacional SMTP da Brevo. Esse envio não inscreve o contato em campanhas. O conteúdo codificado e o logo não são persistidos. A entrega fica disponível automaticamente quando `FIREBASE_SERVICE_ACCOUNT_JSON`, as variáveis públicas Firebase/App Check e `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` e `BREVO_SENDER_NAME` estão configuradas. No painel `/admin`, a aba **E-mails** mostra os endereços capturados pelo gerador, o consentimento de entrega, os pedidos e o status do envio, em uma seção separada dos assinantes de newsletter. Os pedidos repetidos para o mesmo endereço têm intervalo mínimo de um minuto.
 
 ### Landing page do e-book
 

@@ -24,9 +24,23 @@ type Campaign = {
   createdAt: string | null;
 };
 
+type QrCodeLead = {
+  id: string;
+  email: string;
+  source: string;
+  consent: boolean;
+  createdAt: string | null;
+  consentAt: string | null;
+  lastRequestAt: string | null;
+  requestCount: number;
+  deliveryStatus: string;
+};
+
 type NewsletterData = {
   subscribers: Subscriber[];
   campaigns: Campaign[];
+  qrCodeLeads: QrCodeLead[];
+  qrCodeLeadCount: number;
   activeCount: number;
   brevoConfigured: boolean;
 };
@@ -70,6 +84,13 @@ const campaignStatus: Record<string, string> = {
   provider_error: "Erro na Brevo",
 };
 
+const qrDeliveryStatus: Record<string, string> = {
+  pending: "Pendente",
+  sent: "Enviado pela Brevo",
+  failed: "Falha no envio",
+  unknown: "Status indisponível",
+};
+
 export default function NewsletterManager({ articles }: { articles: NewsletterArticle[] }) {
   const [data, setData] = useState<NewsletterData | null>(null);
   const [search, setSearch] = useState("");
@@ -87,7 +108,7 @@ export default function NewsletterManager({ articles }: { articles: NewsletterAr
       setData(response);
       setError("");
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Não foi possível carregar os assinantes.");
+      setError(loadError instanceof Error ? loadError.message : "Não foi possível carregar os dados de e-mail.");
     } finally {
       setLoading(false);
     }
@@ -103,7 +124,7 @@ export default function NewsletterManager({ articles }: { articles: NewsletterAr
       })
       .catch((loadError: unknown) => {
         if (active) {
-          setError(loadError instanceof Error ? loadError.message : "Não foi possível carregar os assinantes.");
+          setError(loadError instanceof Error ? loadError.message : "Não foi possível carregar os dados de e-mail.");
         }
       })
       .finally(() => {
@@ -117,6 +138,9 @@ export default function NewsletterManager({ articles }: { articles: NewsletterAr
   const filteredSubscribers = useMemo(() => (data?.subscribers ?? []).filter((subscriber) =>
     subscriber.email.toLocaleLowerCase("pt-BR").includes(search.toLocaleLowerCase("pt-BR")),
   ), [data?.subscribers, search]);
+  const filteredQrCodeLeads = useMemo(() => (data?.qrCodeLeads ?? []).filter((lead) =>
+    lead.email.toLocaleLowerCase("pt-BR").includes(search.toLocaleLowerCase("pt-BR")),
+  ), [data?.qrCodeLeads, search]);
 
   async function updateSubscriber(subscriber: Subscriber, action: "unsubscribe" | "welcome") {
     if (action === "unsubscribe" && !window.confirm(`Cancelar a inscrição de ${subscriber.email}?`)) return;
@@ -282,6 +306,48 @@ export default function NewsletterManager({ articles }: { articles: NewsletterAr
             }
           </div>
         )}
+      </section>
+
+      <section className="newsletter-qr-leads" aria-labelledby="newsletter-qr-leads-heading">
+        <div className="newsletter-section-heading">
+          <div>
+            <span className="eyebrow">CAPTURA DE LEADS · GERADOR QR</span>
+            <h2 id="newsletter-qr-leads-heading">Pedidos de QR Code</h2>
+          </div>
+          <span>{data?.qrCodeLeadCount ?? 0} e-mails capturados</span>
+        </div>
+        <p className="newsletter-qr-leads-note">
+          Pessoas que solicitaram o SVG por e-mail no gerador. Esse consentimento vale apenas para
+          a entrega pedida: esses endereços não são assinantes da newsletter e não recebem campanhas.
+        </p>
+        <div className="admin-list">
+          {loading ? <p className="admin-loading">Carregando pedidos de QR Code…</p> :
+            filteredQrCodeLeads.length === 0
+              ? <p className="newsletter-empty">
+                  {search ? "Nenhum pedido de QR Code corresponde à busca." : "Nenhum e-mail capturado pelo gerador de QR Code ainda."}
+                </p>
+              : filteredQrCodeLeads.map((lead) => (
+                  <article className="admin-article-row newsletter-qr-lead-row" key={lead.id}>
+                    <div>
+                      <span className={`admin-status ${lead.deliveryStatus === "sent" ? "status-published" : lead.deliveryStatus === "failed" ? "status-deleted" : "status-draft"}`}>
+                        {qrDeliveryStatus[lead.deliveryStatus] ?? "Status indisponível"}
+                      </span>
+                      <span className="admin-status newsletter-qr-source">Gerador QR Code</span>
+                      <h3>{lead.email}</h3>
+                      <p>
+                        Pedido inicial: {dateLabel(lead.createdAt)} · Último pedido: {dateLabel(lead.lastRequestAt)}
+                        {" · "}{lead.requestCount} solicitação(ões)
+                      </p>
+                      <p>
+                        Consentimento de entrega: {lead.consent ? "registrado" : "ausente"}
+                        {lead.consentAt ? ` em ${dateLabel(lead.consentAt)}` : ""}
+                        {" · Fonte: "}{lead.source}
+                      </p>
+                    </div>
+                  </article>
+                ))
+          }
+        </div>
       </section>
 
       <section className="newsletter-campaign-history" aria-labelledby="newsletter-history-heading">

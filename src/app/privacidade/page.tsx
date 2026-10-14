@@ -18,7 +18,7 @@ export default function PrivacyPage() {
         <article className="info-page-content">
           <span className="eyebrow">TRANSPARÊNCIA</span>
           <h1>Política de privacidade.</h1>
-          <p className="info-lead">Última atualização: 13 de outubro de 2026.</p>
+          <p className="info-lead">Última atualização: 14 de outubro de 2026.</p>
           <p>
             Esta página explica, em linguagem simples, como o site Lucrazi pode tratar
             informações quando você navega por seus artigos. A configuração efetiva pode
@@ -124,6 +124,19 @@ export default function PrivacyPage() {
             <Link href="/contato">canal de contato</Link>. O formulário não solicita outros dados
             pessoais.
           </p>
+          <h2 id="qr-code">Pedidos de QR Code</h2>
+          <p>
+            Se você solicitar a entrega de um QR Code por e-mail, o endereço informado, a
+            autorização, a data do pedido e o resultado da entrega serão registrados no
+            Firebase/Cloud Firestore para atender e controlar pedidos repetidos. O endereço também
+            será compartilhado com a Brevo para enviar a mensagem transacional com o arquivo SVG
+            anexado. Esse pedido não inscreve você na lista de novidades nem autoriza campanhas.
+            O conteúdo que você codifica e o logo escolhido são usados para gerar o arquivo, são
+            enviados ao servidor apenas para montar o SVG e não são guardados pelo Lucrazi. O
+            download direto em PNG ou SVG não exige e-mail. Para pedir
+            acesso, correção ou exclusão dos registros do pedido, use o{" "}
+            <Link href="/contato">canal de contato</Link>.
+          </p>
           <h2>Links de terceiros</h2>
           <p>
             Os artigos podem apontar para sites externos, inclusive fontes oficiais. Esses sites
@@ -146,8 +159,8 @@ export default function PrivacyPage() {
           </p>
           <p>
             Este site não mantém conta de usuário nem formulário de contato próprio. O cadastro
-            opcional de novidades e os pedidos de e-book estão descritos acima. O uso da Brevo
-            para envio de e-mails também é descrito nesta política.
+            opcional de novidades, os pedidos de e-book e a entrega por e-mail de QR Codes estão
+            descritos acima. O uso da Brevo para envio de e-mails também é descrito nesta política.
           </p>
         </article>
       </main>

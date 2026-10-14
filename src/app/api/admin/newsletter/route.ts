@@ -15,9 +15,10 @@ export async function GET(request: Request) {
 
   try {
     const db = getFirebaseAdminDb();
-    const [subscriberSnapshot, campaignSnapshot] = await Promise.all([
+    const [subscriberSnapshot, campaignSnapshot, qrLeadSnapshot] = await Promise.all([
       db.collection("newsletterSubscribers").get(),
       db.collection("newsletterCampaigns").orderBy("createdAt", "desc").limit(20).get(),
+      db.collection("qrCodeLeads").orderBy("lastRequestAt", "desc").get(),
     ]);
     const subscribers = subscriberSnapshot.docs.flatMap((item) => {
       const data = item.data();
@@ -43,6 +44,23 @@ export async function GET(request: Request) {
         createdAt: data.createdAt?.toDate?.().toISOString() ?? null,
       };
     });
+    const qrCodeLeads = qrLeadSnapshot.docs.flatMap((item) => {
+      const data = item.data();
+      if (typeof data.email !== "string") return [];
+      return [{
+        id: item.id,
+        email: data.email,
+        source: typeof data.source === "string" ? data.source : "gerador-qr",
+        consent: data.consent === true,
+        createdAt: data.createdAt?.toDate?.().toISOString() ?? null,
+        consentAt: data.consentAt?.toDate?.().toISOString() ?? null,
+        lastRequestAt: data.lastRequestAt?.toDate?.().toISOString() ?? null,
+        requestCount: typeof data.requestCount === "number" && Number.isSafeInteger(data.requestCount)
+          ? data.requestCount
+          : 1,
+        deliveryStatus: typeof data.deliveryStatus === "string" ? data.deliveryStatus : "unknown",
+      }];
+    });
     const activeCount = subscribers.filter((item) =>
       item.status === "subscribed" && item.consent,
     ).length;
@@ -50,12 +68,16 @@ export async function GET(request: Request) {
     return NextResponse.json({
       subscribers,
       campaigns,
+      qrCodeLeads,
+      qrCodeLeadCount: qrCodeLeads.length,
       activeCount,
       brevoConfigured: isBrevoConfigured(),
+    }, {
+      headers: { "Cache-Control": "private, no-store" },
     });
   } catch (error) {
-    console.error("Não foi possível carregar os assinantes da newsletter.", error);
-    return NextResponse.json({ error: "Não foi possível carregar os assinantes." }, { status: 500 });
+    console.error("Não foi possível carregar os dados de e-mail do painel administrativo.", error);
+    return NextResponse.json({ error: "Não foi possível carregar os dados de e-mail do painel." }, { status: 500 });
   }
 }
 

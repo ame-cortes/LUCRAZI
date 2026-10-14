@@ -11,6 +11,7 @@ export function SiteHeader() {
           </Link>
           <nav className="main-nav" aria-label="Navegação principal">
             <Link href="/artigos">Guias</Link>
+            <Link href="/gerador-qr">QR Code</Link>
             <Link href="/sobre">Sobre</Link>
           </nav>
           <Link className="header-cta" href="/#guias-iniciais">
@@ -37,6 +38,7 @@ export function SiteFooter() {
         <div className="footer-links">
           <span>EXPLORE</span>
           <Link href="/artigos">Todos os guias</Link>
+          <Link href="/gerador-qr">Gerador de QR Code</Link>
           <Link href="/#guias-iniciais">Destaques</Link>
           <Link href="/sobre">Sobre o Lucrazi</Link>
         </div>
