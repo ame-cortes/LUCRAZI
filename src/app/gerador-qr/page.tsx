@@ -6,10 +6,36 @@ import { isBrevoEmailConfigured } from "@/lib/newsletter-email";
 import { qrCodeUrl } from "@/lib/site-config";
 
 export const metadata: Metadata = {
-  title: "Gerador de QR Code personalizado",
+  title: {
+    absolute: "Gerador de QR Code personalizado | Lucrazi",
+  },
   description:
-    "Crie QR Codes para links e textos, personalize as cores, adicione seu logo e baixe em PNG ou SVG.",
+    "Crie QR Codes personalizados para links e textos, adicione seu logo, receba por e-mail e baixe em PNG ou SVG.",
   alternates: { canonical: qrCodeUrl.toString() },
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    siteName: "Lucrazi",
+    url: qrCodeUrl.toString(),
+    title: "Gerador de QR Code personalizado",
+    description:
+      "Crie QR Codes para links e textos, personalize as cores, adicione seu logo e receba o arquivo por e-mail.",
+    images: [
+      {
+        url: new URL("/images/qr-generator-og.png", qrCodeUrl).toString(),
+        width: 1200,
+        height: 630,
+        alt: "Gerador de QR Code personalizado do Lucrazi",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Gerador de QR Code personalizado | Lucrazi",
+    description:
+      "Crie QR Codes para links e textos, personalize as cores, adicione seu logo e receba o arquivo por e-mail.",
+    images: [new URL("/images/qr-generator-og.png", qrCodeUrl).toString()],
+  },
 };
 
 async function QrCodeDelivery() {
