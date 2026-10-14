@@ -15,6 +15,7 @@ const qrOptions = {
   margin: 4,
   width: 360,
 };
+const rememberedEmailStorageKey = "lucrazi.qr-code.email";
 
 function downloadFile(filename: string, content: BlobPart, type: string) {
   const url = window.URL.createObjectURL(new Blob([content], { type }));
@@ -80,6 +81,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
   const [deliveredRequestKey, setDeliveredRequestKey] = useState("");
   const [previewError, setPreviewError] = useState("");
   const [formError, setFormError] = useState("");
+  const [emailStorageError, setEmailStorageError] = useState("");
   const requestKey = JSON.stringify([
     email.trim().toLowerCase(),
     content.trim(),
@@ -88,7 +90,20 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
     backgroundColor,
     logoDataUrl,
   ]);
-  const downloadsUnlocked = consented && deliveredRequestKey === requestKey;
+  const downloadsUnlocked = deliveredRequestKey !== "" && deliveredRequestKey === requestKey;
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      try {
+        const rememberedEmail = window.localStorage.getItem(rememberedEmailStorageKey);
+        if (rememberedEmail) setEmail((currentEmail) => currentEmail || rememberedEmail);
+      } catch (error) {
+        console.warn("Não foi possível recuperar o e-mail lembrado neste navegador.", error);
+        setEmailStorageError("Este navegador não permitiu lembrar seu e-mail.");
+      }
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -283,7 +298,15 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
         throw new Error(errorMessage);
       }
 
+      try {
+        window.localStorage.setItem(rememberedEmailStorageKey, email.trim().toLowerCase());
+        setEmailStorageError("");
+      } catch (error) {
+        console.warn("O QR Code foi enviado, mas não foi possível lembrar o e-mail neste navegador.", error);
+        setEmailStorageError("O envio deu certo, mas este navegador não conseguiu salvar seu e-mail.");
+      }
       setDeliveredRequestKey(submittedRequestKey);
+      setConsented(false);
     } catch (error) {
       console.error("Não foi possível solicitar a entrega do QR Code.", error);
       setFormError(
@@ -293,6 +316,17 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
       );
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  function forgetRememberedEmail() {
+    try {
+      window.localStorage.removeItem(rememberedEmailStorageKey);
+      setEmail("");
+      setEmailStorageError("");
+    } catch (error) {
+      console.error("Não foi possível apagar o e-mail lembrado neste navegador.", error);
+      setEmailStorageError("Não foi possível apagar o e-mail salvo neste navegador.");
     }
   }
 
@@ -408,44 +442,61 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
         <h2 id="qr-email-heading">Informe seu e-mail para receber e baixar o QR Code.</h2>
         {emailDeliveryEnabled ? (
           downloadsUnlocked ? (
-            <p aria-live="polite" className="qr-success" role="status">
-              Enviado para {email.trim()}. Agora você pode baixar o PNG ou SVG na prévia acima.
-            </p>
+            <>
+              <p aria-live="polite" className="qr-success" role="status">
+                Enviado para {email.trim()}. Agora você pode baixar o PNG ou SVG na prévia acima.
+              </p>
+              {emailStorageError && (
+                <p aria-live="polite" className="qr-delivery-notice" role="status">{emailStorageError}</p>
+              )}
+            </>
           ) : (
             <form className="qr-email-form" onSubmit={(event) => void handleEmailDelivery(event)}>
-                <label htmlFor="qr-email">Seu e-mail</label>
-                <input
-                  autoComplete="email"
-                  disabled={isSubmitting}
-                  id="qr-email"
-                  maxLength={254}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="voce@exemplo.com"
-                  required
-                  type="email"
-                  value={email}
-                />
-                <label className="qr-email-consent">
-                  <input
-                    checked={consented}
-                    disabled={isSubmitting}
-                    onChange={(event) => setConsented(event.target.checked)}
-                    required
-                    type="checkbox"
-                  />
-                  <span>
-                    Autorizo o uso do meu e-mail para registrar este pedido e enviar o QR Code solicitado.
-                    Isso não me inscreve em campanhas.
-                  </span>
-                </label>
-                <button className="button button-dark" disabled={isSubmitting} type="submit">
-                  {isSubmitting ? "Enviando..." : "Enviar e liberar downloads"} <span aria-hidden="true">↗</span>
+              <label htmlFor="qr-email">Seu e-mail</label>
+              <input
+                autoComplete="email"
+                disabled={isSubmitting}
+                id="qr-email"
+                maxLength={254}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="voce@exemplo.com"
+                required
+                type="email"
+                value={email}
+              />
+              <span className="qr-field-hint">
+                Depois do primeiro envio confirmado, este navegador poderá lembrar seu e-mail para próximos pedidos.
+              </span>
+              {email && (
+                <button className="qr-secondary-button" onClick={forgetRememberedEmail} type="button">
+                  Esquecer e-mail neste navegador
                 </button>
-                {formError && <p aria-live="polite" className="qr-error" role="alert">{formError}</p>}
-                <p className="qr-privacy">
-                  Depois do envio confirmado, você poderá baixar o PNG ou SVG aqui. Seu e-mail não será inscrito em campanhas.
-                  Consulte a <Link href="/privacidade">política de privacidade</Link>.
-                </p>
+              )}
+              {emailStorageError && (
+                <p aria-live="polite" className="qr-delivery-notice" role="status">{emailStorageError}</p>
+              )}
+              <label className="qr-email-consent">
+                <input
+                  checked={consented}
+                  disabled={isSubmitting}
+                  onChange={(event) => setConsented(event.target.checked)}
+                  required
+                  type="checkbox"
+                />
+                <span>
+                  Autorizo o uso do meu e-mail para registrar este pedido e enviar o QR Code solicitado.
+                  Isso não me inscreve em campanhas.
+                </span>
+              </label>
+              <button className="button button-dark" disabled={isSubmitting} type="submit">
+                {isSubmitting ? "Enviando..." : "Enviar e liberar downloads"} <span aria-hidden="true">↗</span>
+              </button>
+              {formError && <p aria-live="polite" className="qr-error" role="alert">{formError}</p>}
+              <p className="qr-privacy">
+                Depois do envio confirmado, você poderá baixar o PNG ou SVG aqui. Seu e-mail não será inscrito em campanhas.
+                A autorização é solicitada a cada pedido.
+                Consulte a <Link href="/privacidade">política de privacidade</Link>.
+              </p>
             </form>
           )
         ) : (

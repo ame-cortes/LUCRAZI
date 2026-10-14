@@ -132,10 +132,14 @@ export default function PrivacyPage() {
             Firebase/Cloud Firestore para atender e controlar pedidos repetidos. O endereço também
             será compartilhado com a Brevo para enviar a mensagem transacional com o arquivo PNG
             anexado. Os downloads locais só são liberados depois que o envio por e-mail é confirmado.
-            Esse pedido não inscreve você na lista de novidades nem autoriza campanhas. O conteúdo
-            que você codifica e o logo escolhido são usados para gerar o arquivo, são enviados ao
-            servidor para montar o anexo PNG e não são guardados pelo Lucrazi. Para pedir acesso,
-            correção ou exclusão dos registros do pedido, use o{" "}
+            Após o primeiro envio confirmado, o e-mail pode ser lembrado no armazenamento local do
+            navegador neste dispositivo para facilitar pedidos futuros. Você pode apagá-lo pelo
+            botão “Esquecer e-mail neste navegador” ou limpando os dados do site no navegador. A
+            autorização é solicitada separadamente em cada pedido. Esse fluxo não inscreve você na
+            lista de novidades nem autoriza campanhas. O conteúdo que você codifica e o logo
+            escolhido são usados para gerar o arquivo, são enviados ao servidor para montar o anexo
+            PNG e não são guardados pelo Lucrazi. Para pedir acesso, correção ou exclusão dos
+            registros do pedido, use o{" "}
             <Link href="/contato">canal de contato</Link>.
           </p>
           <h2>Links de terceiros</h2>
