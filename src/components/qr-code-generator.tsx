@@ -77,9 +77,18 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
   const [email, setEmail] = useState("");
   const [consented, setConsented] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deliveredRequestKey, setDeliveredRequestKey] = useState("");
   const [previewError, setPreviewError] = useState("");
-  const [formMessage, setFormMessage] = useState("");
   const [formError, setFormError] = useState("");
+  const requestKey = JSON.stringify([
+    email.trim().toLowerCase(),
+    content.trim(),
+    contentType,
+    foregroundColor,
+    backgroundColor,
+    logoDataUrl,
+  ]);
+  const downloadsUnlocked = consented && deliveredRequestKey === requestKey;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -227,7 +236,6 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
   async function handleEmailDelivery(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError("");
-    setFormMessage("");
     if (!consented) {
       setFormError("Autorize o uso do e-mail para receber o arquivo solicitado.");
       return;
@@ -243,6 +251,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
     }
 
     setIsSubmitting(true);
+    const submittedRequestKey = requestKey;
     try {
       const appCheck = await getFirebaseAppCheck();
       const { token } = await getToken(appCheck);
@@ -274,9 +283,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
         throw new Error(errorMessage);
       }
 
-      setEmail("");
-      setConsented(false);
-      setFormMessage("QR Code enviado em PNG! Confira sua caixa de entrada e a pasta de spam.");
+      setDeliveredRequestKey(submittedRequestKey);
     } catch (error) {
       console.error("Não foi possível solicitar a entrega do QR Code.", error);
       setFormError(
@@ -296,6 +303,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
           <label htmlFor="qr-content-type">Tipo de conteúdo</label>
           <select
             id="qr-content-type"
+            disabled={isSubmitting}
             onChange={(event) => setContentType(event.target.value === "text" ? "text" : "url")}
             value={contentType}
           >
@@ -309,13 +317,16 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
           <textarea
             id="qr-content"
             maxLength={2048}
+            disabled={isSubmitting}
             onChange={(event) => setContent(event.target.value)}
             placeholder={contentType === "url" ? "https://exemplo.com" : "Digite o texto"}
             required
             rows={contentType === "url" ? 2 : 4}
             value={content}
           />
-          <span className="qr-field-hint">{content.length}/2048 caracteres. O conteúdo fica no QR Code.</span>
+          <span className="qr-field-hint">
+            {content.length}/2048 caracteres. Usado para gerar e enviar seu QR Code; não é armazenado.
+          </span>
         </div>
 
         <fieldset className="qr-color-fields">
@@ -324,6 +335,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
             <label htmlFor="qr-foreground">Código</label>
             <input
               id="qr-foreground"
+              disabled={isSubmitting}
               onChange={(event) => setForegroundColor(event.target.value)}
               type="color"
               value={foregroundColor}
@@ -334,6 +346,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
             <label htmlFor="qr-background">Fundo</label>
             <input
               id="qr-background"
+              disabled={isSubmitting}
               onChange={(event) => setBackgroundColor(event.target.value)}
               type="color"
               value={backgroundColor}
@@ -346,11 +359,14 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
           <label htmlFor="qr-logo">Logo (opcional)</label>
           <input
             accept="image/png,image/jpeg"
+            disabled={isSubmitting}
             id="qr-logo"
             onChange={(event) => void handleLogoChange(event)}
             type="file"
           />
-          <span className="qr-field-hint">PNG ou JPEG, até 256 KB. O arquivo é processado no navegador e não é armazenado.</span>
+          <span className="qr-field-hint">
+            PNG ou JPEG, até 256 KB. Usado na prévia e no envio solicitado; não é armazenado.
+          </span>
         </div>
       </section>
 
@@ -365,59 +381,76 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
           width={360}
         />
         <p className="qr-preview-hint">Escaneie o código com a câmera antes de imprimir ou compartilhar.</p>
-        <div className="qr-download-actions">
-          <button className="button button-dark" onClick={() => void handleDownloadPng()} type="button">
-            Baixar PNG <span aria-hidden="true">↓</span>
-          </button>
-          <button className="qr-secondary-button" onClick={() => void handleDownloadSvg()} type="button">
-            Baixar SVG
-          </button>
-        </div>
+        {downloadsUnlocked ? (
+          <>
+            <p aria-live="polite" className="qr-success" role="status">
+              QR Code enviado para {email.trim()}. Os downloads locais estão liberados.
+            </p>
+            <div className="qr-download-actions">
+              <button className="button button-dark" onClick={() => void handleDownloadPng()} type="button">
+                Baixar PNG <span aria-hidden="true">↓</span>
+              </button>
+              <button className="qr-secondary-button" onClick={() => void handleDownloadSvg()} type="button">
+                Baixar SVG
+              </button>
+            </div>
+          </>
+        ) : (
+          <p aria-live="polite" className="qr-delivery-notice" role="status">
+            Informe seu e-mail e confirme a entrega para liberar os downloads locais.
+          </p>
+        )}
         {previewError && <p aria-live="polite" className="qr-error" role="alert">{previewError}</p>}
       </section>
 
       <section aria-labelledby="qr-email-heading" className="qr-email-card">
         <span className="qr-preview-label">ENTREGA POR E-MAIL</span>
-        <h2 id="qr-email-heading">Receba o PNG na sua caixa de entrada.</h2>
+        <h2 id="qr-email-heading">Informe seu e-mail para receber e baixar o QR Code.</h2>
         {emailDeliveryEnabled ? (
-          <form className="qr-email-form" onSubmit={(event) => void handleEmailDelivery(event)}>
-            <label htmlFor="qr-email">Seu e-mail</label>
-            <input
-              autoComplete="email"
-              disabled={isSubmitting}
-              id="qr-email"
-              maxLength={254}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="voce@exemplo.com"
-              required
-              type="email"
-              value={email}
-            />
-            <label className="qr-email-consent">
-              <input
-                checked={consented}
-                disabled={isSubmitting}
-                onChange={(event) => setConsented(event.target.checked)}
-                required
-                type="checkbox"
-              />
-              <span>
-                Autorizo o uso do meu e-mail para registrar este pedido e enviar o QR Code solicitado.
-                Isso não me inscreve em campanhas.
-              </span>
-            </label>
-            <button className="button button-dark" disabled={isSubmitting} type="submit">
-              {isSubmitting ? "Enviando..." : "Enviar meu QR Code"} <span aria-hidden="true">↗</span>
-            </button>
-            {formError && <p aria-live="polite" className="qr-error" role="alert">{formError}</p>}
-            {formMessage && <p aria-live="polite" className="qr-success" role="status">{formMessage}</p>}
-            <p className="qr-privacy">
-              Consulte a <Link href="/privacidade">política de privacidade</Link>. Você também pode baixar o arquivo sem informar o e-mail.
+          downloadsUnlocked ? (
+            <p aria-live="polite" className="qr-success" role="status">
+              Enviado para {email.trim()}. Agora você pode baixar o PNG ou SVG na prévia acima.
             </p>
-          </form>
+          ) : (
+            <form className="qr-email-form" onSubmit={(event) => void handleEmailDelivery(event)}>
+                <label htmlFor="qr-email">Seu e-mail</label>
+                <input
+                  autoComplete="email"
+                  disabled={isSubmitting}
+                  id="qr-email"
+                  maxLength={254}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="voce@exemplo.com"
+                  required
+                  type="email"
+                  value={email}
+                />
+                <label className="qr-email-consent">
+                  <input
+                    checked={consented}
+                    disabled={isSubmitting}
+                    onChange={(event) => setConsented(event.target.checked)}
+                    required
+                    type="checkbox"
+                  />
+                  <span>
+                    Autorizo o uso do meu e-mail para registrar este pedido e enviar o QR Code solicitado.
+                    Isso não me inscreve em campanhas.
+                  </span>
+                </label>
+                <button className="button button-dark" disabled={isSubmitting} type="submit">
+                  {isSubmitting ? "Enviando..." : "Enviar e liberar downloads"} <span aria-hidden="true">↗</span>
+                </button>
+                {formError && <p aria-live="polite" className="qr-error" role="alert">{formError}</p>}
+                <p className="qr-privacy">
+                  Depois do envio confirmado, você poderá baixar o PNG ou SVG aqui. Seu e-mail não será inscrito em campanhas.
+                  Consulte a <Link href="/privacidade">política de privacidade</Link>.
+                </p>
+            </form>
+          )
         ) : (
           <p aria-live="polite" className="qr-delivery-notice" role="status">
-            A entrega por e-mail está temporariamente indisponível. Você ainda pode personalizar e baixar o QR Code acima.
+            O envio por e-mail e os downloads estão temporariamente indisponíveis. Tente novamente mais tarde.
           </p>
         )}
       </section>

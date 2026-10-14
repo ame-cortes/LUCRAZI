@@ -126,15 +126,16 @@ export default function PrivacyPage() {
           </p>
           <h2 id="qr-code">Pedidos de QR Code</h2>
           <p>
-            Se você solicitar a entrega de um QR Code por e-mail, o endereço informado, a
+            Para receber um QR Code e liberar os downloads locais em PNG ou SVG, é necessário
+            informar um e-mail e autorizar o atendimento do pedido. O endereço informado, a
             autorização, a data do pedido e o resultado da entrega serão registrados no
             Firebase/Cloud Firestore para atender e controlar pedidos repetidos. O endereço também
-            será compartilhado com a Brevo para enviar a mensagem transacional com o arquivo SVG
-            anexado. Esse pedido não inscreve você na lista de novidades nem autoriza campanhas.
-            O conteúdo que você codifica e o logo escolhido são usados para gerar o arquivo, são
-            enviados ao servidor apenas para montar o SVG e não são guardados pelo Lucrazi. O
-            download direto em PNG ou SVG não exige e-mail. Para pedir
-            acesso, correção ou exclusão dos registros do pedido, use o{" "}
+            será compartilhado com a Brevo para enviar a mensagem transacional com o arquivo PNG
+            anexado. Os downloads locais só são liberados depois que o envio por e-mail é confirmado.
+            Esse pedido não inscreve você na lista de novidades nem autoriza campanhas. O conteúdo
+            que você codifica e o logo escolhido são usados para gerar o arquivo, são enviados ao
+            servidor para montar o anexo PNG e não são guardados pelo Lucrazi. Para pedir acesso,
+            correção ou exclusão dos registros do pedido, use o{" "}
             <Link href="/contato">canal de contato</Link>.
           </p>
           <h2>Links de terceiros</h2>

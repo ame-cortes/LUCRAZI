@@ -35,8 +35,8 @@ export default function QrCodePage() {
           <span className="eyebrow"><span className="eyebrow-dot" /> FERRAMENTA GRATUITA</span>
           <h1>Seu QR Code, <span>com a sua marca.</span></h1>
           <p>
-            Crie um código para um link ou texto, ajuste as cores, inclua um logo e baixe o arquivo.
-            A geração e a prévia acontecem no seu navegador.
+            Crie um código para um link ou texto, ajuste as cores e inclua um logo.
+            Informe seu e-mail para recebê-lo e liberar os downloads em PNG e SVG.
           </p>
         </header>
         <Suspense fallback={<QrCodeGenerator emailDeliveryEnabled={false} />}>
