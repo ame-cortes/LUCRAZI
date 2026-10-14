@@ -37,6 +37,7 @@ Os artigos de exemplo são conteúdo inicial: revise os textos, atribua autoria 
 Copie `.env.example` para `.env.local` e configure os valores para o seu domínio, contato e conta de anúncios:
 
 - `NEXT_PUBLIC_SITE_URL`: URL pública canônica do site, incluindo `https://`. É usada nos metadados, sitemap e dados estruturados.
+- `NEXT_PUBLIC_QR_CODE_URL`: URL pública canônica do gerador de QR Code. O padrão de produção é `https://qr.lucrazi.com.br`.
 - `NEXT_PUBLIC_CONTACT_EMAIL`: e-mail real de contato editorial e privacidade.
 - `GOOGLE_SITE_VERIFICATION`: token opcional de verificação HTML do Google Search Console. Para verificação por DNS, não é necessário configurar esta variável.
 - A verificação HTML do Bing Webmaster Tools está configurada nos metadados globais do site.

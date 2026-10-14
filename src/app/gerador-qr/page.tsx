@@ -3,12 +3,13 @@ import { Suspense } from "react";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { QrCodeGenerator } from "@/components/qr-code-generator";
 import { isBrevoEmailConfigured } from "@/lib/newsletter-email";
+import { qrCodeUrl } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "Gerador de QR Code personalizado",
   description:
     "Crie QR Codes para links e textos, personalize as cores, adicione seu logo e baixe em PNG ou SVG.",
-  alternates: { canonical: "/gerador-qr" },
+  alternates: { canonical: qrCodeUrl.toString() },
 };
 
 async function QrCodeDelivery() {

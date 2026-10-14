@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { qrCodeUrl } from "@/lib/site-config";
 
 const BREVO_API = "https://api.brevo.com/v3";
 const ebookFilename = "como-faturar-seus-primeiros-1000-na-internet.pdf";
@@ -160,7 +161,7 @@ export async function sendQrCodeEmail(email: string, qrPng: Uint8Array) {
       to: [{ email }],
       subject: "Seu QR Code personalizado do Lucrazi",
       htmlContent: `<!doctype html><html lang="pt-BR"><body style="margin:0;background:#f4f3ed;font-family:Arial,sans-serif;color:#25271f;line-height:1.6"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f3ed;padding:28px 12px"><tr><td align="center"><table role="presentation" width="600" cellspacing="0" cellpadding="0" style="width:100%;max-width:600px;background:#fff;border:1px solid #e6e5dc;border-radius:16px;overflow:hidden"><tr><td style="padding:22px 32px;background:#28351f"><a href="${baseUrl}" style="color:#fff;font-size:22px;font-weight:bold;text-decoration:none">lucrazi<span style="color:#b8d58b">.</span></a></td></tr><tr><td style="padding:32px"><h1 style="margin:0 0 16px;font-size:26px;line-height:1.25">Seu QR Code está pronto.</h1><p style="margin:0 0 16px">Como solicitado, anexamos o arquivo PNG do seu QR Code personalizado. Você também pode baixar as versões PNG e SVG diretamente na página do gerador.</p><p style="margin:0;color:#555">Este e-mail atende somente ao seu pedido e não inscreve seu endereço em campanhas.</p></td></tr></table></td></tr></table></body></html>`,
-      textContent: `Seu QR Code personalizado está pronto.\n\nComo solicitado, anexamos o arquivo PNG do seu QR Code. Você também pode baixar as versões PNG e SVG em ${baseUrl}/gerador-qr.\n\nEste e-mail atende somente ao seu pedido e não inscreve seu endereço em campanhas.`,
+      textContent: `Seu QR Code personalizado está pronto.\n\nComo solicitado, anexamos o arquivo PNG do seu QR Code. Você também pode baixar as versões PNG e SVG em ${qrCodeUrl.toString()}.\n\nEste e-mail atende somente ao seu pedido e não inscreve seu endereço em campanhas.`,
       tags: ["lucrazi-qr-code"],
       attachment: [{
         name: "qr-code-lucrazi.png",
