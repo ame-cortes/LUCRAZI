@@ -276,7 +276,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
 
       setEmail("");
       setConsented(false);
-      setFormMessage("QR Code enviado! Confira sua caixa de entrada e a pasta de spam.");
+      setFormMessage("QR Code enviado em PNG! Confira sua caixa de entrada e a pasta de spam.");
     } catch (error) {
       console.error("Não foi possível solicitar a entrega do QR Code.", error);
       setFormError(
@@ -378,7 +378,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
 
       <section aria-labelledby="qr-email-heading" className="qr-email-card">
         <span className="qr-preview-label">ENTREGA POR E-MAIL</span>
-        <h2 id="qr-email-heading">Receba o SVG na sua caixa de entrada.</h2>
+        <h2 id="qr-email-heading">Receba o PNG na sua caixa de entrada.</h2>
         {emailDeliveryEnabled ? (
           <form className="qr-email-form" onSubmit={(event) => void handleEmailDelivery(event)}>
             <label htmlFor="qr-email">Seu e-mail</label>

@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import QRCode from "qrcode";
+import sharp from "sharp";
 import { NextResponse } from "next/server";
 import { getFirebaseAdminDb } from "@/lib/firebase-admin";
 import { isBrevoEmailConfigured, sendQrCodeEmail } from "@/lib/newsletter-email";
@@ -226,10 +227,14 @@ export async function POST(request: Request) {
   }
 
   let logo: ReturnType<typeof parseLogo>;
-  let qrSvg: string;
+  let qrPng: Buffer;
   try {
     logo = parseLogo(input.logoDataUrl);
-    qrSvg = await createQrSvg(input, logo);
+    const qrSvg = await createQrSvg(input, logo);
+    qrPng = await sharp(Buffer.from(qrSvg))
+      .resize({ width: 1080, height: 1080 })
+      .png()
+      .toBuffer();
   } catch (error) {
     const message = error instanceof Error ? error.message : "Não foi possível preparar o QR Code.";
     return NextResponse.json({ error: message }, { status: 400 });
@@ -279,7 +284,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    await sendQrCodeEmail(input.email, qrSvg);
+    await sendQrCodeEmail(input.email, qrPng);
   } catch (error) {
     console.error("O pedido de QR Code foi registrado, mas o arquivo não foi enviado pela Brevo.", error);
     try {
