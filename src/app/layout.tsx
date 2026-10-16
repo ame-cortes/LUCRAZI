@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import { siteUrl } from "@/lib/site-config";
+import "@uiw/react-md-editor/markdown-editor.css";
 import "./globals.css";
 
 const adsenseClientId = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT_ID;

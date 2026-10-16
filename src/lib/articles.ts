@@ -122,6 +122,8 @@ function isArticleWithImage(value: unknown): value is ArticleWithImage {
     && typeof article.description === "string"
     && typeof article.category === "string"
     && typeof article.intro === "string"
+    && (article.contentMarkdown === undefined
+      || (typeof article.contentMarkdown === "string" && article.contentMarkdown.trim().length > 0))
     && typeof article.takeaway === "string"
     && typeof article.publishedAt === "string"
     && typeof article.author === "string"
@@ -399,14 +401,18 @@ export function getArticle(slug: string) {
 export function getEstimatedReadTime(article: Article) {
   const content = [
     article.title,
-    article.intro,
-    ...article.sections.flatMap((section) => [
-      section.heading,
-      ...section.paragraphs,
-      ...(section.bullets ?? []),
-      section.note ?? "",
-    ]),
-    article.takeaway,
+    ...(article.contentMarkdown !== undefined
+      ? [article.contentMarkdown]
+      : [
+        article.intro,
+        ...article.sections.flatMap((section) => [
+          section.heading,
+          ...section.paragraphs,
+          ...(section.bullets ?? []),
+          section.note ?? "",
+        ]),
+        article.takeaway,
+      ]),
   ].join(" ");
   const wordCount = content.trim().split(/\s+/).length;
 

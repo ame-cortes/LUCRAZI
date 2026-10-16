@@ -21,6 +21,7 @@ export type Article = {
   author: string;
   accent: "mint" | "yellow" | "lavender" | "peach";
   intro: string;
+  contentMarkdown?: string;
   sections: ArticleSection[];
   takeaway: string;
 };

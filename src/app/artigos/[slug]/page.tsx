@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { AdSlot } from "@/components/ad-slot";
 import { ArticleCard } from "@/components/article-card";
+import { ArticleMarkdown } from "@/components/article-markdown";
 import { ArticleText } from "@/components/article-text";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { getArticleCluster, getClusterArticles } from "@/lib/article-clusters";
@@ -16,6 +17,7 @@ import {
   loadArticle,
   loadPublishedArticles,
 } from "@/lib/articles";
+import { getMarkdownHeadings } from "@/lib/article-markdown";
 import { siteUrl } from "@/lib/site-config";
 
 type ArticlePageProps = {
@@ -96,6 +98,9 @@ async function ArticleContent({ params }: ArticlePageProps) {
   const article = articles.find((item) => item.slug === slug);
   if (!article) notFound();
 
+  const markdownHeadings = article.contentMarkdown
+    ? getMarkdownHeadings(article.contentMarkdown)
+    : [];
   const articleCluster = getArticleCluster(article.slug);
   const relatedArticles = articleCluster
     ? getClusterArticles(articleCluster, articles, article.slug).slice(0, 3)
@@ -192,53 +197,76 @@ async function ArticleContent({ params }: ArticlePageProps) {
               </figcaption>
             </figure>
             <div className="article-body">
-              <p className="article-intro"><ArticleText text={article.intro} /></p>
-              <nav className="article-toc" aria-label="Neste artigo">
-                <span aria-hidden="true">NESTE ARTIGO</span>
-                <ol>
-                  {article.sections.map((section, index) => (
-                    <li key={section.heading}>
-                      <a href={`#secao-${index + 1}`}>{section.heading}</a>
-                    </li>
-                  ))}
-                </ol>
-              </nav>
-              {article.sections.map((section, index) => (
-                <div key={`section-${index}`}>
-                  <section className="article-content-section" id={`secao-${index + 1}`}>
-                    <h2><ArticleText text={section.heading} /></h2>
-                    {section.paragraphs.map((paragraph, paragraphIndex) => (
-                      <p key={`paragraph-${paragraphIndex}`}><ArticleText text={paragraph} /></p>
-                    ))}
-                    {section.bullets && (
-                      <ul>
-                        {section.bullets.map((bullet, bulletIndex) => (
-                          <li key={`bullet-${bulletIndex}`}><ArticleText text={bullet} /></li>
+              {article.contentMarkdown ? (
+                <>
+                  {markdownHeadings.length > 0 && (
+                    <nav className="article-toc" aria-label="Neste artigo">
+                      <span aria-hidden="true">NESTE ARTIGO</span>
+                      <ol>
+                        {markdownHeadings.map((heading) => (
+                          <li key={heading.id}>
+                            <a href={`#${heading.id}`}>{heading.text}</a>
+                          </li>
                         ))}
-                      </ul>
-                    )}
-                    {section.note && <aside className="article-note"><ArticleText text={section.note} /></aside>}
-                    {section.sources && (
-                      <aside className="article-sources" aria-label="Fontes dos dados">
-                        <strong>Fontes consultadas</strong>
-                        <ul>
-                          {section.sources.map((source) => (
-                            <li key={source.url}>
-                              <a href={source.url} target="_blank" rel="noopener noreferrer">{source.label}</a>
-                              <span> — consultado em {new Intl.DateTimeFormat("pt-BR").format(new Date(`${source.checkedAt}T12:00:00`))}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </aside>
-                    )}
-                  </section>
-                  {index === 2 && <AdSlot className="article-ad" />}
-                </div>
-              ))}
-              <aside className="article-takeaway">
-                <span>PARA LEVAR COM VOCÊ</span>
-                <p><ArticleText text={article.takeaway} /></p>
-              </aside>
+                      </ol>
+                    </nav>
+                  )}
+                  <ArticleMarkdown
+                    content={article.contentMarkdown}
+                    insertAdAfterThirdSection={markdownHeadings.length >= 3}
+                  />
+                </>
+              ) : (
+                <>
+                  <p className="article-intro"><ArticleText text={article.intro} /></p>
+                  <nav className="article-toc" aria-label="Neste artigo">
+                    <span aria-hidden="true">NESTE ARTIGO</span>
+                    <ol>
+                      {article.sections.map((section, index) => (
+                        <li key={section.heading}>
+                          <a href={`#secao-${index + 1}`}>{section.heading}</a>
+                        </li>
+                      ))}
+                    </ol>
+                  </nav>
+                  {article.sections.map((section, index) => (
+                    <div key={`section-${index}`}>
+                      <section className="article-content-section" id={`secao-${index + 1}`}>
+                        <h2><ArticleText text={section.heading} /></h2>
+                        {section.paragraphs.map((paragraph, paragraphIndex) => (
+                          <p key={`paragraph-${paragraphIndex}`}><ArticleText text={paragraph} /></p>
+                        ))}
+                        {section.bullets && (
+                          <ul>
+                            {section.bullets.map((bullet, bulletIndex) => (
+                              <li key={`bullet-${bulletIndex}`}><ArticleText text={bullet} /></li>
+                            ))}
+                          </ul>
+                        )}
+                        {section.note && <aside className="article-note"><ArticleText text={section.note} /></aside>}
+                        {section.sources && (
+                          <aside className="article-sources" aria-label="Fontes dos dados">
+                            <strong>Fontes consultadas</strong>
+                            <ul>
+                              {section.sources.map((source) => (
+                                <li key={source.url}>
+                                  <a href={source.url} target="_blank" rel="noopener noreferrer">{source.label}</a>
+                                  <span> — consultado em {new Intl.DateTimeFormat("pt-BR").format(new Date(`${source.checkedAt}T12:00:00`))}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </aside>
+                        )}
+                      </section>
+                      {index === 2 && <AdSlot className="article-ad" />}
+                    </div>
+                  ))}
+                  <aside className="article-takeaway">
+                    <span>PARA LEVAR COM VOCÊ</span>
+                    <p><ArticleText text={article.takeaway} /></p>
+                  </aside>
+                </>
+              )}
               {article.actionCta && (
                 <aside className="article-action-cta" aria-labelledby="article-action-cta-title">
                   <div>

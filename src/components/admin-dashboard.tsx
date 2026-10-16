@@ -14,6 +14,7 @@ import {
   serverTimestamp,
   writeBatch,
 } from "firebase/firestore";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -25,10 +26,15 @@ import {
   type ManagedArticle,
 } from "@/lib/articles";
 import { getFirebaseAuth, getFirebaseDb, isFirebaseConfigured } from "@/lib/firebase";
-import type { ArticleSection } from "@/lib/article-types";
+import { articleToMarkdown } from "@/lib/article-markdown";
 import NewsletterManager from "@/components/newsletter-manager";
 
 type EditorArticle = ManagedArticle;
+
+const MarkdownEditor = dynamic(() => import("@uiw/react-md-editor"), {
+  ssr: false,
+  loading: () => <div className="admin-markdown-loading">Carregando editor…</div>,
+});
 
 function newArticle(): EditorArticle {
   const image = starterArticles[0];
@@ -41,7 +47,8 @@ function newArticle(): EditorArticle {
     author: "Redação Lucrazi",
     accent: "mint",
     intro: "",
-    sections: [{ heading: "", paragraphs: [""], bullets: [], note: "" }],
+    contentMarkdown: "",
+    sections: [],
     takeaway: "",
     imageSrc: image.imageSrc,
     imageAlt: image.imageAlt,
@@ -72,12 +79,16 @@ function validateArticle(article: EditorArticle): string | null {
   if (!isValidSlug(article.slug)) return "Use um slug com letras minúsculas, números e hífens.";
   if (!article.category.trim()) return "Informe a categoria.";
   if (!article.description.trim()) return "Informe a descrição para busca e compartilhamento.";
-  if (!article.intro.trim() || !article.takeaway.trim()) return "Preencha a introdução e o resumo final.";
-  if (!article.sections.length || article.sections.some((section) =>
-    !section.heading.trim()
-    || (!section.paragraphs.some((paragraph) => paragraph.trim())
-      && !(section.bullets ?? []).some((bullet) => bullet.trim())),
-  )) return "Cada seção precisa de título e ao menos um parágrafo.";
+  if (article.contentMarkdown !== undefined) {
+    if (!article.contentMarkdown.trim()) return "Escreva o conteúdo completo do artigo.";
+  } else {
+    if (!article.intro.trim() || !article.takeaway.trim()) return "Preencha a introdução e o resumo final.";
+    if (!article.sections.length || article.sections.some((section) =>
+      !section.heading.trim()
+      || (!section.paragraphs.some((paragraph) => paragraph.trim())
+        && !(section.bullets ?? []).some((bullet) => bullet.trim())),
+    )) return "Cada seção precisa de título e ao menos um parágrafo.";
+  }
   const actionCta = hasActionCtaContent(article.actionCta) ? article.actionCta : undefined;
   if (actionCta && (
     !actionCta.title.trim()
@@ -92,15 +103,19 @@ function validateArticle(article: EditorArticle): string | null {
   const articleBlocks = [
     article.title,
     article.description,
-    article.intro,
-    article.takeaway,
     ...(actionCta ? [actionCta.title, actionCta.description, actionCta.buttonLabel] : []),
-    ...article.sections.flatMap((section) => [
-      section.heading,
-      ...section.paragraphs,
-      ...(section.bullets ?? []),
-      section.note ?? "",
-    ]),
+    ...(article.contentMarkdown !== undefined
+      ? [article.contentMarkdown]
+      : [
+        article.intro,
+        article.takeaway,
+        ...article.sections.flatMap((section) => [
+          section.heading,
+          ...section.paragraphs,
+          ...(section.bullets ?? []),
+          section.note ?? "",
+        ]),
+      ]),
   ];
   if (articleBlocks.some((block) => /\bR\s+\d/iu.test(block))) {
     return "Revise valores em reais: use o símbolo R$ antes do valor e confirme dados financeiros ou tributários em fontes oficiais antes de publicar.";
@@ -542,6 +557,7 @@ function articleWithoutStatus(article: ManagedArticle): Omit<ManagedArticle, "st
     author: article.author,
     accent: article.accent,
     intro: article.intro,
+    ...(article.contentMarkdown !== undefined ? { contentMarkdown: article.contentMarkdown } : {}),
     sections: article.sections,
     takeaway: article.takeaway,
     imageSrc: article.imageSrc,
@@ -566,7 +582,9 @@ function ArticleEditor({
   onClose: () => void;
   onSave: (article: EditorArticle, status: ArticleStatus) => void;
 }) {
-  const [value, setValue] = useState(article);
+  const [value, setValue] = useState(() => article.contentMarkdown !== undefined
+    ? article
+    : { ...article, contentMarkdown: articleToMarkdown(article) });
   const [slugTouched, setSlugTouched] = useState(Boolean(article.slug));
   const setField = <K extends keyof EditorArticle>(key: K, nextValue: EditorArticle[K]) => {
     setValue((current) => ({ ...current, [key]: nextValue }));
@@ -584,13 +602,6 @@ function ArticleEditor({
       },
     }));
   };
-  const updateSection = (index: number, section: ArticleSection) => {
-    setValue((current) => ({
-      ...current,
-      sections: current.sections.map((item, itemIndex) => itemIndex === index ? section : item),
-    }));
-  };
-
   return (
     <div className="admin-modal-backdrop" role="presentation">
       <section className="admin-editor" aria-labelledby="admin-editor-title" role="dialog" aria-modal="true">
@@ -609,7 +620,6 @@ function ArticleEditor({
             <label className="admin-field-wide">Descrição para busca e compartilhamento<textarea rows={2} value={value.description} onChange={(event) => setField("description", event.target.value)} /></label>
             <label>Autor<input value={value.author} onChange={(event) => setField("author", event.target.value)} /></label>
             <label>Data de publicação<input type="date" value={value.publishedAt} onChange={(event) => setField("publishedAt", event.target.value)} /></label>
-            <label className="admin-field-wide">Introdução<textarea rows={3} value={value.intro} onChange={(event) => setField("intro", event.target.value)} /></label>
             <div className="admin-field-wide admin-action-cta-fields">
               <div><h3>Chamada para ação (opcional)</h3><p>Adicione um convite e um link específicos para este artigo. O botão aparece ao final do conteúdo.</p></div>
               <label>Título<input value={value.actionCta?.title ?? ""} onChange={(event) => setActionCtaField("title", event.target.value)} /></label>
@@ -630,17 +640,21 @@ function ArticleEditor({
             <label className="admin-field-wide">Texto alternativo da imagem<input value={value.imageAlt} onChange={(event) => setField("imageAlt", event.target.value)} /></label>
             <label className="admin-field-wide">Crédito da imagem (URL)<input value={value.imageCreditUrl} onChange={(event) => setField("imageCreditUrl", event.target.value)} /></label>
           </div>
-          <div className="admin-sections-heading"><div><h3>Conteúdo</h3><p>Organize o artigo em seções. Um parágrafo por linha.</p></div><button className="admin-secondary-button" onClick={() => setValue((current) => ({ ...current, sections: [...current.sections, { heading: "", paragraphs: [""], bullets: [], note: "" }] }))} type="button">Adicionar seção</button></div>
-          {value.sections.map((section, index) => (
-            <fieldset className="admin-section-editor" key={`section-${index}`}>
-              <legend>Seção {index + 1}</legend>
-              <div className="admin-section-title"><label>Título da seção<input value={section.heading} onChange={(event) => updateSection(index, { ...section, heading: event.target.value })} /></label><button aria-label={`Remover seção ${index + 1}`} className="admin-delete-button" disabled={value.sections.length === 1} onClick={() => setValue((current) => ({ ...current, sections: current.sections.filter((_, sectionIndex) => sectionIndex !== index) }))} type="button">Remover</button></div>
-              <label>Parágrafos (um por linha)<textarea rows={5} value={section.paragraphs.join("\n")} onChange={(event) => updateSection(index, { ...section, paragraphs: event.target.value.split("\n") })} /></label>
-              <label>Lista opcional (um item por linha)<textarea rows={3} value={(section.bullets ?? []).join("\n")} onChange={(event) => updateSection(index, { ...section, bullets: event.target.value.split("\n").filter(Boolean) })} /></label>
-              <label>Dica ou observação opcional<input value={section.note ?? ""} onChange={(event) => updateSection(index, { ...section, note: event.target.value })} /></label>
-            </fieldset>
-          ))}
-          <label className="admin-editor-takeaway">Resumo final<textarea rows={2} value={value.takeaway} onChange={(event) => setField("takeaway", event.target.value)} /></label>
+          <div className="admin-markdown-field">
+            <div>
+              <h3>Conteúdo completo</h3>
+              <p>Escreva o artigo em um só lugar. Use títulos com ## para criar seções e o índice automático. O editor mostra a prévia ao lado.</p>
+            </div>
+            <div data-color-mode="light">
+              <MarkdownEditor
+                value={value.contentMarkdown ?? ""}
+                onChange={(markdown) => setField("contentMarkdown", markdown ?? "")}
+                preview="live"
+                height={560}
+                textareaProps={{ "aria-label": "Conteúdo completo do artigo em Markdown" }}
+              />
+            </div>
+          </div>
         </div>
         <footer className="admin-editor-footer">
           <button className="admin-secondary-button" disabled={busy} onClick={onClose} type="button">Cancelar</button>

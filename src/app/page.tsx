@@ -19,6 +19,32 @@ const featuredArticleSlugs = [
   "como-vender-produtos-usados-online",
 ];
 
+const homeFaq = [
+  {
+    question: "Por onde começar para ganhar dinheiro na internet?",
+    answer:
+      "Comece entendendo as opções e escolhendo uma que combine com seu tempo, suas habilidades e seus recursos. Nossos guias ajudam a comparar caminhos; avance aos poucos e pesquise antes de investir.",
+    link: { label: "Ver todos os guias.", href: "/artigos" },
+  },
+  {
+    question: "O Lucrazi garante ganhos ou resultados?",
+    answer:
+      "Não. O conteúdo é informativo e não promete resultados. Custos, regras e resultados variam, então confira informações importantes em fontes oficiais e atualizadas.",
+    link: null,
+  },
+  {
+    question: "Os guias substituem orientação profissional?",
+    answer:
+      "Não. Os artigos não são recomendação de investimento nem substituem orientação financeira, jurídica ou contábil adequada à sua situação.",
+    link: null,
+  },
+  {
+    question: "Como posso sugerir uma pauta ou corrigir uma informação?",
+    answer: "Envie sua sugestão ou correção para a redação.",
+    link: { label: "Entre em contato.", href: "/contato" },
+  },
+] as const;
+
 const structuredData = {
   "@context": "https://schema.org",
   "@graph": [
@@ -57,6 +83,15 @@ const structuredData = {
       inLanguage: "pt-BR",
       publisher: { "@id": `${siteUrl}#organization` },
       isPartOf: { "@id": `${siteUrl}#website` },
+    },
+    {
+      "@type": "FAQPage",
+      "@id": `${siteUrl}#faq`,
+      mainEntity: homeFaq.map(({ question, answer }) => ({
+        "@type": "Question",
+        name: question,
+        acceptedAnswer: { "@type": "Answer", text: answer },
+      })),
     },
   ],
 };
@@ -103,6 +138,26 @@ export default async function Home() {
           <div className="article-grid home-guides-grid">
             {featuredArticles.map((article, index) => <ArticleCard article={article} key={article.slug} index={index + 1} />)}
           </div>
+        </div>
+      </section>
+      <section aria-labelledby="home-faq-heading" className="home-faq">
+        <div className="wrap home-faq-inner">
+          <span className="eyebrow">DÚVIDAS FREQUENTES</span>
+          <h2 id="home-faq-heading">Antes de dar o próximo passo.</h2>
+          <div className="home-faq-list">
+            {homeFaq.map(({ question, answer, link }) => (
+              <details className="home-faq-item" key={question}>
+                <summary>
+                  <span>{question}</span>
+                  <span aria-hidden="true" className="home-faq-icon">+</span>
+                </summary>
+                <p>{answer} {link && <Link href={link.href}>{link.label}</Link>}</p>
+              </details>
+            ))}
+          </div>
+          <p className="home-faq-about">
+            Saiba mais sobre a <Link href="/sobre">proposta editorial do Lucrazi</Link>.
+          </p>
         </div>
       </section>
       <NewsletterSignup />
