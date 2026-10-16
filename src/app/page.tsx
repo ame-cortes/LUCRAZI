@@ -105,10 +105,10 @@ export default async function Home() {
     .map((slug) => articles.find((item) => item.slug === slug))
     .filter((article) => article !== undefined);
   const preferredSlugs = new Set(preferredArticles.map((article) => article.slug));
-  const featuredArticles = [
+  const homeArticles = [
     ...preferredArticles,
     ...articles.filter((article) => !preferredSlugs.has(article.slug)),
-  ].slice(0, 3);
+  ];
 
   return (<>
     <SiteHeader />
@@ -132,11 +132,11 @@ export default async function Home() {
       <section className="latest-section" id="guias-iniciais">
         <div className="wrap">
           <div className="section-heading">
-            <div><span className="eyebrow">PARA COMEÇAR COM CALMA</span><h2>Três ideias para dar o primeiro passo.</h2></div>
+            <div><span className="eyebrow">{homeArticles.length} GUIAS PARA EXPLORAR</span><h2>Encontre seu próximo passo.</h2></div>
             <Link className="text-link" href="/artigos">Ver todos os guias <span aria-hidden="true">↗</span></Link>
           </div>
           <div className="article-grid home-guides-grid">
-            {featuredArticles.map((article, index) => <ArticleCard article={article} key={article.slug} index={index + 1} />)}
+            {homeArticles.map((article, index) => <ArticleCard article={article} key={article.slug} index={index + 1} />)}
           </div>
         </div>
       </section>
