@@ -50,6 +50,7 @@ Copie `.env.example` para `.env.local` e configure os valores para o seu domíni
 - `NEXT_PUBLIC_EBOOK_SIGNUP_ENABLED`: defina como `true` somente depois de configurar a chave App Check, autorizar o domínio `ebook.lucrazi.com.br` no Firebase App Check e configurar a credencial Firebase de servidor. Os pedidos do e-book são armazenados separadamente em `ebookLeads`; eles não inscrevem o endereço na lista de novidades.
 - A entrega de QR Code por e-mail usa as credenciais SMTP da Brevo existentes e a configuração Firebase/App Check do site. Os pedidos são registrados em `qrCodeLeads`, separados da lista de novidades; o conteúdo do QR e o logo não são armazenados.
 - `FIREBASE_SERVICE_ACCOUNT_JSON`: JSON privado da conta de serviço, usado somente por rotas de servidor; nunca use o prefixo `NEXT_PUBLIC_` nem o envie ao Git.
+- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` e `CLOUDINARY_API_SECRET`: credenciais privadas do Cloudinary para uploads de imagens autenticados pelo painel. Configure no ambiente do servidor; nunca use o prefixo `NEXT_PUBLIC_` nem envie o segredo ao Git.
 - `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME`, `BREVO_SENDER_ADDRESS` e `BREVO_NEWSLETTER_LIST_ID`: credenciais e dados do remetente para envio e sincronização com uma lista Brevo exclusiva do Lucrazi. O endereço postal configurado é exibido no rodapé das campanhas.
 - `NEWSLETTER_UNSUBSCRIBE_SECRET`: segredo privado aleatório de pelo menos 32 caracteres, usado para assinar links individuais de cancelamento; nunca o envie ao Git.
 - `INDEXNOW_API_KEY`: chave IndexNow usada no envio automático de URLs publicadas e no arquivo público `/indexnow-key.txt`. A chave é pública por definição do protocolo; configure o mesmo valor no ambiente local e na hospedagem.
@@ -58,7 +59,7 @@ Os anúncios não são carregados enquanto cliente ou bloco não estiverem confi
 
 ### Painel de artigos no Firebase
 
-O painel administrativo fica em `/admin`. O app usa Firebase Authentication com e-mail e senha e Firestore para salvar artigos. Para capas novas, informe uma URL HTTPS pública de imagem; o painel verifica se ela carrega e salva a URL e o crédito no Firestore. A imagem continua hospedada na origem do link, sem upload para o Firebase. As chaves `NEXT_PUBLIC_FIREBASE_*` são a configuração pública do SDK Web; elas não substituem as regras de segurança do Firebase. Não coloque chaves privadas de conta de serviço no navegador.
+O painel administrativo fica em `/admin`. O app usa Firebase Authentication com e-mail e senha e Firestore para salvar artigos. Para enviar uma capa, escolha uma imagem de até 10 MB e o painel a envia ao Cloudinary. O nome público é gerado a partir do slug do artigo e do número informado (por exemplo, `nome-do-artigo-1`); se esse nome já existir, escolha outro número. Configure `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` e `CLOUDINARY_API_SECRET` somente no ambiente do servidor. Como alternativa, informe uma URL HTTPS pública de imagem; nesse caso, ela continua hospedada na origem e não é copiada para o Firebase. As chaves `NEXT_PUBLIC_FIREBASE_*` são a configuração pública do SDK Web; elas não substituem as regras de segurança do Firebase. Não coloque chaves privadas de conta de serviço no navegador.
 
 Para ativar o painel no projeto Firebase:
 

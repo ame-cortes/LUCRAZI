@@ -1303,6 +1303,14 @@ button:focus-visible {
   line-height: 1.35;
 }
 
+.article-markdown img {
+  display: block;
+  width: min(100%, 400px);
+  height: auto;
+  margin: 28px auto;
+  border-radius: 8px;
+}
+
 .article-markdown ul,
 .article-markdown ol {
   display: grid;

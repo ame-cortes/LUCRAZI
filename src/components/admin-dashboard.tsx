@@ -16,7 +16,7 @@ import {
 } from "firebase/firestore";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   articles as starterArticles,
   deleteManagedArticle,
@@ -590,6 +590,9 @@ function ArticleEditor({
     : { ...article, contentMarkdown: articleToMarkdown(article) });
   const [slugTouched, setSlugTouched] = useState(Boolean(article.slug));
   const [coverUrl, setCoverUrl] = useState(() => article.imageSrc.startsWith("https://") ? article.imageSrc : "");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageNumber, setImageNumber] = useState("1");
+  const imageFileInput = useRef<HTMLInputElement>(null);
   const [loadingImage, setLoadingImage] = useState(false);
   const [imageMessage, setImageMessage] = useState("");
   const [imageError, setImageError] = useState("");
@@ -631,6 +634,74 @@ function ArticleEditor({
       setLoadingImage(false);
     };
     image.src = imageSrc;
+  };
+  const uploadCoverImage = async () => {
+    if (!imageFile) {
+      setImageError("Selecione uma imagem para enviar.");
+      setImageMessage("");
+      return;
+    }
+    if (!/^[1-9]\d{0,2}$/.test(imageNumber)) {
+      setImageError("Informe um número de imagem entre 1 e 999.");
+      setImageMessage("");
+      return;
+    }
+
+    const baseName = slugify(value.slug || value.title) || "imagem";
+    const publicId = `${baseName}-${imageNumber}`;
+    if (publicId.length > 200) {
+      setImageError("O slug do artigo está longo demais para gerar o nome da imagem. Encurte o slug e tente novamente.");
+      setImageMessage("");
+      return;
+    }
+    setLoadingImage(true);
+    setImageError("");
+    setImageMessage("");
+    try {
+      const currentUser = getFirebaseAuth().currentUser;
+      if (!currentUser) throw new Error("Sua sessão expirou. Entre novamente.");
+      const formData = new FormData();
+      formData.set("file", imageFile);
+      formData.set("publicId", publicId);
+      const response = await fetch("/api/admin/cloudinary", {
+        method: "POST",
+        headers: { authorization: `Bearer ${await currentUser.getIdToken()}` },
+        body: formData,
+        cache: "no-store",
+      });
+      const result: unknown = await response.json();
+      if (!response.ok) {
+        const message = typeof result === "object" && result !== null && "error" in result
+          && typeof result.error === "string"
+          ? result.error
+          : `Falha ao enviar a imagem (HTTP ${response.status}).`;
+        throw new Error(message);
+      }
+      if (
+        typeof result !== "object"
+        || result === null
+        || !("imageUrl" in result)
+        || typeof result.imageUrl !== "string"
+        || !("publicId" in result)
+        || typeof result.publicId !== "string"
+      ) {
+        throw new Error("O servidor retornou uma confirmação inválida do Cloudinary.");
+      }
+      const imageUrl = result.imageUrl;
+      const uploadedPublicId = result.publicId;
+      setValue((current) => ({
+        ...current,
+        imageSrc: imageUrl,
+        imageCreditUrl: imageUrl,
+      }));
+      setImageFile(null);
+      if (imageFileInput.current) imageFileInput.current.value = "";
+      setImageMessage(`Imagem enviada como “${uploadedPublicId}”. O link foi adicionado como crédito; você pode substituí-lo pelo link da página original da fonte.`);
+    } catch (uploadError) {
+      setImageError(errorMessage(uploadError));
+    } finally {
+      setLoadingImage(false);
+    }
   };
   return (
     <div className="admin-modal-backdrop" role="presentation">
@@ -676,6 +747,33 @@ function ArticleEditor({
               {starterArticles.map((candidate) => <option key={candidate.slug} value={candidate.imageSrc}>{candidate.title}</option>)}
             </select></label>
             <div className="admin-cover-upload admin-field-wide">
+              <label htmlFor="admin-cover-file">Enviar imagem para o Cloudinary</label>
+              <input
+                accept="image/avif,image/gif,image/jpeg,image/png,image/webp"
+                disabled={busy || loadingImage}
+                id="admin-cover-file"
+                ref={imageFileInput}
+                onChange={(event) => {
+                  setImageFile(event.target.files?.[0] ?? null);
+                  setImageError("");
+                  setImageMessage("");
+                }}
+                type="file"
+              />
+              <label htmlFor="admin-cover-image-number">Número da imagem</label>
+              <input
+                disabled={busy || loadingImage}
+                id="admin-cover-image-number"
+                max={999}
+                min={1}
+                onChange={(event) => setImageNumber(event.target.value)}
+                type="number"
+                value={imageNumber}
+              />
+              <span>Nome SEO gerado: {slugify(value.slug || value.title) || "imagem"}-{imageNumber || "número"}. O arquivo será salvo na pasta lucrazi/artigos.</span>
+              <button className="admin-secondary-button" disabled={busy || loadingImage || !imageFile} onClick={() => void uploadCoverImage()} type="button">
+                {loadingImage ? "Enviando imagem…" : "Enviar imagem"}
+              </button>
               <label htmlFor="admin-cover-url">URL direta da imagem de capa</label>
               <input
                 disabled={busy || loadingImage}
@@ -689,7 +787,7 @@ function ArticleEditor({
               <button className="admin-secondary-button" disabled={busy || loadingImage} onClick={applyCoverUrl} type="button">
                 {loadingImage ? "Carregando imagem…" : "Carregar imagem pela URL"}
               </button>
-              <span>A imagem será exibida a partir desse endereço público; o link também será usado como crédito. Você pode informar abaixo a página original da fonte. A imagem não é copiada para o Firebase.</span>
+              <span>Você também pode carregar uma imagem por URL pública. Imagens enviadas pelo painel ficam no Cloudinary; o link da imagem será usado como crédito e pode ser substituído pela página original da fonte.</span>
             </div>
             <label>Cor do cartão<select value={value.accent} onChange={(event) => setField("accent", event.target.value as EditorArticle["accent"])}><option value="mint">Verde</option><option value="yellow">Amarelo</option><option value="lavender">Lavanda</option><option value="peach">Pêssego</option></select></label>
             <label className="admin-field-wide">Texto alternativo da imagem<input value={value.imageAlt} onChange={(event) => setField("imageAlt", event.target.value)} /></label>
