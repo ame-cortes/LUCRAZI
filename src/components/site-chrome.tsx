@@ -41,12 +41,13 @@ export function SiteFooter() {
           <Link href="/artigos">Todos os guias</Link>
           <a href={qrCodeUrl.toString()}>Gerador de QR Code</a>
           <Link href="/#guias-iniciais">Destaques</Link>
-          <Link href="/sobre">Sobre o Lucrazi</Link>
+          <Link href="/about">Sobre o Lucrazi</Link>
         </div>
         <div className="footer-links">
           <span>TRANSPARÊNCIA</span>
-          <Link href="/privacidade">Privacidade</Link>
-          <Link href="/contato">Fale com a redação</Link>
+          <Link href="/privacy">Privacidade</Link>
+          <Link href="/terms">Termos de uso</Link>
+          <Link href="/contact">Fale com a redação</Link>
           {contactEmail && <a href={`mailto:${contactEmail}`}>{contactEmail}</a>}
         </div>
       </div>

@@ -23,6 +23,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/sobre", changeFrequency: "monthly" as const, priority: 0.5 },
     { path: "/contato", changeFrequency: "monthly" as const, priority: 0.4 },
     { path: "/privacidade", changeFrequency: "yearly" as const, priority: 0.3 },
+    { path: "/termos-de-uso", changeFrequency: "yearly" as const, priority: 0.3 },
   ];
 
   return [

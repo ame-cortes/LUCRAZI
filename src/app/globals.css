@@ -110,6 +110,12 @@ button:focus-visible {
   font-size: 14px;
 }
 
+.main-nav a {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+}
+
 .main-nav a,
 .footer-links a {
   transition: color 160ms ease;
@@ -122,7 +128,7 @@ button:focus-visible {
 
 .header-cta {
   display: flex;
-  min-height: 44px;
+  min-height: 48px;
   gap: 14px;
   align-items: center;
   border: 1px solid #d7d8cf;
@@ -160,7 +166,7 @@ button:focus-visible {
   align-items: center;
   gap: 8px;
   color: #5f6159;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 1.45px;
 }
@@ -327,7 +333,7 @@ button:focus-visible {
   bottom: 22px;
   left: 24px;
   color: #657158;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 1.6px;
 }
@@ -364,7 +370,7 @@ button:focus-visible {
 .section-index {
   flex-shrink: 0;
   color: #6a6c64;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 1px;
 }
@@ -377,7 +383,7 @@ button:focus-visible {
 
 .topic-links a {
   display: flex;
-  min-height: 42px;
+  min-height: 48px;
   align-items: center;
   gap: 9px;
   border: 1px solid #e6e5de;
@@ -507,7 +513,7 @@ button:focus-visible {
   top: 23px;
   left: 26px;
   color: rgb(47 70 43 / 51%);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 1px;
 }
@@ -531,7 +537,7 @@ button:focus-visible {
   bottom: 19px;
   left: 25px;
   color: #fff;
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 1.5px;
 }
@@ -597,8 +603,8 @@ button:focus-visible {
 
 .round-arrow {
   display: grid;
-  width: 28px;
-  height: 28px;
+  width: 48px;
+  height: 48px;
   place-items: center;
   border: 1px solid #dedfd6;
   border-radius: 50%;
@@ -626,7 +632,7 @@ button:focus-visible {
   top: 19px;
   left: 20px;
   color: rgb(50 55 42 / 60%);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 1px;
 }
@@ -724,6 +730,7 @@ button:focus-visible {
 
 .home-faq-item summary {
   display: flex;
+  min-height: 48px;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
@@ -861,7 +868,7 @@ button:focus-visible {
 
 .catalog-topic-card > .eyebrow {
   color: #4f6934;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .catalog-topic-card h3 {
@@ -1022,6 +1029,7 @@ button:focus-visible {
 
 .text-link {
   display: inline-flex;
+  min-height: 48px;
   align-items: center;
   gap: 10px;
   font-size: 13px;
@@ -1069,10 +1077,16 @@ button:focus-visible {
   font-size: 13px;
 }
 
+.footer-links a {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+}
+
 .footer-links > span {
   margin-bottom: 3px;
   color: #999e90;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 1px;
 }
@@ -1084,7 +1098,7 @@ button:focus-visible {
   border-top: 1px solid #40463e;
   padding-block: 16px 18px;
   color: #a3a79d;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .article-page {
@@ -1188,7 +1202,7 @@ button:focus-visible {
   border-radius: 4px;
   background: rgb(0 0 0 / 55%);
   color: #fff;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 1px;
 }
@@ -1252,7 +1266,7 @@ button:focus-visible {
 .article-takeaway > span,
 .ad-label {
   color: #666a5d;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 1.2px;
 }
@@ -1451,7 +1465,7 @@ button:focus-visible {
   display: block;
   margin-bottom: 9px;
   color: #6a6c64;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 1px;
 }
 
@@ -1760,10 +1774,10 @@ button:focus-visible {
   }
 
   .header-cta {
-    min-height: 40px;
+    min-height: 48px;
     gap: 5px;
     padding: 8px 10px;
-    font-size: 11px;
+    font-size: 12px;
   }
 
   .header-cta span {
@@ -2459,7 +2473,7 @@ button:focus-visible {
   padding: 4px 8px;
   background: #edf0e7;
   color: #46563a;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.4px;
   text-transform: uppercase;
@@ -2799,7 +2813,7 @@ button:focus-visible {
     align-items: center;
     gap: 9px;
     color: #65705a;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 1.55px;
   }
@@ -2847,7 +2861,7 @@ button:focus-visible {
 
   .ebook-form-step {
     color: #758c54;
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 1.3px;
   }
@@ -2907,7 +2921,7 @@ button:focus-visible {
     gap: 9px;
     padding-block: 3px;
     color: #6f7169;
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.55;
   }
 
@@ -2962,7 +2976,7 @@ button:focus-visible {
   }
 
   .ebook-privacy {
-    font-size: 10px;
+    font-size: 12px;
   }
 
   .ebook-privacy a {
@@ -3018,7 +3032,7 @@ button:focus-visible {
     padding: 8px 10px;
     background: #f3f5ed;
     color: #55644a !important;
-    font-size: 11px !important;
+    font-size: 12px !important;
     line-height: 1.55 !important;
   }
 
@@ -3030,7 +3044,7 @@ button:focus-visible {
   .ebook-disclaimer {
     margin: 11px 0 0;
     color: #78796f;
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1.6;
   }
 
@@ -3106,7 +3120,7 @@ button:focus-visible {
   .ebook-cover-label {
     margin-top: 47px;
     color: #c6e68d;
-    font-size: 8px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 1.7px;
   }
@@ -3129,7 +3143,7 @@ button:focus-visible {
   .ebook-cover-bottom {
     margin-top: 14px;
     color: #ebeee2;
-    font-size: 8px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 1.8px;
   }
@@ -3177,7 +3191,7 @@ button:focus-visible {
 
   .ebook-art-note > span:first-child {
     color: #778568;
-    font-size: 8px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 1.3px;
   }
@@ -3216,7 +3230,7 @@ button:focus-visible {
     right: 18px;
     bottom: 17px;
     color: #747d68;
-    font-size: 8px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 1.4px;
   }
@@ -3260,7 +3274,7 @@ button:focus-visible {
 
   .ebook-benefit-number {
     color: #78904f;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 1px;
   }
@@ -3298,7 +3312,7 @@ button:focus-visible {
   .ebook-footer > span,
   .ebook-footer > a:last-child {
     color: #c2c5b9;
-    font-size: 11px;
+    font-size: 12px;
   }
 
   .ebook-footer > a:last-child {
@@ -3411,7 +3425,7 @@ button:focus-visible {
   @media (max-width: 380px) {
     .ebook-header-note {
       gap: 5px;
-      font-size: 11px;
+      font-size: 12px;
     }
 
     .ebook-form-card {
@@ -3612,7 +3626,7 @@ button:focus-visible {
 
 .qr-preview-label {
   color: #6b7d50;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 750;
   letter-spacing: 1.2px;
 }
