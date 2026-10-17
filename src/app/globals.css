@@ -2376,6 +2376,59 @@ button:focus-visible {
   background: var(--paper);
 }
 
+.admin-featured-manager {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 22px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px;
+  background: var(--paper);
+}
+
+.admin-featured-manager h2 {
+  margin: 0 0 5px;
+  font-size: 17px;
+}
+
+.admin-featured-manager p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.admin-featured-slots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-featured-slots label {
+  display: grid;
+  gap: 7px;
+  color: #41443a;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.admin-featured-slots select {
+  min-width: 0;
+  width: 100%;
+  border: 1px solid #d8d8cf;
+  border-radius: 8px;
+  padding: 11px 12px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 400;
+}
+
+.admin-featured-slots select:focus {
+  outline: 2px solid #789a3f;
+  outline-offset: 2px;
+}
+
 .admin-article-row {
   display: flex;
   align-items: center;
@@ -2619,6 +2672,10 @@ button:focus-visible {
   .admin-toolbar {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .admin-featured-slots {
+    grid-template-columns: 1fr;
   }
 
   .admin-toolbar label {

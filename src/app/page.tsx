@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { connection } from "next/server";
-import { loadPublishedArticles } from "@/lib/articles";
+import { loadFeaturedArticleSlugs, loadPublishedArticles } from "@/lib/articles";
 import { ArticleCard } from "@/components/article-card";
 import { NewsletterSignup } from "@/components/newsletter-signup";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
@@ -11,12 +11,6 @@ const topics = [
   { label: "Produtos digitais", href: "/artigos/como-criar-e-vender-curso-online" },
   { label: "Comércio online", href: "/artigos/como-vender-produtos-usados-online" },
   { label: "Serviços locais", href: "/artigos/como-ganhar-dinheiro-como-pet-sitter" },
-];
-
-const featuredArticleSlugs = [
-  "como-ganhar-dinheiro-com-marketing-de-afiliados",
-  "como-ganhar-dinheiro-no-youtube",
-  "como-vender-produtos-usados-online",
 ];
 
 const homeFaq = [
@@ -100,7 +94,10 @@ export const instant = false;
 
 export default async function Home() {
   await connection();
-  const articles = await loadPublishedArticles();
+  const [articles, featuredArticleSlugs] = await Promise.all([
+    loadPublishedArticles(),
+    loadFeaturedArticleSlugs(),
+  ]);
   const preferredArticles = featuredArticleSlugs
     .map((slug) => articles.find((item) => item.slug === slug))
     .filter((article) => article !== undefined);

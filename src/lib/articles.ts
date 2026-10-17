@@ -81,6 +81,19 @@ export type ManagedArticle = ArticleWithImage & {
   status: ArticleStatus;
 };
 
+export const defaultFeaturedArticleSlugs = [
+  "como-ganhar-dinheiro-com-marketing-de-afiliados",
+  "como-ganhar-dinheiro-no-youtube",
+  "como-vender-produtos-usados-online",
+];
+
+function isFeaturedArticleSlugList(value: unknown): value is string[] {
+  return Array.isArray(value)
+    && value.length <= 3
+    && value.every((slug) => typeof slug === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))
+    && new Set(value).size === value.length;
+}
+
 function isArticleSection(value: unknown): value is ArticleSection {
   if (!value || typeof value !== "object") return false;
   const section = value as Partial<ArticleSection>;
@@ -247,6 +260,33 @@ async function queryPublicDocuments(
   return result
     .map((row) => row && typeof row === "object" ? decodeFirestoreDocument((row as { document?: unknown }).document) : null)
     .filter((document): document is PublicDocument => document !== null);
+}
+
+export async function loadFeaturedArticleSlugs(): Promise<string[]> {
+  if (!isFirebaseConfigured()) return defaultFeaturedArticleSlugs;
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+  if (!projectId || !apiKey) throw new Error("A configuração pública do Firebase está incompleta.");
+
+  try {
+    const response = await fetch(
+      `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/databases/(default)/documents/siteSettings/homepage?key=${encodeURIComponent(apiKey)}`,
+      { cache: "no-store" },
+    );
+    if (response.status === 404) return defaultFeaturedArticleSlugs;
+    if (!response.ok) throw new FirestoreRestError(response.status);
+
+    const document = decodeFirestoreDocument(await response.json());
+    if (!document || !isFeaturedArticleSlugList(document.data.featuredSlugs)) {
+      console.error("A configuração de artigos em destaque no Firestore está inválida.");
+      return defaultFeaturedArticleSlugs;
+    }
+    return document.data.featuredSlugs;
+  } catch (error) {
+    if (!isFirestoreSetupError(error)) throw error;
+    logFirestoreFallback(error);
+    return defaultFeaturedArticleSlugs;
+  }
 }
 
 function isFirestoreSetupError(error: unknown) {

@@ -12,6 +12,7 @@ import {
   getDoc,
   getDocs,
   serverTimestamp,
+  setDoc,
   writeBatch,
 } from "firebase/firestore";
 import dynamic from "next/dynamic";
@@ -21,6 +22,7 @@ import {
   articles as starterArticles,
   deleteManagedArticle,
   loadManagedArticles,
+  defaultFeaturedArticleSlugs,
   type ArticleActionCta,
   type ArticleStatus,
   type ManagedArticle,
@@ -168,6 +170,8 @@ export default function AdminDashboard() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(() => isFirebaseConfigured());
   const [articles, setArticles] = useState<ManagedArticle[]>([]);
+  const [featuredSlugs, setFeaturedSlugs] = useState<string[]>(defaultFeaturedArticleSlugs);
+  const [savedFeaturedSlugs, setSavedFeaturedSlugs] = useState<string[]>(defaultFeaturedArticleSlugs);
   const [selected, setSelected] = useState<EditorArticle | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -179,7 +183,30 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<"articles" | "newsletter">("articles");
 
   const refreshArticles = useCallback(async () => {
-    setArticles(await loadManagedArticles());
+    const [loadedArticles, featuredSettings] = await Promise.all([
+      loadManagedArticles(),
+      getDoc(doc(getFirebaseDb(), "siteSettings", "homepage")),
+    ]);
+    setArticles(loadedArticles);
+    const publishedSlugs = new Set(loadedArticles
+      .filter((article) => article.status === "published")
+      .map((article) => article.slug));
+    const storedFeaturedSlugs = featuredSettings.exists()
+      ? featuredSettings.data().featuredSlugs
+      : defaultFeaturedArticleSlugs;
+    if (
+      !Array.isArray(storedFeaturedSlugs)
+      || storedFeaturedSlugs.length > 3
+      || !storedFeaturedSlugs.every((slug) => typeof slug === "string")
+      || new Set(storedFeaturedSlugs).size !== storedFeaturedSlugs.length
+    ) {
+      throw new Error("A configuração de artigos em destaque está inválida no Firestore.");
+    }
+    const nextFeaturedSlugs = storedFeaturedSlugs.filter((slug): slug is string =>
+      typeof slug === "string" && publishedSlugs.has(slug),
+    );
+    setFeaturedSlugs(nextFeaturedSlugs);
+    setSavedFeaturedSlugs(nextFeaturedSlugs);
   }, []);
 
   useEffect(() => {
@@ -219,6 +246,23 @@ export default function AdminDashboard() {
       await signInWithEmailAndPassword(getFirebaseAuth(), email.trim(), password);
     } catch (authError) {
       setError(errorMessage(authError));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveFeaturedArticles() {
+    setBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      await setDoc(doc(getFirebaseDb(), "siteSettings", "homepage"), {
+        featuredSlugs,
+      });
+      setSavedFeaturedSlugs(featuredSlugs);
+      setNotice("Artigos em destaque atualizados.");
+    } catch (saveError) {
+      setError(errorMessage(saveError));
     } finally {
       setBusy(false);
     }
@@ -521,6 +565,48 @@ export default function AdminDashboard() {
               <label>Estado<select value={filter} onChange={(event) => setFilter(event.target.value as "all" | ArticleStatus)}><option value="all">Todos</option><option value="published">Publicados</option><option value="draft">Rascunhos</option><option value="deleted">Excluídos</option></select></label>
               <span>{filteredArticles.length} artigos</span>
             </div>
+            <section className="admin-featured-manager" aria-labelledby="admin-featured-title">
+              <div>
+                <h2 id="admin-featured-title">Artigos em destaque</h2>
+                <p>Escolha até três artigos publicados e a ordem em que aparecem primeiro na página inicial.</p>
+              </div>
+              <div className="admin-featured-slots">
+                {[0, 1, 2].map((slot) => (
+                  <label key={slot}>
+                    Destaque {slot + 1}
+                    <select
+                      disabled={busy}
+                      onChange={(event) => {
+                        const slug = event.target.value;
+                        setFeaturedSlugs((current) => {
+                          const next = current.filter((item, index) => index !== slot && item !== slug);
+                          if (slug) next.splice(slot, 0, slug);
+                          return next.slice(0, 3);
+                        });
+                      }}
+                      value={featuredSlugs[slot] ?? ""}
+                    >
+                      <option value="">Nenhum</option>
+                      {articles
+                        .filter((article) => article.status === "published")
+                        .filter((article) => article.slug === featuredSlugs[slot]
+                          || !featuredSlugs.includes(article.slug))
+                        .map((article) => (
+                          <option key={article.slug} value={article.slug}>{article.title}</option>
+                        ))}
+                    </select>
+                  </label>
+                ))}
+              </div>
+              <button
+                className="admin-secondary-button"
+                disabled={busy || stableJson(featuredSlugs) === stableJson(savedFeaturedSlugs)}
+                onClick={() => void saveFeaturedArticles()}
+                type="button"
+              >
+                {busy ? "Salvando…" : "Salvar destaques"}
+              </button>
+            </section>
             <div className="admin-list">
               {filteredArticles.map((article) => (
                 <article className="admin-article-row" key={article.slug}>

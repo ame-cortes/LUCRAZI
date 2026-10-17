@@ -26,6 +26,25 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    match /siteSettings/{settingId} {
+      allow read: if settingId == "homepage";
+      allow create, update: if isAdmin()
+        && settingId == "homepage"
+        && request.resource.data.keys().hasOnly(["featuredSlugs"])
+        && request.resource.data.featuredSlugs is list
+        && request.resource.data.featuredSlugs.size() <= 3
+        && (request.resource.data.featuredSlugs.size() < 1
+          || (request.resource.data.featuredSlugs[0] is string
+            && request.resource.data.featuredSlugs[0].matches("^[a-z0-9]+(-[a-z0-9]+)*$")))
+        && (request.resource.data.featuredSlugs.size() < 2
+          || (request.resource.data.featuredSlugs[1] is string
+            && request.resource.data.featuredSlugs[1].matches("^[a-z0-9]+(-[a-z0-9]+)*$")))
+        && (request.resource.data.featuredSlugs.size() < 3
+          || (request.resource.data.featuredSlugs[2] is string
+            && request.resource.data.featuredSlugs[2].matches("^[a-z0-9]+(-[a-z0-9]+)*$")));
+      allow delete: if isAdmin() && settingId == "homepage";
+    }
+
     match /admins/{adminId} {
       allow read: if request.auth != null && request.auth.uid == adminId;
       allow write: if false;
