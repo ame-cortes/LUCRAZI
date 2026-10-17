@@ -296,7 +296,6 @@ export async function sendNewsletterCampaign(
       subject,
       htmlContent,
       recipients: { listIds: [config.listId] },
-      tag: "lucrazi-newsletter",
     }),
   });
   if (!Number.isSafeInteger(created.id) || !created.id) {
