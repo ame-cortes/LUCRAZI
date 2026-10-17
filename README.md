@@ -44,7 +44,7 @@ Copie `.env.example` para `.env.local` e configure os valores para o seu domíni
 - `NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT_ID`: identificador de publicador fornecido pelo AdSense.
 - `NEXT_PUBLIC_GOOGLE_ADSENSE_SLOT_ID`: identificador de um bloco de anúncios aprovado.
 - `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID` e `NEXT_PUBLIC_FIREBASE_APP_ID`: configuração pública do app Firebase Web.
-- `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`, `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` e `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID`: valores adicionais da configuração Firebase.
+- `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` e `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID`: valores adicionais da configuração Firebase.
 - `NEXT_PUBLIC_FIREBASE_APPCHECK_SITE_KEY`: chave pública do reCAPTCHA Enterprise/Fraud Defense usado pelo Firebase App Check.
 - `NEXT_PUBLIC_NEWSLETTER_SIGNUP_ENABLED`: defina como `true` somente depois de configurar a chave App Check e a credencial Firebase de servidor.
 - `NEXT_PUBLIC_EBOOK_SIGNUP_ENABLED`: defina como `true` somente depois de configurar a chave App Check, autorizar o domínio `ebook.lucrazi.com.br` no Firebase App Check e configurar a credencial Firebase de servidor. Os pedidos do e-book são armazenados separadamente em `ebookLeads`; eles não inscrevem o endereço na lista de novidades.
@@ -58,19 +58,19 @@ Os anúncios não são carregados enquanto cliente ou bloco não estiverem confi
 
 ### Painel de artigos no Firebase
 
-O painel administrativo fica em `/admin`. O app usa Firebase Authentication com e-mail e senha e Firestore para salvar artigos. As novas capas são enviadas ao Firebase Storage e lidas pelo site. As chaves `NEXT_PUBLIC_FIREBASE_*` são a configuração pública do SDK Web; elas não substituem as regras de segurança do Firebase. Não coloque chaves privadas de conta de serviço no navegador.
+O painel administrativo fica em `/admin`. O app usa Firebase Authentication com e-mail e senha e Firestore para salvar artigos. Para capas novas, informe uma URL HTTPS pública de imagem; o painel verifica se ela carrega e salva a URL e o crédito no Firestore. A imagem continua hospedada na origem do link, sem upload para o Firebase. As chaves `NEXT_PUBLIC_FIREBASE_*` são a configuração pública do SDK Web; elas não substituem as regras de segurança do Firebase. Não coloque chaves privadas de conta de serviço no navegador.
 
 Para ativar o painel no projeto Firebase:
 
-1. No Firebase Console do projeto `lucrazi`, crie um banco Firestore em modo de produção, ative **Authentication > E-mail/senha** e configure o **Storage** criando um bucket. Se o Console informar que a API do Cloud Firestore ou Cloud Storage está desativada, habilite-a no projeto Google Cloud vinculado e aguarde a propagação.
+1. No Firebase Console do projeto `lucrazi`, crie um banco Firestore em modo de produção e ative **Authentication > E-mail/senha**. Se o Console informar que a API do Cloud Firestore está desativada, habilite-a no projeto Google Cloud vinculado e aguarde a propagação.
 2. Crie a conta administrativa em **Authentication > Users**, autorize o domínio do site em **Authentication > Settings > Authorized domains** e copie o UID dessa conta.
-3. Publique as regras do arquivo [`firestore.rules`](./firestore.rules) na área **Firestore Database > Regras** e as regras de [`storage.rules`](./storage.rules) na área **Storage > Regras**. Com o Firebase CLI configurado para este projeto, também é possível publicar as duas usando `firebase deploy --only firestore:rules,storage`.
+3. Publique as regras do arquivo [`firestore.rules`](./firestore.rules) na área **Firestore Database > Regras**. Com o Firebase CLI configurado para este projeto, também é possível publicá-las usando `firebase deploy --only firestore:rules`.
 4. No Firestore, crie o documento `admins/{UID}` e defina o campo booleano `allowAdmin` como `true`. A regra permite que cada usuário leia somente o documento com o próprio UID; as regras bloqueiam alterações a essa lista pelo painel.
-5. Copie os valores do app Web para as variáveis Firebase em `.env.local` e para as variáveis de ambiente da hospedagem. Configure `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` com o nome do bucket mostrado no Console (por exemplo, `lucrazi.firebasestorage.app`). Reinicie o servidor depois de alterar `.env.local`.
+5. Copie os valores do app Web para as variáveis Firebase em `.env.local` e para as variáveis de ambiente da hospedagem. Reinicie o servidor depois de alterar `.env.local`.
 6. Entre em `/admin` e use **Importar os 50 guias** para gravar os artigos atuais no Firestore. Depois disso, alterações publicadas aparecem nas páginas do site; rascunhos ficam privados e exclusões são registradas apenas como slugs numa coleção separada para não expor o texto removido nem fazer um artigo inicial reaparecer.
 7. Configure `INDEXNOW_API_KEY` com a chave fornecida pelo IndexNow em `.env.local` e nas variáveis de ambiente da hospedagem. O site publica essa chave em `/indexnow-key.txt` e envia automaticamente ao IndexNow as URLs de artigos publicados, atualizados, despublicados, excluídos ou importados pelo painel. Confirme que `https://www.lucrazi.com.br/indexnow-key.txt` exibe somente a chave antes de publicar artigos. O envio informa os mecanismos de busca, mas não garante rastreamento nem indexação.
 
-As regras do Storage permitem leitura pública apenas das capas e limitam o envio e a exclusão à pasta do UID de cada administrador autorizado. O envio aceita JPG, PNG ou WebP de até 5 MB; as imagens novas precisam de texto alternativo e URL de crédito preenchidos no editor antes de salvar ou publicar.
+Ao adicionar uma capa por URL, use um endereço HTTPS direto e acessível publicamente. Informe também o texto alternativo e confira se o crédito aponta para a página correta da fonte antes de salvar ou publicar. A disponibilidade da imagem depende do serviço que hospeda essa URL.
 
 O site continua apresentando os artigos iniciais enquanto eles ainda não foram importados. O catálogo `/artigos` também organiza os guias em cinco coleções editoriais, com páginas próprias em `/artigos/temas/<tema>` e links para leituras relacionadas dentro de cada coleção. No painel, **Atualizar conteúdo dos publicados** compara os artigos publicados do Firestore com as versões editoriais do projeto, mostra quantos serão alterados e pede confirmação; rascunhos e artigos excluídos são preservados. Operações administrativas são verificadas pelas regras do Firestore, não apenas pela tela de login. A configuração do projeto e a publicação das regras no Firebase Console são necessárias antes de usar o painel.
 

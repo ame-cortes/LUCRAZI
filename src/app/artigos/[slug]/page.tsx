@@ -186,13 +186,14 @@ async function ArticleContent({ params }: ArticlePageProps) {
                 alt={article.imageAlt}
                 fill
                 preload
+                unoptimized={!article.imageSrc.startsWith("/")}
                 sizes="(max-width: 800px) 100vw, 1000px"
                 className="article-cover-image"
               />
               <figcaption className="cover-caption">
-                Foto:{" "}
+                Crédito:{" "}
                 <a href={article.imageCreditUrl} target="_blank" rel="noreferrer">
-                  Unsplash
+                  fonte da imagem
                 </a>
               </figcaption>
             </figure>

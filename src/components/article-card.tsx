@@ -18,6 +18,7 @@ export function ArticleCard({ article, featured = false, index }: ArticleCardPro
             alt={article.imageAlt}
             fill
             quality={55}
+            unoptimized={!article.imageSrc.startsWith("/")}
             sizes="(max-width: 720px) 100vw, (max-width: 1100px) 50vw, 33vw"
             className="card-photo"
           />

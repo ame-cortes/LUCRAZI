@@ -14,7 +14,6 @@ import {
   serverTimestamp,
   writeBatch,
 } from "firebase/firestore";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -26,7 +25,7 @@ import {
   type ArticleStatus,
   type ManagedArticle,
 } from "@/lib/articles";
-import { getFirebaseAuth, getFirebaseDb, getFirebaseStorage, isFirebaseConfigured } from "@/lib/firebase";
+import { getFirebaseAuth, getFirebaseDb, isFirebaseConfigured } from "@/lib/firebase";
 import { articleToMarkdown } from "@/lib/article-markdown";
 import NewsletterManager from "@/components/newsletter-manager";
 
@@ -146,9 +145,6 @@ function errorMessage(error: unknown) {
       "auth/weak-password": "Use uma senha com pelo menos seis caracteres.",
       "auth/operation-not-allowed": "Ative o método E-mail/senha no Firebase Authentication.",
       "permission-denied": "Acesso negado. Confirme se o Firestore está criado, se publicou firestore.rules e se o UID está em admins com allowAdmin=true.",
-      "storage/unauthorized": "O Firebase Storage bloqueou o envio. Publique storage.rules e confirme se sua conta está autorizada em admins.",
-      "storage/bucket-not-found": "Bucket do Firebase Storage não encontrado. Ative o Storage no Firebase e confira NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET.",
-      "storage/unknown": "O Firebase Storage não concluiu o envio. Verifique o bucket e tente novamente.",
       "unavailable": "O Firebase está indisponível no momento. Tente novamente.",
     };
     return messages[error.code] ?? `Falha ao acessar o Firebase (${error.code}).`;
@@ -327,27 +323,6 @@ export default function AdminDashboard() {
     } finally {
       setBusy(false);
     }
-  }
-
-  async function uploadCoverImage(file: File) {
-    const currentUser = getFirebaseAuth().currentUser;
-    if (!currentUser) throw new Error("Sua sessão expirou. Entre novamente.");
-
-    const extensionByType: Record<string, string> = {
-      "image/jpeg": "jpg",
-      "image/png": "png",
-      "image/webp": "webp",
-    };
-    const extension = extensionByType[file.type];
-    if (!extension) throw new Error("Escolha uma imagem JPG, PNG ou WebP.");
-    if (file.size > 5 * 1024 * 1024) throw new Error("A imagem precisa ter no máximo 5 MB.");
-
-    const imageRef = ref(
-      getFirebaseStorage(),
-      `article-covers/${currentUser.uid}/${crypto.randomUUID()}.${extension}`,
-    );
-    await uploadBytes(imageRef, file, { contentType: file.type });
-    return getDownloadURL(imageRef);
   }
 
   async function deleteArticle(article: ManagedArticle) {
@@ -566,7 +541,6 @@ export default function AdminDashboard() {
           busy={busy}
           error={error}
           onClose={() => setSelected(null)}
-          onUploadImage={uploadCoverImage}
           onSave={(article, status) => void saveArticle(article, status)}
         />
       )}
@@ -603,23 +577,22 @@ function ArticleEditor({
   busy,
   error,
   onClose,
-  onUploadImage,
   onSave,
 }: {
   article: EditorArticle;
   busy: boolean;
   error: string;
   onClose: () => void;
-  onUploadImage: (file: File) => Promise<string>;
   onSave: (article: EditorArticle, status: ArticleStatus) => void;
 }) {
   const [value, setValue] = useState(() => article.contentMarkdown !== undefined
     ? article
     : { ...article, contentMarkdown: articleToMarkdown(article) });
   const [slugTouched, setSlugTouched] = useState(Boolean(article.slug));
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [uploadMessage, setUploadMessage] = useState("");
-  const [uploadError, setUploadError] = useState("");
+  const [coverUrl, setCoverUrl] = useState(() => article.imageSrc.startsWith("https://") ? article.imageSrc : "");
+  const [loadingImage, setLoadingImage] = useState(false);
+  const [imageMessage, setImageMessage] = useState("");
+  const [imageError, setImageError] = useState("");
   const setField = <K extends keyof EditorArticle>(key: K, nextValue: EditorArticle[K]) => {
     setValue((current) => ({ ...current, [key]: nextValue }));
   };
@@ -636,16 +609,39 @@ function ArticleEditor({
       },
     }));
   };
+  const applyCoverUrl = () => {
+    const imageSrc = coverUrl.trim();
+    if (!URL.canParse(imageSrc) || new URL(imageSrc).protocol !== "https:") {
+      setImageError("Informe o link HTTPS direto da imagem.");
+      setImageMessage("");
+      return;
+    }
+
+    setImageError("");
+    setImageMessage("");
+    setLoadingImage(true);
+    const image = new window.Image();
+    image.onload = () => {
+      setValue((current) => ({ ...current, imageSrc, imageCreditUrl: imageSrc }));
+      setImageMessage("Imagem carregada. O link foi adicionado como crédito; você pode substituí-lo pelo link da página original da fonte.");
+      setLoadingImage(false);
+    };
+    image.onerror = () => {
+      setImageError("Não foi possível carregar a imagem. Use um link HTTPS direto para um arquivo de imagem acessível publicamente.");
+      setLoadingImage(false);
+    };
+    image.src = imageSrc;
+  };
   return (
     <div className="admin-modal-backdrop" role="presentation">
       <section className="admin-editor" aria-labelledby="admin-editor-title" role="dialog" aria-modal="true">
         <header className="admin-editor-header">
           <div><span className="eyebrow">EDITOR DE CONTEÚDO</span><h2 id="admin-editor-title">{article.title ? "Editar artigo" : "Novo artigo"}</h2></div>
-          <button aria-label="Fechar editor" className="admin-close-button" disabled={busy || uploadingImage} onClick={onClose} type="button">×</button>
+          <button aria-label="Fechar editor" className="admin-close-button" disabled={busy || loadingImage} onClick={onClose} type="button">×</button>
         </header>
         <div className="admin-editor-body">
-          {uploadError && <p className="admin-message admin-error" role="alert">{uploadError}</p>}
-          {uploadMessage && <p className="admin-message" role="status">{uploadMessage}</p>}
+          {imageError && <p className="admin-message admin-error" role="alert">{imageError}</p>}
+          {imageMessage && <p className="admin-message" role="status">{imageMessage}</p>}
           <div className="admin-fields-grid">
             <label className="admin-field-wide">Título<input value={value.title} onChange={(event) => {
               const title = event.target.value;
@@ -671,38 +667,29 @@ function ArticleEditor({
                 imageAlt: image?.imageAlt ?? current.imageAlt,
                 imageCreditUrl: image?.imageCreditUrl ?? current.imageCreditUrl,
               }));
+              setCoverUrl("");
+              setImageError("");
+              setImageMessage("");
             }}>
               {!starterArticles.some((candidate) => candidate.imageSrc === value.imageSrc)
                 && <option value={value.imageSrc}>Imagem adicionada</option>}
               {starterArticles.map((candidate) => <option key={candidate.slug} value={candidate.imageSrc}>{candidate.title}</option>)}
             </select></label>
             <div className="admin-cover-upload admin-field-wide">
-              <label htmlFor="admin-cover-file">Adicionar nova capa (JPG, PNG ou WebP; até 5 MB)</label>
+              <label htmlFor="admin-cover-url">URL direta da imagem de capa</label>
               <input
-                accept="image/jpeg,image/png,image/webp"
-                disabled={busy || uploadingImage}
-                id="admin-cover-file"
-                type="file"
-                onChange={(event) => {
-                  const input = event.currentTarget;
-                  const file = input.files?.[0];
-                  if (!file) return;
-                  setUploadError("");
-                  setUploadMessage("");
-                  setUploadingImage(true);
-                  void onUploadImage(file)
-                    .then((imageSrc) => {
-                      setField("imageSrc", imageSrc);
-                      setUploadMessage("Capa enviada. Preencha o texto alternativo e o crédito da imagem antes de publicar.");
-                    })
-                    .catch((uploadError: unknown) => setUploadError(errorMessage(uploadError)))
-                    .finally(() => {
-                      setUploadingImage(false);
-                      input.value = "";
-                    });
-                }}
+                disabled={busy || loadingImage}
+                id="admin-cover-url"
+                inputMode="url"
+                onChange={(event) => setCoverUrl(event.target.value)}
+                placeholder="https://exemplo.com/imagem.jpg"
+                type="url"
+                value={coverUrl}
               />
-              {uploadingImage && <span role="status">Enviando imagem…</span>}
+              <button className="admin-secondary-button" disabled={busy || loadingImage} onClick={applyCoverUrl} type="button">
+                {loadingImage ? "Carregando imagem…" : "Carregar imagem pela URL"}
+              </button>
+              <span>A imagem será exibida a partir desse endereço público; o link também será usado como crédito. Você pode informar abaixo a página original da fonte. A imagem não é copiada para o Firebase.</span>
             </div>
             <label>Cor do cartão<select value={value.accent} onChange={(event) => setField("accent", event.target.value as EditorArticle["accent"])}><option value="mint">Verde</option><option value="yellow">Amarelo</option><option value="lavender">Lavanda</option><option value="peach">Pêssego</option></select></label>
             <label className="admin-field-wide">Texto alternativo da imagem<input value={value.imageAlt} onChange={(event) => setField("imageAlt", event.target.value)} /></label>
@@ -726,9 +713,9 @@ function ArticleEditor({
         </div>
         <footer className="admin-editor-footer">
           {error && <p className="admin-message admin-error admin-editor-alert" role="alert">{error}</p>}
-          <button className="admin-secondary-button" disabled={busy || uploadingImage} onClick={onClose} type="button">Cancelar</button>
-          <button className="admin-secondary-button" disabled={busy || uploadingImage} onClick={() => onSave(value, "draft")} type="button">{busy ? "Salvando…" : "Salvar rascunho"}</button>
-          <button className="button button-dark" disabled={busy || uploadingImage} onClick={() => onSave(value, "published")} type="button">{busy ? "Salvando…" : "Publicar artigo"}</button>
+          <button className="admin-secondary-button" disabled={busy || loadingImage} onClick={onClose} type="button">Cancelar</button>
+          <button className="admin-secondary-button" disabled={busy || loadingImage} onClick={() => onSave(value, "draft")} type="button">{busy ? "Salvando…" : "Salvar rascunho"}</button>
+          <button className="button button-dark" disabled={busy || loadingImage} onClick={() => onSave(value, "published")} type="button">{busy ? "Salvando…" : "Publicar artigo"}</button>
         </footer>
       </section>
     </div>
