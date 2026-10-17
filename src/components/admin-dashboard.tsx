@@ -292,7 +292,7 @@ export default function AdminDashboard() {
       }
       const content = articleWithoutStatus(article);
       const batch = writeBatch(db);
-      if (selected && selected.slug !== article.slug) {
+      if (selected?.slug && selected.slug !== article.slug) {
         batch.delete(doc(db, "articles", selected.slug));
         batch.set(doc(db, "deletedArticles", selected.slug), {
           slug: selected.slug,
