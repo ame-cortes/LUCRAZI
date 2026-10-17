@@ -2489,6 +2489,42 @@ button:focus-visible {
   gap: 16px;
 }
 
+.admin-cover-upload {
+  display: grid;
+  gap: 8px;
+  color: #41443a;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.admin-cover-upload input {
+  width: 100%;
+  border: 1px solid #d8d8cf;
+  border-radius: 8px;
+  padding: 8px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 400;
+}
+
+.admin-cover-upload input::file-selector-button {
+  margin-right: 10px;
+  border: 1px solid #d8d8cf;
+  border-radius: 6px;
+  padding: 7px 10px;
+  background: #f2f1eb;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.admin-cover-upload span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
 .admin-field-wide {
   grid-column: 1 / -1;
 }
@@ -2549,6 +2585,11 @@ button:focus-visible {
   border-top: 1px solid var(--line);
   border-bottom: 0;
   padding: 15px 24px;
+}
+
+.admin-editor-alert {
+  flex: 1 0 100%;
+  margin: 0;
 }
 
 @media (max-width: 700px) {

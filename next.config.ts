@@ -11,6 +11,13 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
     qualities: [55, 65, 75],
     minimumCacheTTL: 604800,
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "firebasestorage.googleapis.com",
+        pathname: "/v0/b/**",
+      },
+    ],
   },
   serverExternalPackages: ["firebase-admin"],
   outputFileTracingIncludes: {

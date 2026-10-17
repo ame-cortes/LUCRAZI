@@ -1,0 +1,19 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isAdmin() {
+      return request.auth != null
+        && firestore.get(/databases/(default)/documents/admins/$(request.auth.uid)).data.allowAdmin == true;
+    }
+
+    match /article-covers/{adminId}/{fileName} {
+      allow read: if true;
+      allow create: if isAdmin()
+        && request.auth.uid == adminId
+        && request.resource.size <= 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
+      allow update: if false;
+      allow delete: if isAdmin() && request.auth.uid == adminId;
+    }
+  }
+}

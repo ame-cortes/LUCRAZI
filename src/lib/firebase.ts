@@ -6,6 +6,7 @@ import {
 } from "firebase/app-check";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 let appCheck: AppCheck | undefined;
 
@@ -53,6 +54,15 @@ export function getFirebaseAuth() {
 
 export function getFirebaseDb() {
   return getFirestore(getFirebaseApp());
+}
+
+export function getFirebaseStorage() {
+  const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
+  if (!storageBucket) {
+    throw new Error("Configure NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET para enviar imagens de capa.");
+  }
+
+  return getStorage(getFirebaseApp(), `gs://${storageBucket}`);
 }
 
 export async function getFirebaseAppCheck() {
