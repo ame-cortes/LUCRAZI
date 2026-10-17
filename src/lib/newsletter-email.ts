@@ -252,6 +252,8 @@ type NewsletterArticle = {
   slug: string;
   title: string;
   description: string;
+  imageSrc?: string;
+  imageAlt?: string;
 };
 
 export async function sendNewsletterCampaign(
@@ -274,8 +276,11 @@ export async function sendNewsletterCampaign(
   const articleUrl = options.article
     ? new URL(`/artigos/${encodeURIComponent(options.article.slug)}`, siteUrl()).toString()
     : null;
+  const articleImageUrl = options.article?.imageSrc
+    ? new URL(options.article.imageSrc, siteUrl()).toString()
+    : null;
   const articleContent = options.article && articleUrl
-    ? `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:24px;border:1px solid #e6e5dc;border-radius:12px"><tr><td style="padding:22px"><p style="margin:0 0 8px;color:#668241;font-size:12px;font-weight:bold;letter-spacing:1px">NOVO GUIA</p><h2 style="margin:0 0 10px;font-size:21px;line-height:1.3">${escapeHtml(options.article.title)}</h2><p style="margin:0 0 20px;color:#555">${escapeHtml(options.article.description)}</p><a href="${escapeHtml(articleUrl)}" style="display:inline-block;padding:12px 18px;border-radius:8px;background:#4e6c2d;color:#fff;font-weight:bold;text-decoration:none">Ler o artigo</a></td></tr></table>`
+    ? `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:24px;border:1px solid #e6e5dc;border-radius:12px"><tr><td>${articleImageUrl ? `<a href="${escapeHtml(articleUrl)}"><img src="${escapeHtml(articleImageUrl)}" alt="${escapeHtml(options.article.imageAlt ?? options.article.title)}" width="560" style="display:block;width:100%;max-width:560px;height:auto;border:0;border-radius:12px 12px 0 0"></a>` : ""}<div style="padding:22px"><p style="margin:0 0 8px;color:#668241;font-size:12px;font-weight:bold;letter-spacing:1px">NOVO GUIA</p><h2 style="margin:0 0 10px;font-size:21px;line-height:1.3">${escapeHtml(options.article.title)}</h2><p style="margin:0 0 20px;color:#555">${escapeHtml(options.article.description)}</p><a href="${escapeHtml(articleUrl)}" style="display:inline-block;padding:12px 18px;border-radius:8px;background:#4e6c2d;color:#fff;font-weight:bold;text-decoration:none">Ler o artigo</a></div></td></tr></table>`
     : "";
   const htmlContent = emailTemplate(
     `${paragraphs}${articleContent}`,

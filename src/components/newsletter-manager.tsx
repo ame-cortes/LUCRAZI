@@ -221,14 +221,14 @@ export default function NewsletterManager({ articles }: { articles: NewsletterAr
         </div>
         <form className="newsletter-campaign-form" onSubmit={(event) => void sendCampaign(event)}>
           <label>
-            Modelo
+            Divulgar post novo
             <select
               onChange={(event) => prepareArticleCampaign(event.target.value)}
               value={articleSlug}
             >
-              <option value="">Campanha livre</option>
+              <option value="">Nenhum post (campanha livre)</option>
               {articles.map((article) => (
-                <option key={article.slug} value={article.slug}>Aviso de artigo: {article.title}</option>
+                <option key={article.slug} value={article.slug}>{article.title}</option>
               ))}
             </select>
           </label>

@@ -47,7 +47,13 @@ export async function POST(request: Request) {
   }
 
   const db = getFirebaseAdminDb();
-  let article: { slug: string; title: string; description: string } | undefined;
+  let article: {
+    slug: string;
+    title: string;
+    description: string;
+    imageSrc?: string;
+    imageAlt?: string;
+  } | undefined;
   if (typeof body.articleSlug === "string") {
     try {
       const articleSnapshot = await db.collection("articles").doc(body.articleSlug).get();
@@ -62,10 +68,17 @@ export async function POST(request: Request) {
       ) {
         return NextResponse.json({ error: "O artigo selecionado não está publicado. Atualize a lista e tente novamente." }, { status: 409 });
       }
+      const imageSrc = typeof content.imageSrc === "string"
+        && (content.imageSrc.startsWith("/images/")
+          || (URL.canParse(content.imageSrc) && new URL(content.imageSrc).protocol === "https:"))
+        ? content.imageSrc
+        : undefined;
       article = {
         slug: body.articleSlug,
         title: content.title,
         description: content.description,
+        ...(imageSrc ? { imageSrc } : {}),
+        ...(typeof content.imageAlt === "string" ? { imageAlt: content.imageAlt } : {}),
       };
     } catch (error) {
       console.error("Não foi possível validar o artigo da campanha.", error);
