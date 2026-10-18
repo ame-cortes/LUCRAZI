@@ -10,11 +10,12 @@ declare global {
 
 type AdSlotProps = {
   className?: string;
+  slotId?: string;
 };
 
-export function AdSlot({ className = "" }: AdSlotProps) {
+export function AdSlot({ className = "", slotId: configuredSlotId }: AdSlotProps) {
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT_ID;
-  const slotId = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_SLOT_ID;
+  const slotId = configuredSlotId ?? process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_SLOT_ID;
   const pushed = useRef(false);
 
   useEffect(() => {

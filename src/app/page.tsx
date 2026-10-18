@@ -2,6 +2,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { loadFeaturedArticleSlugs, loadPublishedArticles } from "@/lib/articles";
 import { ArticleCard } from "@/components/article-card";
+import { AdSlot } from "@/components/ad-slot";
 import { NewsletterSignup } from "@/components/newsletter-signup";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { siteUrl } from "@/lib/site-config";
@@ -137,6 +138,9 @@ export default async function Home() {
           </div>
         </div>
       </section>
+      <div className="wrap">
+        <AdSlot className="home-display-ad" slotId="2358805021" />
+      </div>
       <section aria-labelledby="home-faq-heading" className="home-faq">
         <div className="wrap home-faq-inner">
           <span className="eyebrow">DÚVIDAS FREQUENTES</span>
