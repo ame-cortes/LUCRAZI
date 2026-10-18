@@ -32,7 +32,7 @@ service cloud.firestore {
         && settingId == "homepage"
         && request.resource.data.keys().hasOnly(["featuredSlugs"])
         && request.resource.data.featuredSlugs is list
-        && request.resource.data.featuredSlugs.size() <= 3
+        && request.resource.data.featuredSlugs.size() <= 6
         && (request.resource.data.featuredSlugs.size() < 1
           || (request.resource.data.featuredSlugs[0] is string
             && request.resource.data.featuredSlugs[0].matches("^[a-z0-9]+(-[a-z0-9]+)*$")))
@@ -41,7 +41,16 @@ service cloud.firestore {
             && request.resource.data.featuredSlugs[1].matches("^[a-z0-9]+(-[a-z0-9]+)*$")))
         && (request.resource.data.featuredSlugs.size() < 3
           || (request.resource.data.featuredSlugs[2] is string
-            && request.resource.data.featuredSlugs[2].matches("^[a-z0-9]+(-[a-z0-9]+)*$")));
+            && request.resource.data.featuredSlugs[2].matches("^[a-z0-9]+(-[a-z0-9]+)*$")))
+        && (request.resource.data.featuredSlugs.size() < 4
+          || (request.resource.data.featuredSlugs[3] is string
+            && request.resource.data.featuredSlugs[3].matches("^[a-z0-9]+(-[a-z0-9]+)*$")))
+        && (request.resource.data.featuredSlugs.size() < 5
+          || (request.resource.data.featuredSlugs[4] is string
+            && request.resource.data.featuredSlugs[4].matches("^[a-z0-9]+(-[a-z0-9]+)*$")))
+        && (request.resource.data.featuredSlugs.size() < 6
+          || (request.resource.data.featuredSlugs[5] is string
+            && request.resource.data.featuredSlugs[5].matches("^[a-z0-9]+(-[a-z0-9]+)*$")));
       allow delete: if isAdmin() && settingId == "homepage";
     }
 

@@ -81,15 +81,20 @@ export type ManagedArticle = ArticleWithImage & {
   status: ArticleStatus;
 };
 
+export const maxFeaturedArticles = 6;
+
 export const defaultFeaturedArticleSlugs = [
   "como-ganhar-dinheiro-com-marketing-de-afiliados",
   "como-ganhar-dinheiro-no-youtube",
   "como-vender-produtos-usados-online",
+  "como-criar-e-vender-curso-online",
+  "como-criar-e-vender-ebook",
+  "como-ganhar-dinheiro-como-pet-sitter",
 ];
 
 function isFeaturedArticleSlugList(value: unknown): value is string[] {
   return Array.isArray(value)
-    && value.length <= 3
+    && value.length <= maxFeaturedArticles
     && value.every((slug) => typeof slug === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))
     && new Set(value).size === value.length;
 }

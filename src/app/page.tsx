@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { connection } from "next/server";
-import { loadFeaturedArticleSlugs, loadPublishedArticles } from "@/lib/articles";
+import { loadFeaturedArticleSlugs, loadPublishedArticles, maxFeaturedArticles } from "@/lib/articles";
 import { ArticleCard } from "@/components/article-card";
 import { AdSlot } from "@/components/ad-slot";
 import { NewsletterSignup } from "@/components/newsletter-signup";
@@ -99,14 +99,10 @@ export default async function Home() {
     loadPublishedArticles(),
     loadFeaturedArticleSlugs(),
   ]);
-  const preferredArticles = featuredArticleSlugs
+  const homeArticles = featuredArticleSlugs
     .map((slug) => articles.find((item) => item.slug === slug))
-    .filter((article) => article !== undefined);
-  const preferredSlugs = new Set(preferredArticles.map((article) => article.slug));
-  const homeArticles = [
-    ...preferredArticles,
-    ...articles.filter((article) => !preferredSlugs.has(article.slug)),
-  ];
+    .filter((article) => article !== undefined)
+    .slice(0, maxFeaturedArticles);
 
   return (<>
     <SiteHeader />

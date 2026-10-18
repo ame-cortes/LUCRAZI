@@ -23,6 +23,7 @@ import {
   deleteManagedArticle,
   loadManagedArticles,
   defaultFeaturedArticleSlugs,
+  maxFeaturedArticles,
   type ArticleActionCta,
   type ArticleStatus,
   type ManagedArticle,
@@ -200,7 +201,7 @@ export default function AdminDashboard() {
       : defaultFeaturedArticleSlugs;
     if (
       !Array.isArray(storedFeaturedSlugs)
-      || storedFeaturedSlugs.length > 3
+      || storedFeaturedSlugs.length > maxFeaturedArticles
       || !storedFeaturedSlugs.every((slug) => typeof slug === "string")
       || new Set(storedFeaturedSlugs).size !== storedFeaturedSlugs.length
     ) {
@@ -209,8 +210,12 @@ export default function AdminDashboard() {
     const nextFeaturedSlugs = storedFeaturedSlugs.filter((slug): slug is string =>
       typeof slug === "string" && publishedSlugs.has(slug),
     );
-    setFeaturedSlugs(nextFeaturedSlugs);
-    setSavedFeaturedSlugs(nextFeaturedSlugs);
+    const featuredSlots = [
+      ...nextFeaturedSlugs,
+      ...Array(maxFeaturedArticles - nextFeaturedSlugs.length).fill(""),
+    ];
+    setFeaturedSlugs(featuredSlots);
+    setSavedFeaturedSlugs(featuredSlots);
   }, []);
 
   useEffect(() => {
@@ -261,10 +266,10 @@ export default function AdminDashboard() {
     setNotice("");
     try {
       await setDoc(doc(getFirebaseDb(), "siteSettings", "homepage"), {
-        featuredSlugs,
+        featuredSlugs: featuredSlugs.filter((slug) => slug !== ""),
       });
       setSavedFeaturedSlugs(featuredSlugs);
-      setNotice("Artigos em destaque atualizados.");
+      setNotice("Artigos da página inicial atualizados.");
     } catch (saveError) {
       setError(errorMessage(saveError));
     } finally {
@@ -571,21 +576,21 @@ export default function AdminDashboard() {
             </div>
             <section className="admin-featured-manager" aria-labelledby="admin-featured-title">
               <div>
-                <h2 id="admin-featured-title">Artigos em destaque</h2>
-                <p>Escolha até três artigos publicados e a ordem em que aparecem primeiro na página inicial.</p>
+                <h2 id="admin-featured-title">Artigos da página inicial</h2>
+                <p>Escolha até seis artigos publicados e defina a ordem em que aparecem na página inicial.</p>
               </div>
               <div className="admin-featured-slots">
-                {[0, 1, 2].map((slot) => (
+                {Array.from({ length: maxFeaturedArticles }, (_, slot) => (
                   <label key={slot}>
-                    Destaque {slot + 1}
+                    Artigo {slot + 1}
                     <select
                       disabled={busy}
                       onChange={(event) => {
                         const slug = event.target.value;
                         setFeaturedSlugs((current) => {
-                          const next = current.filter((item, index) => index !== slot && item !== slug);
-                          if (slug) next.splice(slot, 0, slug);
-                          return next.slice(0, 3);
+                          const next = [...current];
+                          next[slot] = slug;
+                          return next;
                         });
                       }}
                       value={featuredSlugs[slot] ?? ""}
@@ -608,7 +613,7 @@ export default function AdminDashboard() {
                 onClick={() => void saveFeaturedArticles()}
                 type="button"
               >
-                {busy ? "Salvando…" : "Salvar destaques"}
+                {busy ? "Salvando…" : "Salvar seleção"}
               </button>
             </section>
             <div className="admin-list">
