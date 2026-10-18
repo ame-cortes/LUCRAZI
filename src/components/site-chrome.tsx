@@ -52,7 +52,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="wrap footer-bottom">
-        <span>© Lucrazi. Todos os direitos reservados.</span>
+        <span>© 2026 Lucrazi. Operado por Mateus Ferreira.</span>
         <span>Conteúdo informativo. Resultados financeiros variam.</span>
       </div>
     </footer>
