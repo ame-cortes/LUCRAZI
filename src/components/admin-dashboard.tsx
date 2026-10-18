@@ -29,6 +29,7 @@ import {
 } from "@/lib/articles";
 import { getFirebaseAuth, getFirebaseDb, isFirebaseConfigured } from "@/lib/firebase";
 import { articleToMarkdown } from "@/lib/article-markdown";
+import { getArticleDescription } from "@/lib/article-description";
 import NewsletterManager from "@/components/newsletter-manager";
 
 type EditorArticle = ManagedArticle;
@@ -126,6 +127,9 @@ function validateArticle(article: EditorArticle): string | null {
     return "Revise o artigo: a expressão “teto de faturamento” aparece repetida. Remova a duplicação e confirme qualquer valor em fonte oficial.";
   }
   if (!article.imageAlt.trim() || !article.imageCreditUrl.trim()) return "Preencha o texto alternativo e a fonte da imagem.";
+  if (getArticleDescription(article.description, article.imageAlt, article.imageCreditUrl) !== article.description.trim()) {
+    return "Mantenha o texto alternativo e o crédito nos campos próprios da imagem, não na descrição do artigo.";
+  }
   if (!URL.canParse(article.imageCreditUrl) || new URL(article.imageCreditUrl).protocol !== "https:") {
     return "O crédito da imagem precisa ser um link HTTPS.";
   }
@@ -806,7 +810,7 @@ function ArticleEditor({
             }} /></label>
             <label>Slug<input value={value.slug} onChange={(event) => { setSlugTouched(true); setField("slug", slugify(event.target.value)); }} /></label>
             <label>Categoria<input value={value.category} onChange={(event) => setField("category", event.target.value)} /></label>
-            <label className="admin-field-wide">Descrição para busca e compartilhamento<textarea rows={2} value={value.description} onChange={(event) => setField("description", event.target.value)} /></label>
+            <label className="admin-field-wide">Descrição para busca e compartilhamento<textarea rows={2} value={value.description} onChange={(event) => setField("description", event.target.value)} /><small>Use um resumo do artigo. Texto alternativo e crédito da capa têm campos próprios abaixo.</small></label>
             <label>Autor<input value={value.author} onChange={(event) => setField("author", event.target.value)} /></label>
             <label>Data de publicação<input type="date" value={value.publishedAt} onChange={(event) => setField("publishedAt", event.target.value)} /></label>
             <div className="admin-field-wide admin-action-cta-fields">

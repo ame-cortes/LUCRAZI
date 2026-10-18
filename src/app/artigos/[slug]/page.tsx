@@ -18,6 +18,7 @@ import {
   loadPublishedArticles,
 } from "@/lib/articles";
 import { getMarkdownHeadings } from "@/lib/article-markdown";
+import { getArticleDescription } from "@/lib/article-description";
 import { siteUrl } from "@/lib/site-config";
 
 type ArticlePageProps = {
@@ -52,15 +53,20 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
   }
 
   const seoTitle = getSeoTitle(article.title);
+  const description = getArticleDescription(
+    article.description,
+    article.imageAlt,
+    article.imageCreditUrl,
+  );
 
   return {
     title: seoTitle,
-    description: article.description,
+    description,
     alternates: { canonical: `/artigos/${article.slug}` },
     openGraph: {
       type: "article",
       title: seoTitle,
-      description: article.description,
+      description,
       url: new URL(`/artigos/${article.slug}`, siteUrl).toString(),
       publishedTime: new Date(article.publishedAt).toISOString(),
       modifiedTime: article.updatedAt ? new Date(article.updatedAt).toISOString() : undefined,
@@ -77,7 +83,7 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
     twitter: {
       card: "summary_large_image",
       title: seoTitle,
-      description: article.description,
+      description,
       images: [new URL(article.imageSrc, siteUrl).toString()],
     },
   };
@@ -97,6 +103,11 @@ async function ArticleContent({ params }: ArticlePageProps) {
   const articles = await loadPublishedArticles();
   const article = articles.find((item) => item.slug === slug);
   if (!article) notFound();
+  const description = getArticleDescription(
+    article.description,
+    article.imageAlt,
+    article.imageCreditUrl,
+  );
 
   const markdownHeadings = article.contentMarkdown
     ? getMarkdownHeadings(article.contentMarkdown)
@@ -111,7 +122,7 @@ async function ArticleContent({ params }: ArticlePageProps) {
       {
         "@type": "BlogPosting",
         headline: article.title,
-        description: article.description,
+        description,
         image: new URL(article.imageSrc, siteUrl).toString(),
         datePublished: article.publishedAt,
         dateModified: article.updatedAt ?? article.publishedAt,
@@ -162,7 +173,7 @@ async function ArticleContent({ params }: ArticlePageProps) {
             <header className="article-header">
               <span className="article-category">{article.category}</span>
               <h1>{article.title}</h1>
-              <p className="article-deck">{article.description}</p>
+              {description && <p className="article-deck">{description}</p>}
               <div className="article-byline">
                 <span className="author-avatar">L.</span>
                 <span>Por <strong>{article.author}</strong></span>
