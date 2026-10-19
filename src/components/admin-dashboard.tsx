@@ -268,6 +268,7 @@ export default function AdminDashboard() {
       await setDoc(doc(getFirebaseDb(), "siteSettings", "homepage"), {
         featuredSlugs: featuredSlugs.filter((slug) => slug !== ""),
       });
+      await revalidatePublicContent([]);
       setSavedFeaturedSlugs(featuredSlugs);
       setNotice("Artigos da página inicial atualizados.");
     } catch (saveError) {
@@ -315,6 +316,36 @@ export default function AdminDashboard() {
     } catch (indexNowError) {
       console.error("O conteúdo foi salvo, mas a notificação IndexNow falhou.", indexNowError);
       setError(`O conteúdo foi salvo, mas não foi possível avisar o IndexNow: ${errorMessage(indexNowError)}`);
+    }
+  }
+
+  async function revalidatePublicContent(slugs: string[]) {
+    const currentUser = getFirebaseAuth().currentUser;
+    if (!currentUser) throw new Error("Sua sessão expirou. Entre novamente.");
+    const response = await fetch("/api/admin/revalidate-content", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${await currentUser.getIdToken()}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ slugs }),
+      cache: "no-store",
+    });
+    const body: unknown = await response.json();
+    if (!response.ok) {
+      const message = typeof body === "object" && body !== null && "error" in body
+        && typeof body.error === "string"
+        ? body.error
+        : `Falha ao atualizar as páginas públicas (HTTP ${response.status}).`;
+      throw new Error(`O conteúdo foi salvo, mas não foi possível atualizar as páginas públicas: ${message}`);
+    }
+    if (
+      typeof body !== "object"
+      || body === null
+      || !("revalidated" in body)
+      || body.revalidated !== true
+    ) {
+      throw new Error("O conteúdo foi salvo, mas o servidor não confirmou a atualização das páginas públicas.");
     }
   }
 
@@ -367,6 +398,7 @@ export default function AdminDashboard() {
         updatedAt: serverTimestamp(),
       });
       await batch.commit();
+      await revalidatePublicContent([...indexNowSlugs]);
       setNotice(status === "published" ? "Artigo publicado." : "Rascunho salvo.");
       setSelected(null);
       await refreshArticles();
@@ -385,6 +417,7 @@ export default function AdminDashboard() {
     setNotice("");
     try {
       await deleteManagedArticle(article);
+      await revalidatePublicContent([article.slug]);
       setSelected(null);
       setNotice("Artigo excluído. Apenas o marcador do slug é mantido, para não expor conteúdo e evitar que o guia original reapareça.");
       await refreshArticles();
@@ -425,6 +458,7 @@ export default function AdminDashboard() {
         });
       }
       await batch.commit();
+      await revalidatePublicContent(missing.map((article) => article.slug));
       setNotice(`${missing.length} guias importados e publicados no Firestore.`);
       await refreshArticles();
       await notifyIndexNow(missing.map((article) => article.slug));
@@ -471,6 +505,7 @@ export default function AdminDashboard() {
         batch.delete(doc(db, "deletedArticles", article.slug));
       }
       await batch.commit();
+      await revalidatePublicContent(updates.map(({ article }) => article.slug));
       setNotice(`Conteúdo de ${updates.length} artigo(s) publicado(s) atualizado.`);
       await refreshArticles();
       await notifyIndexNow(updates.map(({ article }) => article.slug));

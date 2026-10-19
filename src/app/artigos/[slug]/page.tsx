@@ -100,8 +100,10 @@ export default function ArticlePage({ params }: ArticlePageProps) {
 async function ArticleContent({ params }: ArticlePageProps) {
   await connection();
   const { slug } = await params;
-  const articles = await loadPublishedArticles();
-  const article = articles.find((item) => item.slug === slug);
+  const [article, articles] = await Promise.all([
+    loadArticle(slug),
+    loadPublishedArticles(),
+  ]);
   if (!article) notFound();
   const description = getArticleDescription(
     article.description,
