@@ -787,6 +787,66 @@ button:focus-visible {
   font-size: 13px;
 }
 
+.home-author-section {
+  padding-block: 68px;
+  background: #f1f0e9;
+}
+
+.home-author-card {
+  display: grid;
+  max-width: 820px;
+  grid-template-columns: 150px minmax(0, 1fr);
+  align-items: center;
+  gap: 30px;
+  margin-inline: auto;
+}
+
+.home-author-image {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.home-author-copy h2 {
+  margin: 9px 0;
+  font-size: clamp(25px, 3vw, 32px);
+  font-weight: 500;
+  letter-spacing: -1px;
+}
+
+.home-author-copy p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.home-author-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 15px;
+  color: #4f6934;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: #a8bf84;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 560px) {
+  .home-author-card {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .home-author-image {
+    width: 88px;
+    height: 88px;
+  }
+}
+
 .catalog-hero {
   padding-block: 28px 62px;
   background:

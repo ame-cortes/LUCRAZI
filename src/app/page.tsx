@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { connection } from "next/server";
 import { loadFeaturedArticleSlugs, loadPublishedArticles, maxFeaturedArticles } from "@/lib/articles";
 import { ArticleCard } from "@/components/article-card";
@@ -155,6 +156,32 @@ export default async function Home() {
           <p className="home-faq-about">
             Saiba mais sobre a <Link href="/sobre">proposta editorial do Lucrazi</Link>.
           </p>
+        </div>
+      </section>
+      <section aria-labelledby="home-author-heading" className="home-author-section">
+        <div className="wrap">
+          <div className="home-author-card">
+            <Image
+              className="home-author-image"
+              src="/images/articles/mateusprodev.jpg"
+              alt="Mateus Ferreira, criador do Lucrazi e desenvolvedor freelancer"
+              width={150}
+              height={150}
+            />
+            <div className="home-author-copy">
+              <span className="eyebrow">QUEM ESTÁ POR TRÁS DO LUCRAZI</span>
+              <h2 id="home-author-heading">Mateus Ferreira</h2>
+              <p>
+                Sou desenvolvedor freelancer e criador do Lucrazi. Trabalho com projetos
+                digitais e presto serviços pontuais e recorrentes para agências de turismo.
+                Criei este espaço para compartilhar informação prática sobre trabalho e
+                oportunidades online, sem promessas de ganhos.
+              </p>
+              <Link className="home-author-link" href="/sobre#mateus-ferreira">
+                Conheça minha história <span aria-hidden="true">↗</span>
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
       <NewsletterSignup />
