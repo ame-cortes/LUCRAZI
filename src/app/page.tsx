@@ -135,15 +135,20 @@ export default async function Home() {
           </div>
         </div>
       </section>
-      <div className="wrap">
-        <AdSlot className="home-display-ad" slotId="2358805021" />
-      </div>
       <section aria-labelledby="home-tools-heading" className="home-tools-section">
         <div className="wrap home-tools-inner">
           <span className="eyebrow">FERRAMENTAS GRATUITAS</span>
           <h2 id="home-tools-heading">Recursos práticos para colocar suas ideias em ação.</h2>
           <div className="home-tool-card">
-            <div className="home-tool-icon" aria-hidden="true">QR</div>
+            <Image
+              className="home-tool-image"
+              src="/images/qr-generator-og.png"
+              alt=""
+              aria-hidden="true"
+              width={1200}
+              height={630}
+              sizes="72px"
+            />
             <div className="home-tool-copy">
               <h3>Gerador de QR Code grátis</h3>
               <p>
@@ -158,6 +163,9 @@ export default async function Home() {
           </div>
         </div>
       </section>
+      <div className="wrap">
+        <AdSlot className="home-display-ad" slotId="2358805021" />
+      </div>
       <section aria-labelledby="home-faq-heading" className="home-faq">
         <div className="wrap home-faq-inner">
           <span className="eyebrow">DÚVIDAS FREQUENTES</span>
