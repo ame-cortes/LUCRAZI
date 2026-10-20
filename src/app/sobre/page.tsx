@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 
 export const metadata: Metadata = {
   title: "Sobre o Lucrazi",
-  description: "Conheça Mateus Ferreira, fundador do Lucrazi, e a proposta de compartilhar caminhos práticos para quem está começando no digital.",
+  description: "Conheça Mateus Ferreira, desenvolvedor freelancer, e o Lucrazi: guias práticos para explorar renda online e projetos digitais com os pés no chão.",
   alternates: { canonical: "/sobre" },
 };
 
@@ -14,36 +15,59 @@ export default function AboutPage() {
       <SiteHeader />
       <main id="main-content" className="wrap info-page">
         <article className="info-page-content">
-          <span className="eyebrow">SOBRE O Lucrazi</span>
-          <h1>Mais clareza para pensar em dinheiro.</h1>
+          <span className="eyebrow">SOBRE O LUCRAZI</span>
+          <h1>Ideias digitais, explicadas com clareza.</h1>
           <p className="info-lead">
-            O Lucrazi foi criado por Mateus Ferreira para democratizar o conhecimento sobre
-            trabalho e empreendedorismo na internet, ajudando quem está no primeiro contato com
-            o digital a entender por onde começar — sem vender a ideia de fórmula rápida para ganhar dinheiro.
+            O Lucrazi é um projeto editorial independente criado para ajudar você a entender
+            caminhos de renda online, trabalho freelancer e pequenos negócios. Aqui, informação
+            prática vem antes de promessas: cada jornada é diferente, e não existe fórmula mágica.
           </p>
-          <h2 id="mateus-ferreira">Quem está por trás do Lucrazi</h2>
+
+          <h2 id="mateus-ferreira">Sobre mim</h2>
+          <div className="about-profile">
+            <Image
+              className="about-profile-image"
+              src="/images/articles/mateusprodev.jpg"
+              alt="Mateus Ferreira, desenvolvedor freelancer"
+              width={150}
+              height={150}
+            />
+            <div>
+              <p>
+                Sou Mateus Ferreira, desenvolvedor freelancer e criador do Lucrazi. Trabalho há
+                cerca de 10 anos com projetos online, desenvolvendo sites e soluções digitais
+                para diferentes negócios.
+              </p>
+              <p>
+                Também presto serviços para agências de turismo, em demandas pontuais ou
+                parcerias recorrentes, adaptando o trabalho às necessidades de cada equipe.
+                Ao longo da minha trajetória, colaborei com projetos como{" "}
+                <a href="https://passeiolegal.com" target="_blank" rel="noreferrer">Passeio Legal</a>,{" "}
+                <a href="https://transferfortalezatur.com.br" target="_blank" rel="noreferrer">Transfer Fortaleza Tur</a>,{" "}
+                <a href="https://barbeariasamuelabreu.com.br" target="_blank" rel="noreferrer">Barbearia Samuel Abreu</a>{" "}
+                e <a href="https://devguardia.cloud" target="_blank" rel="noreferrer">Devguardia</a>.
+              </p>
+              <p>
+                Acompanhe meu trabalho no{" "}
+                <a href="https://www.instagram.com/mateusprodev/" target="_blank" rel="noreferrer">
+                  Instagram @mateusprodev
+                </a>.
+              </p>
+            </div>
+          </div>
+
+          <h2>Sobre o Lucrazi</h2>
           <p>
-            Mateus é empreendedor digital e trabalha há cerca de 10 anos com projetos online.
-            Nesse período, desenvolveu sites para negócios de turismo, barbearias e projetos SaaS,
-            além de atuar com criativos, gestão de anúncios e suporte virtual para uma agência de turismo.
-            Sua experiência prática orienta a proposta do Lucrazi: explicar possibilidades com clareza,
-            especialmente para quem ainda está tentando dar o primeiro passo.
-          </p>
-          <p>
-            Entre os projetos em que trabalhou estão{" "}
-            <a href="https://passeiolegal.com" target="_blank" rel="noreferrer">Passeio Legal</a>,{" "}
-            <a href="https://transferfortalezatur.com.br" target="_blank" rel="noreferrer">Transfer Fortaleza Tur</a>,{" "}
-            <a href="https://barbeariasamuelabreu.com.br" target="_blank" rel="noreferrer">Barbearia Samuel Abreu</a>{" "}
-            e <a href="https://devguardia.cloud" target="_blank" rel="noreferrer">Devguardia</a>.
-            Você também pode acompanhar o trabalho de Mateus no{" "}
-            <a href="https://www.instagram.com/mateusprodev/" target="_blank" rel="noreferrer">Instagram @mateusprodev</a>.
+            A experiência prática com projetos digitais me mostrou como é difícil saber por
+            onde começar. O Lucrazi nasceu para tornar esse caminho mais simples: reunimos
+            explicações acessíveis e ideias para quem quer explorar oportunidades na internet
+            com planejamento e expectativas realistas.
           </p>
           <h2>O que você encontra por aqui</h2>
           <p>
-            Publicamos guias para dar os primeiros passos em uma renda extra, explorar ideias
-            de negócio, organizar serviços freelance e cuidar melhor das decisões do dia a dia.
-            Nosso foco é ajudar você a fazer perguntas melhores, comparar caminhos e pesquisar
-            antes de investir tempo ou dinheiro.
+            Você encontra guias sobre renda extra, serviços freelance, marketing digital,
+            produtos digitais e pequenos negócios. A proposta é ajudar você a comparar
+            possibilidades, fazer perguntas melhores e pesquisar antes de investir tempo ou dinheiro.
           </p>
           <h2>Como tratamos o conteúdo</h2>
           <p>

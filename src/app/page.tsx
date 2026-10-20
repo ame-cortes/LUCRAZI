@@ -56,7 +56,7 @@ const structuredData = {
       "@type": "Person",
       "@id": `${siteUrl}#mateus-ferreira`,
       name: "Mateus Ferreira",
-      jobTitle: "Empreendedor digital e fundador do Lucrazi",
+      jobTitle: "Desenvolvedor freelancer e fundador do Lucrazi",
       url: `${siteUrl}sobre#mateus-ferreira`,
       sameAs: ["https://www.instagram.com/mateusprodev/"],
     },
