@@ -138,6 +138,26 @@ export default async function Home() {
       <div className="wrap">
         <AdSlot className="home-display-ad" slotId="2358805021" />
       </div>
+      <section aria-labelledby="home-tools-heading" className="home-tools-section">
+        <div className="wrap home-tools-inner">
+          <span className="eyebrow">FERRAMENTAS GRATUITAS</span>
+          <h2 id="home-tools-heading">Recursos práticos para colocar suas ideias em ação.</h2>
+          <div className="home-tool-card">
+            <div className="home-tool-icon" aria-hidden="true">QR</div>
+            <div className="home-tool-copy">
+              <h3>Gerador de QR Code grátis</h3>
+              <p>
+                Crie um QR Code para seu link ou texto, personalize as cores e adicione
+                seu logo. A prévia é gratuita; solicite o envio por e-mail para liberar
+                os downloads em PNG e SVG.
+              </p>
+            </div>
+            <Link className="button button-dark home-tool-button" href="/gerador-qr">
+              Criar QR Code <span aria-hidden="true">↗</span>
+            </Link>
+          </div>
+        </div>
+      </section>
       <section aria-labelledby="home-faq-heading" className="home-faq">
         <div className="wrap home-faq-inner">
           <span className="eyebrow">DÚVIDAS FREQUENTES</span>

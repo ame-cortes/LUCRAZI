@@ -787,6 +787,65 @@ button:focus-visible {
   font-size: 13px;
 }
 
+.home-tools-section {
+  padding-block: 68px;
+  background: #f1f0e9;
+}
+
+.home-tools-inner {
+  max-width: 960px;
+}
+
+.home-tools-inner > h2 {
+  max-width: 620px;
+  margin: 12px 0 26px;
+  font-size: clamp(26px, 3vw, 36px);
+  font-weight: 500;
+  letter-spacing: -1.2px;
+}
+
+.home-tool-card {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 22px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 24px;
+  background: #fff;
+}
+
+.home-tool-icon {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  border-radius: 14px;
+  background: #edf1e5;
+  color: #4f6934;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -1px;
+}
+
+.home-tool-copy h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.home-tool-copy p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.home-tool-button {
+  margin-top: 0;
+  white-space: nowrap;
+}
+
 .home-author-section {
   padding-block: 68px;
   background: #f1f0e9;
@@ -836,6 +895,26 @@ button:focus-visible {
 }
 
 @media (max-width: 560px) {
+  .home-tool-card {
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 14px;
+    padding: 18px;
+  }
+
+  .home-tool-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .home-tool-copy h3 {
+    font-size: 16px;
+  }
+
+  .home-tool-button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
   .home-author-card {
     grid-template-columns: 1fr;
     gap: 16px;

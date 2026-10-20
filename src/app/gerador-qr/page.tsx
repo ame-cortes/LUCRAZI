@@ -8,19 +8,19 @@ import { qrCodeUrl, siteUrl } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: {
-    absolute: "Gerador de QR Code Grátis e Personalizado | Lucrazi",
+    absolute: "Gerador de QR Code Grátis Online | Lucrazi",
   },
   description:
-    "Crie QR Codes grátis para links e textos. Personalize cores e logo e baixe em PNG ou SVG após solicitar o envio por e-mail.",
+    "Crie QR Codes grátis para links e textos, personalize cores e adicione seu logo. Prévia online e download em PNG ou SVG após solicitar por e-mail.",
   alternates: { canonical: qrCodeUrl.toString() },
   openGraph: {
     type: "website",
     locale: "pt_BR",
     siteName: "Lucrazi",
     url: qrCodeUrl.toString(),
-    title: "Gerador de QR Code Grátis e Personalizado",
+    title: "Gerador de QR Code Grátis Online",
     description:
-      "Crie QR Codes grátis para links e textos, personalize cores e logo e baixe em PNG ou SVG após solicitar o envio por e-mail.",
+      "Crie QR Codes grátis para links e textos, personalize cores e adicione seu logo. Prévia online e download em PNG ou SVG após solicitar por e-mail.",
     images: [
       {
         url: new URL("/images/qr-generator-og.png", qrCodeUrl).toString(),
@@ -32,9 +32,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Gerador de QR Code Grátis e Personalizado | Lucrazi",
+    title: "Gerador de QR Code Grátis Online | Lucrazi",
     description:
-      "Crie QR Codes grátis para links e textos, personalize cores e logo e baixe em PNG ou SVG após solicitar o envio por e-mail.",
+      "Crie QR Codes grátis para links e textos, personalize cores e adicione seu logo. Prévia online e download em PNG ou SVG após solicitar por e-mail.",
     images: [new URL("/images/qr-generator-og.png", qrCodeUrl).toString()],
   },
 };
@@ -83,9 +83,9 @@ const structuredData = {
     {
       "@type": "WebApplication",
       "@id": `${qrCodeUrl}#webapplication`,
-      name: "Gerador de QR Code Grátis e Personalizado",
+      name: "Gerador de QR Code Grátis Online",
       url: qrCodeUrl.toString(),
-      description: "Crie QR Codes para links e textos, personalize cores e logo e baixe em PNG ou SVG.",
+      description: "Crie QR Codes grátis para links e textos, personalize cores e adicione seu logo. Solicite o envio por e-mail para baixar em PNG ou SVG.",
       applicationCategory: "UtilitiesApplication",
       operatingSystem: "Any",
       browserRequirements: "JavaScript habilitado",
@@ -138,10 +138,11 @@ export default function QrCodePage() {
       <main id="main-content" className="qr-page wrap">
         <header className="qr-page-heading">
           <span className="eyebrow"><span className="eyebrow-dot" /> FERRAMENTA GRATUITA</span>
-          <h1>Gerador de QR Code <span>grátis e personalizado.</span></h1>
+          <h1>Gerador de QR Code grátis <span>online e personalizado.</span></h1>
           <p>
-            Crie um código para um link ou texto, personalize as cores e inclua seu logo.
-            Veja a prévia e solicite o envio por e-mail para liberar os downloads em PNG e SVG.
+            Crie um QR Code grátis para um link ou texto, personalize as cores e inclua seu
+            logo. Confira a prévia e solicite o envio por e-mail para liberar os downloads em
+            PNG ou SVG.
           </p>
         </header>
         <Suspense fallback={<QrCodeGenerator emailDeliveryEnabled={false} />}>
