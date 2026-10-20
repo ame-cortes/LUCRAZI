@@ -1,25 +1,15 @@
 import type { MetadataRoute } from "next";
-import { headers } from "next/headers";
 import { articleClusters } from "@/lib/article-clusters";
 import { loadPublishedArticles } from "@/lib/articles";
-import { hasDedicatedQrCodeHost, isQrCodeHost, qrCodeUrl, siteUrl } from "@/lib/site-config";
+import { ebookUrl, qrCodeUrl, siteUrl } from "@/lib/site-config";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  if (isQrCodeHost((await headers()).get("host"))) {
-    return [{
-      url: qrCodeUrl.toString(),
-      changeFrequency: "monthly",
-      priority: 1,
-    }];
-  }
-
   const articles = await loadPublishedArticles();
   const pages = [
     { path: "", changeFrequency: "weekly" as const, priority: 1 },
     { path: "/artigos", changeFrequency: "weekly" as const, priority: 0.9 },
-    ...(!hasDedicatedQrCodeHost && qrCodeUrl.pathname !== "/"
-      ? [{ path: qrCodeUrl.pathname, changeFrequency: "monthly" as const, priority: 0.6 }]
-      : []),
+    { path: qrCodeUrl.pathname, changeFrequency: "monthly" as const, priority: 0.7 },
+    { path: ebookUrl.pathname, changeFrequency: "monthly" as const, priority: 0.6 },
     { path: "/sobre", changeFrequency: "monthly" as const, priority: 0.5 },
     { path: "/contato", changeFrequency: "monthly" as const, priority: 0.4 },
     { path: "/privacidade", changeFrequency: "yearly" as const, priority: 0.3 },

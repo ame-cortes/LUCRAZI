@@ -8,7 +8,7 @@ import {
   syncBrevoSubscriber,
 } from "@/lib/newsletter-email";
 
-type SubscriberSource = "homepage" | "ebook.lucrazi.com.br";
+type SubscriberSource = "homepage" | "ferramentas-ebook";
 
 type NewsletterSubscriptionResult =
   | { status: "already-subscribed"; welcomeSent: boolean }

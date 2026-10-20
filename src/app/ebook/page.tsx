@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EbookSignupForm } from "@/components/ebook-signup-form";
-import { siteUrl } from "@/lib/site-config";
-
-const ebookUrl = new URL("https://ebook.lucrazi.com.br");
+import { ebookUrl, siteUrl } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: {

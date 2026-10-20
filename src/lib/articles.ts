@@ -35,7 +35,7 @@ const articleActionCtas: Partial<Record<string, ArticleActionCta>> = {
     title: "Quer dar os primeiros passos para faturar na internet?",
     description: "Baixe grátis o e-book “Como faturar seus primeiros R$ 1.000 na internet”. Informe seu e-mail na página para liberar o PDF. O material é educativo e não garante resultados financeiros.",
     buttonLabel: "Acessar e liberar o e-book grátis",
-    url: "https://ebook.lucrazi.com.br",
+    url: "/ferramentas/ebook-gratuito",
   },
 };
 

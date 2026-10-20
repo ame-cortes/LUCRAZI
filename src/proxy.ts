@@ -1,34 +1,54 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { ebookUrl, qrCodeUrl, siteUrl } from "@/lib/site-config";
+
+function permanentRedirect(request: NextRequest, destination: URL) {
+  destination.search = request.nextUrl.search;
+  return NextResponse.redirect(destination, 301);
+}
 
 export function proxy(request: NextRequest) {
-  const hostname = request.nextUrl.hostname.toLowerCase();
+  const hostHeader = request.headers.get("host");
+  const hostname = (hostHeader ?? request.nextUrl.hostname)
+    .toLowerCase()
+    .replace(/:\d+$/, "");
   const isReadRequest = request.method === "GET" || request.method === "HEAD";
   if (!isReadRequest) {
     return NextResponse.next();
   }
 
-  if (hostname === "ebook.lucrazi.com.br" && request.nextUrl.pathname === "/") {
-    const destination = request.nextUrl.clone();
-    destination.pathname = "/ebook";
-    return NextResponse.rewrite(destination);
+  const requestedPath = request.nextUrl.pathname;
+
+  if (
+    (hostname === "ebook.lucrazi.com.br" || hostname === "qr.lucrazi.com.br")
+    && (requestedPath === "/sitemap.xml" || requestedPath === "/robots.txt")
+  ) {
+    return permanentRedirect(request, new URL(requestedPath, siteUrl));
+  }
+
+  if (hostname === "ebook.lucrazi.com.br") {
+    if (requestedPath === "/" || requestedPath === "/ebook") {
+      return permanentRedirect(request, ebookUrl);
+    }
   }
 
   if (hostname === "qr.lucrazi.com.br") {
-    if (request.nextUrl.pathname === "/") {
-      const destination = request.nextUrl.clone();
-      destination.pathname = "/gerador-qr";
-      return NextResponse.rewrite(destination);
+    if (requestedPath === "/" || requestedPath === "/gerador-qr") {
+      return permanentRedirect(request, qrCodeUrl);
     }
-    if (request.nextUrl.pathname === "/gerador-qr") {
-      const destination = request.nextUrl.clone();
-      destination.pathname = "/";
-      return NextResponse.redirect(destination);
-    }
+    return permanentRedirect(request, new URL(requestedPath, siteUrl));
+  }
+
+  if (requestedPath === "/gerador-qr") {
+    return permanentRedirect(request, qrCodeUrl);
+  }
+
+  if (requestedPath === "/ebook") {
+    return permanentRedirect(request, ebookUrl);
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/", "/gerador-qr"],
+  matcher: ["/", "/ebook", "/gerador-qr", "/sitemap.xml", "/robots.txt"],
 };

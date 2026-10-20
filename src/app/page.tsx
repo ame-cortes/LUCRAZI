@@ -152,7 +152,7 @@ export default async function Home() {
                 os downloads em PNG e SVG.
               </p>
             </div>
-            <Link className="button button-dark home-tool-button" href="/gerador-qr">
+            <Link className="button button-dark home-tool-button" href="/ferramentas/gerador-qrcode-gratuito">
               Criar QR Code <span aria-hidden="true">↗</span>
             </Link>
           </div>

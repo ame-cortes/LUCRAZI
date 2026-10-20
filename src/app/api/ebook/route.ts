@@ -129,7 +129,7 @@ export async function POST(request: Request) {
       consentTextVersion: "2026-10-13",
       consentAt: FieldValue.serverTimestamp(),
       createdAt: FieldValue.serverTimestamp(),
-      source: "ebook.lucrazi.com.br",
+      source: "ferramentas-ebook",
       purpose: "ebook_delivery",
       ebookEmailStatus: "pending",
       ebookEmailRequestedAt: FieldValue.serverTimestamp(),
@@ -203,7 +203,7 @@ export async function POST(request: Request) {
     } else {
       try {
         const subscription = await subscribeNewsletterSubscriber(email, emailHash, {
-          source: "ebook.lucrazi.com.br",
+          source: "ferramentas-ebook",
           consentTextVersion: "2026-10-13",
           ebookAttachment: ebook,
         });

@@ -12,7 +12,7 @@ export function SiteHeader() {
           </Link>
           <nav className="main-nav" aria-label="Navegação principal">
             <Link href="/artigos">Guias</Link>
-            <a href={qrCodeUrl.toString()}>QR Code</a>
+            <Link href={qrCodeUrl.pathname}>QR Code</Link>
             <Link href="/sobre">Sobre</Link>
           </nav>
           <Link className="header-cta" href="/#guias-iniciais">
@@ -39,7 +39,7 @@ export function SiteFooter() {
         <div className="footer-links">
           <span>EXPLORE</span>
           <Link href="/artigos">Todos os guias</Link>
-          <a href={qrCodeUrl.toString()}>Gerador de QR Code</a>
+          <Link href={qrCodeUrl.pathname}>Gerador de QR Code</Link>
           <Link href="/#guias-iniciais">Destaques</Link>
           <Link href="/about">Sobre o Lucrazi</Link>
         </div>

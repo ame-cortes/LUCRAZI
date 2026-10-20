@@ -3,14 +3,8 @@ export const siteUrl = new URL(
 );
 
 export const qrCodeUrl = new URL(
-  process.env.NEXT_PUBLIC_QR_CODE_URL || "/gerador-qr",
+  "/ferramentas/gerador-qrcode-gratuito",
   siteUrl,
 );
 
-export const hasDedicatedQrCodeHost =
-  qrCodeUrl.hostname.toLowerCase() !== siteUrl.hostname.toLowerCase();
-
-export function isQrCodeHost(host: string | null): boolean {
-  return hasDedicatedQrCodeHost
-    && host?.toLowerCase().replace(/:\d+$/, "") === qrCodeUrl.hostname.toLowerCase();
-}
+export const ebookUrl = new URL("/ferramentas/ebook-gratuito", siteUrl);

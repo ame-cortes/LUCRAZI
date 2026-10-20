@@ -117,6 +117,54 @@ async function resolveFirebaseAuthKey(kid: string, forceRefresh = false): Promis
   return key;
 }
 
+export async function verifyFirebaseIdToken(request: Request) {
+  const authorization = request.headers.get("authorization");
+  const match = authorization?.match(/^Bearer\s+([^\s]+)$/i);
+  if (!match) return null;
+
+  try {
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+    if (!projectId) throw new Error("NEXT_PUBLIC_FIREBASE_PROJECT_ID não está configurada.");
+    const untrustedHeader = decodeProtectedHeader(match[1]);
+    if (
+      untrustedHeader.alg !== "RS256"
+      || untrustedHeader.typ !== "JWT"
+      || typeof untrustedHeader.kid !== "string"
+    ) return null;
+    const { payload, protectedHeader } = await jwtVerify(
+      match[1],
+      async (header) => {
+        if (typeof header.kid !== "string") {
+          throw new Error("O token Firebase Auth não tem identificador de chave.");
+        }
+        return resolveFirebaseAuthKey(header.kid);
+      },
+      {
+        algorithms: ["RS256"],
+        audience: projectId,
+        issuer: `https://securetoken.google.com/${projectId}`,
+        requiredClaims: ["exp", "iat", "auth_time", "sub"],
+      },
+    );
+    const now = Math.floor(Date.now() / 1000);
+    if (
+      protectedHeader.typ !== "JWT"
+      || typeof payload.sub !== "string"
+      || payload.sub.length === 0
+      || payload.sub.length > 128
+      || typeof payload.iat !== "number"
+      || payload.iat > now + 60
+      || typeof payload.auth_time !== "number"
+      || payload.auth_time > now + 60
+    ) return null;
+
+    return { uid: payload.sub };
+  } catch (error) {
+    console.warn("A solicitação não apresentou um token Firebase Auth válido.", error);
+    return null;
+  }
+}
+
 export async function verifyNewsletterAdmin(request: Request) {
   const authorization = request.headers.get("authorization");
   const match = authorization?.match(/^Bearer (.+)$/);
