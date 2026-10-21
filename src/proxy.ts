@@ -16,6 +16,17 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  if (
+    (hostname === "lucrazi.com.br" || hostname === "www.lucrazi.com.br")
+    && (hostname !== "www.lucrazi.com.br" || request.nextUrl.protocol !== "https:")
+  ) {
+    const destination = request.nextUrl.clone();
+    destination.protocol = "https:";
+    destination.hostname = "www.lucrazi.com.br";
+    destination.port = "";
+    return permanentRedirect(request, destination);
+  }
+
   const requestedPath = request.nextUrl.pathname;
 
   if (
@@ -50,5 +61,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/ebook", "/gerador-qr", "/sitemap.xml", "/robots.txt"],
+  matcher: ["/((?!_next/static|_next/image).*)"],
 };
