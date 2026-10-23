@@ -643,7 +643,7 @@ export default function QrCodeDashboard() {
                     })}
                   </div>
                   <p className="qr-plan-test-notice">
-                    Preço temporário para teste do Premium: R$ 0,05 por mês (ou R$ 0,14 por trimestre). O valor dos outros planos não mudou.
+                    Preço temporário para teste do Premium: R$ 1,00 por mês (ou R$ 2,85 por trimestre). O valor dos outros planos não mudou.
                   </p>
                   <p className="qr-plan-contact">Precisa de QR Codes ilimitados? <Link href="/contato">Fale conosco para consultar.</Link></p>
                 </>

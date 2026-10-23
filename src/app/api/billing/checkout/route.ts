@@ -18,6 +18,23 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+function readProviderError(value: unknown) {
+  if (!isRecord(value)) return { code: null, message: null };
+  const firstCause = Array.isArray(value.cause) ? value.cause.find(isRecord) : null;
+  return {
+    code: typeof value.error === "string"
+      ? value.error
+      : firstCause && typeof firstCause.code === "string"
+        ? firstCause.code
+        : null,
+    message: typeof value.message === "string"
+      ? value.message
+      : firstCause && typeof firstCause.description === "string"
+        ? firstCause.description
+        : null,
+  };
+}
+
 export async function POST(request: Request) {
   const account = await verifyFirebaseIdToken(request);
   if (!account?.email) return jsonError("Entre com um e-mail válido para iniciar a assinatura.", 401);
@@ -100,9 +117,22 @@ export async function POST(request: Request) {
     if (!response.ok || !isRecord(responseBody)
       || typeof responseBody.id !== "string"
       || typeof responseBody.init_point !== "string") {
-      console.error("Mercado Pago não criou a assinatura.", { status: response.status });
+      const providerError = readProviderError(responseBody);
+      console.error("Mercado Pago não criou a assinatura.", {
+        status: response.status,
+        code: providerError.code,
+        message: providerError.message,
+      });
       await markCheckoutFailed(db, billingRef, checkoutRequestId);
-      return jsonError("Não foi possível iniciar o checkout. Tente novamente mais tarde.", 502);
+      const rejectedAmount = `${providerError.code ?? ""} ${providerError.message ?? ""}`
+        .toLocaleLowerCase("en-US")
+        .includes("amount");
+      return jsonError(
+        rejectedAmount
+          ? "O Mercado Pago recusou o valor desta assinatura. O preço de teste foi ajustado; tente novamente. Se persistir, confira o código da resposta nos logs do servidor."
+          : "O Mercado Pago recusou a criação da assinatura. Tente novamente; se persistir, confira o código da resposta nos logs do servidor.",
+        502,
+      );
     }
 
     const checkoutUrl = new URL(responseBody.init_point);

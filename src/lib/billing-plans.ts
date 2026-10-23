@@ -2,8 +2,8 @@ export const billingPlans = {
   solo: {
     name: "Premium",
     qrLimit: 1,
-    monthlyPriceCents: 5,
-    quarterlyPriceCents: 14,
+    monthlyPriceCents: 100,
+    quarterlyPriceCents: 285,
   },
   duo: {
     name: "Duo",
