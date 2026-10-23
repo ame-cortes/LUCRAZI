@@ -207,6 +207,8 @@ export default function QrCodeDashboard() {
   const previewContent = access.hasMetrics && publicId
     ? new URL(`/q/${publicId}`, siteUrl).toString()
     : content.trim();
+  const qrCanvasContent = previewContent || siteUrl.toString();
+  const canDownloadPreview = Boolean(previewContent);
   const totalScans = codes.reduce((total, code) => total + (code.trackingEnabled ? code.scanCount : 0), 0);
   const dynamicCodes = codes.filter((code) => code.trackingEnabled).length;
   const filteredCodes = codes.filter((code) =>
@@ -215,9 +217,9 @@ export default function QrCodeDashboard() {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !previewContent) return;
+    if (!canvas) return;
     let cancelled = false;
-    void QRCode.toCanvas(canvas, previewContent, {
+    void QRCode.toCanvas(canvas, qrCanvasContent, {
       errorCorrectionLevel: "H",
       margin: 4,
       width: 360,
@@ -249,7 +251,7 @@ export default function QrCodeDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [backgroundColor, foregroundColor, logoDataUrl, previewContent]);
+  }, [backgroundColor, foregroundColor, logoDataUrl, qrCanvasContent]);
 
   function resetEditor() {
     setSelectedId("");
@@ -495,7 +497,7 @@ export default function QrCodeDashboard() {
 
   async function downloadPng() {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !canDownloadPreview) return;
     try {
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob((result) => {
@@ -510,6 +512,7 @@ export default function QrCodeDashboard() {
   }
 
   async function downloadSvg() {
+    if (!canDownloadPreview) return;
     try {
       let svg = await QRCode.toString(previewContent, {
         type: "svg",
@@ -642,9 +645,6 @@ export default function QrCodeDashboard() {
                       );
                     })}
                   </div>
-                  <p className="qr-plan-test-notice">
-                    Preço temporário para teste do Premium: R$ 1,00 por mês (ou R$ 2,85 por trimestre). O valor dos outros planos não mudou.
-                  </p>
                   <p className="qr-plan-contact">Precisa de QR Codes ilimitados? <Link href="/contato">Fale conosco para consultar.</Link></p>
                 </>
               )}
@@ -695,15 +695,14 @@ export default function QrCodeDashboard() {
                     {selectedId && <button className="qr-secondary-button" disabled={busy} onClick={resetEditor} type="button">Cancelar edição</button>}
                   </div>
                 </form>
-                {content.trim() && (
-                  <div className="qr-account-preview">
-                    <canvas aria-label="Prévia do QR Code" ref={canvasRef} role="img" />
-                    <div className="qr-download-actions">
-                      <button className="qr-secondary-button" onClick={() => void downloadPng()} type="button">Baixar PNG</button>
-                      <button className="qr-secondary-button" onClick={() => void downloadSvg()} type="button">Baixar SVG</button>
-                    </div>
+                <div className="qr-account-preview">
+                  <canvas aria-label="Prévia do QR Code" ref={canvasRef} role="img" />
+                  {!canDownloadPreview && <p>Digite um link ou texto para atualizar a prévia.</p>}
+                  <div className="qr-download-actions">
+                    <button className="qr-secondary-button" disabled={!canDownloadPreview} onClick={() => void downloadPng()} type="button">Baixar PNG</button>
+                    <button className="qr-secondary-button" disabled={!canDownloadPreview} onClick={() => void downloadSvg()} type="button">Baixar SVG</button>
                   </div>
-                )}
+                </div>
               </section>
               <section className="qr-account-card qr-saved-list">
                 <div className="qr-saved-heading">
