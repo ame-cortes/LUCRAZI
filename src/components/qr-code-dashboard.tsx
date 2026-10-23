@@ -12,7 +12,7 @@ import {
 } from "firebase/auth";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
-import { getFirebaseAuth, isFirebaseConfigured } from "@/lib/firebase";
+import { getPersistentFirebaseAuth, getFirebaseAuth, isFirebaseConfigured } from "@/lib/firebase";
 import { billingPlans, type BillingAccess, type PaidPlanId } from "@/lib/billing-plans";
 import { siteUrl } from "@/lib/site-config";
 
@@ -297,7 +297,7 @@ export default function QrCodeDashboard() {
     setError("");
     setNotice("");
     try {
-      const auth = getFirebaseAuth();
+      const auth = await getPersistentFirebaseAuth();
       if (registering) {
         await createUserWithEmailAndPassword(auth, email.trim(), password);
         setNotice("Conta criada. Seus QR Codes salvos ficarão disponíveis neste painel.");
@@ -316,7 +316,8 @@ export default function QrCodeDashboard() {
     setError("");
     setNotice("");
     try {
-      await signInWithPopup(getFirebaseAuth(), new GoogleAuthProvider());
+      const auth = await getPersistentFirebaseAuth();
+      await signInWithPopup(auth, new GoogleAuthProvider());
     } catch (authError) {
       setError(errorMessage(authError));
     } finally {

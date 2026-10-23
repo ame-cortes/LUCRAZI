@@ -4,7 +4,7 @@ import {
   ReCaptchaEnterpriseProvider,
   type AppCheck,
 } from "firebase/app-check";
-import { getAuth } from "firebase/auth";
+import { browserLocalPersistence, getAuth, setPersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 let appCheck: AppCheck | undefined;
@@ -48,6 +48,12 @@ export function getFirebaseApp() {
 
 export function getFirebaseAuth() {
   return getAuth(getFirebaseApp());
+}
+
+export async function getPersistentFirebaseAuth() {
+  const auth = getFirebaseAuth();
+  await setPersistence(auth, browserLocalPersistence);
+  return auth;
 }
 
 export function getFirebaseDb() {

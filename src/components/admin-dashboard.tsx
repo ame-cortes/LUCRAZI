@@ -28,7 +28,7 @@ import {
   type ArticleStatus,
   type ManagedArticle,
 } from "@/lib/articles";
-import { getFirebaseAuth, getFirebaseDb, isFirebaseConfigured } from "@/lib/firebase";
+import { getFirebaseAuth, getFirebaseDb, getPersistentFirebaseAuth, isFirebaseConfigured } from "@/lib/firebase";
 import { articleToMarkdown } from "@/lib/article-markdown";
 import { getArticleDescription } from "@/lib/article-description";
 import NewsletterManager from "@/components/newsletter-manager";
@@ -231,7 +231,7 @@ export default function AdminDashboard() {
         .then((adminDoc) => {
           if (!adminDoc.exists()) {
             setError(`Sua conta ainda não está autorizada. No Firestore, crie admins/${nextUser.uid} e defina allowAdmin como true.`);
-            return signOut(getFirebaseAuth());
+            return;
           }
           setIsAdmin(true);
           return refreshArticles();
@@ -252,7 +252,8 @@ export default function AdminDashboard() {
     setBusy(true);
     setError("");
     try {
-      await signInWithEmailAndPassword(getFirebaseAuth(), email.trim(), password);
+      const auth = await getPersistentFirebaseAuth();
+      await signInWithEmailAndPassword(auth, email.trim(), password);
     } catch (authError) {
       setError(errorMessage(authError));
     } finally {
