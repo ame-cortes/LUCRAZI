@@ -3,8 +3,10 @@
 import QRCode from "qrcode";
 import {
   createUserWithEmailAndPassword,
+  GoogleAuthProvider,
   onAuthStateChanged,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
   type User,
 } from "firebase/auth";
@@ -146,6 +148,10 @@ export default function QrCodeDashboard() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [codes, setCodes] = useState<SavedQrCode[]>([]);
+  const [loadingCodes, setLoadingCodes] = useState(false);
+  const [refreshingCodes, setRefreshingCodes] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [codeSearch, setCodeSearch] = useState("");
   const [access, setAccess] = useState<BillingAccess>(freeAccess);
   const [pendingCheckoutUrl, setPendingCheckoutUrl] = useState("");
   const [selectedId, setSelectedId] = useState("");
@@ -180,12 +186,20 @@ export default function QrCodeDashboard() {
       if (!nextUser) {
         setCodes([]);
         setAccess(freeAccess);
+        setLoadingCodes(false);
+        setLastUpdated(null);
         return;
       }
       setError("");
-      void refreshCodes(nextUser).catch((loadError: unknown) => {
+      setCodes([]);
+      setLoadingCodes(true);
+      void refreshCodes(nextUser).then(() => {
+        setLastUpdated(new Date());
+      }).catch((loadError: unknown) => {
         console.error("Não foi possível carregar os QR Codes salvos.", loadError);
         setError(`Não foi possível carregar seus QR Codes: ${errorMessage(loadError)}`);
+      }).finally(() => {
+        setLoadingCodes(false);
       });
     });
   }, [firebaseConfigured, refreshCodes]);
@@ -193,6 +207,11 @@ export default function QrCodeDashboard() {
   const previewContent = access.hasMetrics && publicId
     ? new URL(`/q/${publicId}`, siteUrl).toString()
     : content.trim();
+  const totalScans = codes.reduce((total, code) => total + (code.trackingEnabled ? code.scanCount : 0), 0);
+  const dynamicCodes = codes.filter((code) => code.trackingEnabled).length;
+  const filteredCodes = codes.filter((code) =>
+    `${code.name} ${code.content}`.toLocaleLowerCase("pt-BR").includes(codeSearch.trim().toLocaleLowerCase("pt-BR")),
+  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -243,6 +262,21 @@ export default function QrCodeDashboard() {
     setLogoDataUrl("");
   }
 
+  async function refreshDashboard() {
+    if (!user || refreshingCodes) return;
+    setRefreshingCodes(true);
+    setError("");
+    try {
+      await refreshCodes(user);
+      setLastUpdated(new Date());
+    } catch (loadError) {
+      console.error("Não foi possível atualizar os QR Codes salvos.", loadError);
+      setError(`Não foi possível atualizar seus QR Codes: ${errorMessage(loadError)}`);
+    } finally {
+      setRefreshingCodes(false);
+    }
+  }
+
   function editCode(code: SavedQrCode) {
     setSelectedId(code.id);
     setPublicId(code.publicId);
@@ -270,6 +304,19 @@ export default function QrCodeDashboard() {
       } else {
         await signInWithEmailAndPassword(auth, email.trim(), password);
       }
+    } catch (authError) {
+      setError(errorMessage(authError));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleGoogleAuth() {
+    setBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      await signInWithPopup(getFirebaseAuth(), new GoogleAuthProvider());
     } catch (authError) {
       setError(errorMessage(authError));
     } finally {
@@ -509,6 +556,21 @@ export default function QrCodeDashboard() {
                 {busy ? "Aguarde…" : registering ? "Criar conta" : "Entrar"}
               </button>
             </form>
+            <div className="qr-account-login-divider"><span>ou</span></div>
+            <button
+              className="qr-google-button"
+              disabled={busy}
+              onClick={() => void handleGoogleAuth()}
+              type="button"
+            >
+              <svg aria-hidden="true" viewBox="0 0 48 48">
+                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z" />
+                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.25 5.48-4.71 7.18l7.64 5.93c4.46-4.12 7.11-10.18 7.11-17.58Z" />
+                <path fill="#FBBC05" d="M10.53 28.59A14.4 14.4 0 0 1 9.75 24c0-1.59.27-3.12.76-4.59l-7.98-6.19A23.9 23.9 0 0 0 0 24c0 3.87.93 7.53 2.56 10.78l7.97-6.19Z" />
+                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.9-5.87l-7.64-5.93c-2.13 1.43-4.86 2.28-8.26 2.28-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48Z" />
+              </svg>
+              {busy ? "Aguarde…" : "Continuar com Google"}
+            </button>
             <button className="qr-account-switch" disabled={busy} onClick={() => setRegistering((value) => !value)} type="button">
               {registering ? "Já tem conta? Entrar" : "Ainda não tem conta? Criar conta"}
             </button>
@@ -568,8 +630,8 @@ export default function QrCodeDashboard() {
                       const plan = billingPlans[planId];
                       const price = billingInterval === "monthly" ? plan.monthlyPriceCents : plan.quarterlyPriceCents;
                       return (
-                        <article className="qr-plan-option" key={planId}>
-                          <span>{plan.name}</span>
+                        <article className={`qr-plan-option${planId === "solo" ? " qr-plan-option-test" : ""}`} key={planId}>
+                          <span>{planId === "solo" ? "Premium · preço de teste" : plan.name}</span>
                           <strong>{money(price)}<small>/{billingInterval === "monthly" ? "mês" : "trimestre"}</small></strong>
                           <p>{plan.qrLimit} QR Code{plan.qrLimit > 1 ? "s" : ""} · Logo · Métricas</p>
                           <button className="button button-dark" disabled={billingBusy} onClick={() => void startCheckout(planId)} type="button">
@@ -579,12 +641,20 @@ export default function QrCodeDashboard() {
                       );
                     })}
                   </div>
+                  <p className="qr-plan-test-notice">
+                    Preço temporário para teste do Premium: R$ 0,05 por mês (ou R$ 0,14 por trimestre). O valor dos outros planos não mudou.
+                  </p>
                   <p className="qr-plan-contact">Precisa de QR Codes ilimitados? <Link href="/contato">Fale conosco para consultar.</Link></p>
                 </>
               )}
             </section>
             {notice && <p className="admin-message" role="status">{notice}</p>}
             {error && <p className="admin-message admin-error" role="alert">{error}</p>}
+            <section className="qr-account-stats" aria-label="Resumo da conta">
+              <article><span>QR Codes</span><strong>{codes.length}<small> de {access.qrLimit}</small></strong></article>
+              <article><span>Escaneamentos</span><strong>{access.hasMetrics ? totalScans : "—"}</strong></article>
+              <article><span>Códigos dinâmicos</span><strong>{access.hasMetrics ? dynamicCodes : "—"}</strong></article>
+            </section>
             <div className="qr-account-grid">
               <section className="qr-account-card">
                 <div className="qr-editor-heading">
@@ -635,12 +705,28 @@ export default function QrCodeDashboard() {
                 )}
               </section>
               <section className="qr-account-card qr-saved-list">
-                <div className="qr-saved-heading"><h2>Seus QR Codes</h2><span>{codes.length}</span></div>
-                {codes.length === 0 ? (
+                <div className="qr-saved-heading">
+                  <h2>Seus QR Codes</h2>
+                  <button className="qr-secondary-button" disabled={refreshingCodes || loadingCodes} onClick={() => void refreshDashboard()} type="button">
+                    {refreshingCodes || loadingCodes ? "Atualizando…" : "Atualizar"}
+                  </button>
+                </div>
+                <p className="qr-saved-updated">
+                  {lastUpdated ? `Atualizado às ${lastUpdated.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : "Sincronize para ver os dados mais recentes."}
+                </p>
+                <label className="qr-code-search">
+                  Buscar por nome ou conteúdo
+                  <input type="search" value={codeSearch} onChange={(event) => setCodeSearch(event.target.value)} placeholder="Ex.: cardápio ou site.com" />
+                </label>
+                {loadingCodes && codes.length === 0 ? (
+                  <p className="qr-saved-empty" role="status">Carregando seus QR Codes…</p>
+                ) : codes.length === 0 ? (
                   <p className="qr-saved-empty">Você ainda não salvou nenhum QR Code.</p>
+                ) : filteredCodes.length === 0 ? (
+                  <p className="qr-saved-empty">Nenhum QR Code corresponde à busca.</p>
                 ) : (
                   <ul>
-                    {codes.map((code) => (
+                    {filteredCodes.map((code) => (
                       <li key={code.id}>
                         <div>
                           <strong>{code.name}</strong>
