@@ -58,5 +58,21 @@ service cloud.firestore {
       allow read: if request.auth != null && request.auth.uid == adminId;
       allow write: if false;
     }
+
+    match /users/{userId} {
+      allow read, write: if false;
+
+      match /qrCodes/{qrCodeId} {
+        allow read, write: if false;
+      }
+
+      match /billing/{billingId} {
+        allow read, write: if false;
+      }
+    }
+
+    match /mercadoPagoWebhookEvents/{eventId} {
+      allow read, write: if false;
+    }
   }
 }

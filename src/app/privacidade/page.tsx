@@ -18,7 +18,7 @@ export default function PrivacyPage() {
         <article className="info-page-content">
           <span className="eyebrow">TRANSPARÊNCIA</span>
           <h1>Política de privacidade.</h1>
-          <p className="info-lead">Última atualização: 14 de outubro de 2026.</p>
+          <p className="info-lead">Última atualização: 23 de outubro de 2026.</p>
           <p>
             Esta página explica, em linguagem simples, como o site Lucrazi pode tratar
             informações quando você navega por seus artigos. A configuração efetiva pode
@@ -141,6 +141,20 @@ export default function PrivacyPage() {
             PNG e não são guardados pelo Lucrazi. Para pedir acesso, correção ou exclusão dos
             registros do pedido, use o{" "}
             <Link href="/contato">canal de contato</Link>.
+          </p>
+          <h2 id="qr-account">Conta e QR Codes salvos</h2>
+          <p>
+            Se você criar uma conta no painel “Meus QR Codes” e escolher salvar um código,
+            o nome, o conteúdo codificado, o tipo e as cores desse QR Code serão armazenados
+            no Firebase/Cloud Firestore associados ao identificador da sua conta, para que
+            você possa editar, baixar novamente ou excluir o código. Esses dados não são
+            usados para campanhas nem ficam visíveis a outras contas. Você pode excluir cada
+            QR Code pelo painel; para solicitar a exclusão da conta ou exercer outros direitos,
+            use o <Link href="/contato">canal de contato</Link>. O QR Code criado apenas no
+            gerador público não é salvo na conta automaticamente. Nos planos pagos, os QR Codes
+            de links usam um endereço de redirecionamento do Lucrazi para contar escaneamentos;
+            armazenamos o total e o horário do último escaneamento, sem registrar o endereço IP
+            de quem acessou.
           </p>
           <h2>Links de terceiros</h2>
           <p>

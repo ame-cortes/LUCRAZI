@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { QrCodeGenerator } from "@/components/qr-code-generator";
 import { isBrevoEmailConfigured } from "@/lib/newsletter-email";
-import { qrCodeUrl, siteUrl } from "@/lib/site-config";
+import { ebookUrl, qrCodeUrl, siteUrl } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: {
@@ -68,7 +68,7 @@ const qrFaq = [
   {
     question: "O conteúdo do QR Code e o logo enviado ficam armazenados?",
     answer:
-      "Não. O conteúdo codificado e o arquivo do logo não são persistidos. O e-mail, a autorização e os dados necessários para registrar e atender o pedido são tratados conforme a política de privacidade.",
+      "O conteúdo e o logo usados apenas no gerador público não são persistidos. Se você criar uma conta e salvar um QR Code no painel, o nome, o conteúdo e as cores ficam armazenados para você poder editá-lo ou excluí-lo. O e-mail e os dados do pedido são tratados conforme a política de privacidade.",
   },
   {
     question: "O QR Code é dinâmico?",
@@ -109,7 +109,11 @@ const structuredData = {
         name: question,
         acceptedAnswer: {
           "@type": "Answer",
-          text: answer,
+          text:
+            answer
+            + (question === "Que tipo de conteúdo posso colocar no QR Code?"
+              ? " Para divulgar produtos ou serviços, conheça também nosso guia de marketing de afiliados."
+              : ""),
         },
       })),
     },
@@ -144,10 +148,64 @@ export default function QrCodePage() {
             logo. Confira a prévia e solicite o envio por e-mail para liberar os downloads em
             PNG ou SVG.
           </p>
+          <Link className="button button-dark qr-account-entry" href="/minha-conta">
+            Salvar e gerenciar meus QR Codes <span aria-hidden="true">↗</span>
+          </Link>
         </header>
         <Suspense fallback={<QrCodeGenerator emailDeliveryEnabled={false} />}>
           <QrCodeDelivery />
         </Suspense>
+        <section aria-labelledby="qr-guide-heading" className="qr-guide">
+          <span className="eyebrow">ENTENDA E APROVEITE MELHOR</span>
+          <h2 id="qr-guide-heading">QR Code: como funciona e como criar o seu</h2>
+          <div className="qr-guide-grid">
+            <article className="qr-guide-card">
+              <h3>O que é um QR Code e para que serve?</h3>
+              <p>
+                QR Code é um código de barras bidimensional que pode ser lido pela câmera
+                de um celular. Ele pode guardar um endereço de internet ou um texto curto,
+                facilitando o acesso a uma informação sem precisar digitá-la.
+              </p>
+              <p>
+                Restaurantes podem usá-lo para abrir um cardápio, profissionais podem
+                compartilhá-lo em cartões de visita e empresas podem incluí-lo em materiais
+                de marketing ou em links de afiliados. Em qualquer caso, confira se o destino
+                está correto e acessível antes de divulgar o código.
+              </p>
+            </article>
+            <article className="qr-guide-card">
+              <h3>Como usar o Gerador de QR Code do Lucrazi</h3>
+              <ol>
+                <li>Insira um link iniciado por http:// ou https://, ou escreva seu texto.</li>
+                <li>Escolha as cores do código e do fundo; o logo é opcional.</li>
+                <li>Confira a prévia e teste o QR Code com a câmera do celular.</li>
+                <li>Informe seu e-mail, autorize o pedido e solicite o envio.</li>
+                <li>Após a confirmação do envio, baixe o arquivo em PNG ou SVG.</li>
+              </ol>
+              <p>
+                Para links, prefira um endereço curto e confira o contraste entre as cores
+                para facilitar a leitura. O gerador cria códigos estáticos: se o destino
+                mudar, será necessário gerar outro QR Code.
+              </p>
+            </article>
+            <article className="qr-guide-card">
+              <h3>Por que usar um QR Code personalizado?</h3>
+              <p>
+                Cores alinhadas à identidade visual e um logo podem ajudar as pessoas a
+                reconhecer a marca e entender de onde veio o material. A personalização,
+                porém, não garante mais leituras: mantenha bom contraste, deixe o código
+                desobstruído e teste o arquivo impresso ou exibido em diferentes telas.
+              </p>
+              <p>
+                Se você atende negócios locais, veja também o guia{" "}
+                <Link href="/artigos/como-criar-sites-para-pequenos-negocios">
+                  Como criar sites para pequenos negócios
+                </Link>
+                , com orientações para estruturar uma presença online.
+              </p>
+            </article>
+          </div>
+        </section>
         <section aria-labelledby="qr-faq-heading" className="qr-faq">
           <span className="eyebrow">DÚVIDAS SOBRE O GERADOR</span>
           <h2 id="qr-faq-heading">Perguntas frequentes sobre QR Code</h2>
@@ -155,13 +213,42 @@ export default function QrCodePage() {
             {qrFaq.map(({ question, answer }) => (
               <div className="qr-faq-item" key={question}>
                 <dt>{question}</dt>
-                <dd>{answer}</dd>
+                <dd>
+                  {answer}
+                  {question === "Que tipo de conteúdo posso colocar no QR Code?" && (
+                    <>
+                      {" "}Para divulgar produtos ou serviços, conheça também nosso guia de{" "}
+                      <Link href="/artigos/como-ganhar-dinheiro-com-marketing-de-afiliados">
+                        marketing de afiliados
+                      </Link>
+                      .
+                    </>
+                  )}
+                </dd>
               </div>
             ))}
           </dl>
           <p className="qr-faq-privacy">
             Consulte também a <Link href="/privacidade">política de privacidade do Lucrazi</Link>.
           </p>
+        </section>
+        <section aria-labelledby="qr-next-steps-heading" className="qr-next-steps">
+          <div>
+            <span className="eyebrow">CONTINUE EXPLORANDO</span>
+            <h2 id="qr-next-steps-heading">Mais ideias para colocar seus planos em prática</h2>
+            <p>
+              Explore outros conteúdos gratuitos do Lucrazi e encontre orientações para o
+              próximo passo da sua jornada.
+            </p>
+          </div>
+          <div className="qr-next-steps-actions">
+            <Link className="button button-dark" href="/artigos">
+              Explorar guias gratuitos <span aria-hidden="true">↗</span>
+            </Link>
+            <Link className="button button-light" href={ebookUrl.pathname}>
+              Baixar o e-book grátis <span aria-hidden="true">↗</span>
+            </Link>
+          </div>
         </section>
       </main>
       <script

@@ -13,6 +13,7 @@ export function SiteHeader() {
           <nav className="main-nav" aria-label="Navegação principal">
             <Link href="/artigos">Guias</Link>
             <Link href={qrCodeUrl.pathname}>QR Code</Link>
+            <Link href="/minha-conta">Minha conta</Link>
             <Link href="/sobre">Sobre</Link>
           </nav>
           <Link className="header-cta" href="/#guias-iniciais">
@@ -48,6 +49,13 @@ export function SiteFooter() {
           <Link href="/privacy">Privacidade</Link>
           <Link href="/terms">Termos de uso</Link>
           <Link href="/contact">Fale com a redação</Link>
+          <a
+            href="https://transparencyreport.google.com/safe-browsing/search?url=https:%2F%2Fwww.lucrazi.com.br%2F&hl=pt_BR"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Verificação de segurança do site (Google)
+          </a>
           {contactEmail && <a href={`mailto:${contactEmail}`}>{contactEmail}</a>}
         </div>
       </div>

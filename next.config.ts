@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   experimental: {
     inlineCss: true,
+    agentUpgrade: "security",
   },
   images: {
     formats: ["image/avif", "image/webp"],

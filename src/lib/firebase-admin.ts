@@ -158,7 +158,10 @@ export async function verifyFirebaseIdToken(request: Request) {
       || payload.auth_time > now + 60
     ) return null;
 
-    return { uid: payload.sub };
+    return {
+      uid: payload.sub,
+      ...(typeof payload.email === "string" ? { email: payload.email } : {}),
+    };
   } catch (error) {
     console.warn("A solicitação não apresentou um token Firebase Auth válido.", error);
     return null;
