@@ -175,6 +175,9 @@ export async function GET(
       topCities,
       topCountries,
       topRegions,
+      scansByRegion: Array.from(scansByRegion.entries())
+        .map(([region, count]) => ({ region, count }))
+        .sort((a, b) => b.count - a.count),
       deviceTypes,
       operatingSystems,
       browsers,
