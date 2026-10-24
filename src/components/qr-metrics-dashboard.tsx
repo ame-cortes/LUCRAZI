@@ -193,10 +193,10 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
                           <div
                             className="qr-chart-bar"
                             style={{
-                              height: `${Math.max((count / maxMonthly) * 100, count > 0 ? 20 : 0)}%`,
+                              height: `${Math.max((count / maxMonthly) * 100, count > 0 ? 30 : 0)}%`,
                               opacity: count > 0 ? 1 : 0.3
                             }}
-                            title={`${count} escaneamentos`}
+                            title={`${month}: ${count} escaneamentos`}
                           />
                           <span className="qr-chart-label">{month}</span>
                         </div>
@@ -209,10 +209,10 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
                         <div
                           className="qr-chart-bar"
                           style={{
-                            height: `${Math.max((count / maxDailyDateScans) * 100, count > 0 ? 20 : 0)}%`,
+                            height: `${Math.max((count / maxDailyDateScans) * 100, count > 0 ? 30 : 0)}%`,
                             opacity: count > 0 ? 1 : 0.3
                           }}
-                          title={`${count} escaneamentos`}
+                          title={`${metrics.dateLabels[index] || ""}: ${count} escaneamentos`}
                         />
                         <span className="qr-chart-label">{metrics.dateLabels[index] || ""}</span>
                       </div>
