@@ -5792,16 +5792,62 @@ button:focus-visible {
   list-style: none;
 }
 
+.qr-metrics-list-bars ul {
+  gap: 14px;
+}
+
 .qr-metrics-list li {
   display: grid;
-  grid-template-columns: 24px 1fr auto;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 8px;
+  grid-template-columns: 24px 1fr;
+  grid-template-rows: auto auto;
+  gap: 6px 8px;
+  align-items: start;
+  margin-bottom: 12px;
 }
 
 .qr-metrics-list li:last-child {
   margin-bottom: 0;
+}
+
+.qr-metric-count {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.qr-metric-bar {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  height: 8px;
+  margin-top: 2px;
+}
+
+.qr-metrics-list-bars li {
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 4px 12px;
+  align-items: center;
+}
+
+.qr-metrics-list-bars .qr-metric-name {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.qr-metrics-list-bars .qr-metric-count {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+}
+
+.qr-metrics-list-bars .qr-metric-bar {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  height: 8px;
+  margin-top: 4px;
 }
 
 .qr-metric-rank {
@@ -5829,7 +5875,7 @@ button:focus-visible {
 
 .qr-metric-bar {
   grid-column: 2;
-  height: 6px;
+  height: 8px;
   border-radius: 3px;
   background: #e8e6df;
   overflow: hidden;
@@ -5877,10 +5923,10 @@ button:focus-visible {
   grid-template-columns: 1fr;
   grid-template-rows: repeat(24, minmax(0, 1fr));
   align-items: center;
-  min-height: 320px;
+  min-height: 200px;
   padding-bottom: 0;
   border-bottom: 0;
-  gap: 4px;
+  gap: 2px;
 }
 
 .qr-chart-bar-wrapper {
@@ -6023,7 +6069,7 @@ button:focus-visible {
 
   .qr-metrics-list li {
     grid-template-columns: 22px 1fr;
-    gap: 6px;
+    gap: 5px;
   }
 
   .qr-metric-rank {
@@ -6042,10 +6088,7 @@ button:focus-visible {
   }
 
   .qr-metric-bar {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    height: 5px;
-    margin-top: 4px;
+    height: 6px;
   }
 
   .qr-metrics-chart {

@@ -194,7 +194,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
                     ))}
                   </ul>
                 ) : (
-                  <p className="qr-metrics-empty">Sem dados de cidades</p>
+                  <p className="qr-metrics-empty">Aguardando dados de localização...</p>
                 )}
               </div>
               <div className="qr-metrics-list">
@@ -242,17 +242,17 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
               Métricas de Dispositivo
             </h3>
             <div className="qr-metrics-grid">
-              <div className="qr-metrics-list">
+              <div className="qr-metrics-list qr-metrics-list-bars">
                 <h4>Tipo de Dispositivo</h4>
                 {metrics.deviceTypes.length > 0 ? (
                   <ul>
                     {metrics.deviceTypes.map((item) => (
                       <li key={item.type}>
                         <span className="qr-metric-name">{item.type}</span>
+                        <span className="qr-metric-count">{item.count} ({item.percentage.toFixed(1)}%)</span>
                         <div className="qr-metric-bar">
                           <div className="qr-metric-bar-fill" style={{ width: `${item.percentage}%` }} />
                         </div>
-                        <span className="qr-metric-count">{item.count} ({item.percentage.toFixed(1)}%)</span>
                       </li>
                     ))}
                   </ul>
@@ -260,17 +260,17 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
                   <p className="qr-metrics-empty">Sem dados de dispositivos</p>
                 )}
               </div>
-              <div className="qr-metrics-list">
+              <div className="qr-metrics-list qr-metrics-list-bars">
                 <h4>Sistema Operacional</h4>
                 {metrics.operatingSystems.length > 0 ? (
                   <ul>
                     {metrics.operatingSystems.map((item) => (
                       <li key={item.os}>
                         <span className="qr-metric-name">{item.os}</span>
+                        <span className="qr-metric-count">{item.count} ({item.percentage.toFixed(1)}%)</span>
                         <div className="qr-metric-bar">
                           <div className="qr-metric-bar-fill" style={{ width: `${item.percentage}%` }} />
                         </div>
-                        <span className="qr-metric-count">{item.count} ({item.percentage.toFixed(1)}%)</span>
                       </li>
                     ))}
                   </ul>
@@ -278,17 +278,17 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
                   <p className="qr-metrics-empty">Sem dados de OS</p>
                 )}
               </div>
-              <div className="qr-metrics-list">
+              <div className="qr-metrics-list qr-metrics-list-bars">
                 <h4>Navegadores</h4>
                 {metrics.browsers.length > 0 ? (
                   <ul>
                     {metrics.browsers.map((item) => (
                       <li key={item.browser}>
                         <span className="qr-metric-name">{item.browser}</span>
+                        <span className="qr-metric-count">{item.count} ({item.percentage.toFixed(1)}%)</span>
                         <div className="qr-metric-bar">
                           <div className="qr-metric-bar-fill" style={{ width: `${item.percentage}%` }} />
                         </div>
-                        <span className="qr-metric-count">{item.count} ({item.percentage.toFixed(1)}%)</span>
                       </li>
                     ))}
                   </ul>
