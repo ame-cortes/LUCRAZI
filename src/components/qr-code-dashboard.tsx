@@ -141,6 +141,50 @@ function downloadFile(filename: string, content: BlobPart, type: string) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+function getSavedQrContent(code: SavedQrCode) {
+  return code.trackingEnabled
+    ? new URL(`/q/${code.publicId}`, siteUrl).toString()
+    : code.content;
+}
+
+async function renderSavedQrCode(code: SavedQrCode) {
+  const canvas = document.createElement("canvas");
+  await QRCode.toCanvas(canvas, getSavedQrContent(code), {
+    errorCorrectionLevel: "H",
+    margin: 4,
+    width: 720,
+    color: { dark: code.foregroundColor, light: code.backgroundColor },
+  });
+
+  if (code.logoDataUrl) {
+    const image = new Image();
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve();
+      image.onerror = () => reject(new Error("Não foi possível carregar o logo deste QR Code."));
+      image.src = code.logoDataUrl;
+    });
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("O navegador não conseguiu preparar a imagem do QR Code.");
+
+    const logoSize = canvas.width * 0.2;
+    const backingSize = logoSize * 1.25;
+    const center = canvas.width / 2;
+    context.fillStyle = code.backgroundColor;
+    context.beginPath();
+    context.roundRect(
+      center - backingSize / 2,
+      center - backingSize / 2,
+      backingSize,
+      backingSize,
+      backingSize * 0.12,
+    );
+    context.fill();
+    context.drawImage(image, center - logoSize / 2, center - logoSize / 2, logoSize, logoSize);
+  }
+
+  return canvas;
+}
+
 export default function QrCodeDashboard() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const firebaseConfigured = isFirebaseConfigured();
@@ -187,7 +231,7 @@ export default function QrCodeDashboard() {
 
         // Gerar imagem do QR Code para preview
         try {
-          const qrDataUrl = await QRCode.toDataURL(savedCode.content, {
+          const qrDataUrl = await QRCode.toDataURL(getSavedQrContent(savedCode), {
             width: 120,
             margin: 1,
             color: {
@@ -237,7 +281,6 @@ export default function QrCodeDashboard() {
     ? new URL(`/q/${publicId}`, siteUrl).toString()
     : content.trim();
   const qrCanvasContent = previewContent || "https://www.lucrazi.com.br";
-  const canDownloadPreview = true;
   const totalScans = codes.reduce((total, code) => total + (code.trackingEnabled ? code.scanCount : 0), 0);
   const dynamicCodes = codes.filter((code) => code.trackingEnabled).length;
   const filteredCodes = codes.filter((code) =>
@@ -613,37 +656,44 @@ export default function QrCodeDashboard() {
     }
   }
 
-  async function downloadPng() {
-    const canvas = canvasRef.current;
-    if (!canvas || !canDownloadPreview) return;
+  async function downloadSavedPng(code: SavedQrCode) {
     try {
+      const canvas = await renderSavedQrCode(code);
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob((result) => {
           if (result) resolve(result);
           else reject(new Error("O navegador não conseguiu preparar o PNG."));
         }, "image/png");
       });
-      downloadFile("qr-code-lucrazi.png", blob, "image/png");
+      downloadFile(`qr-code-${code.name.trim().replace(/[^\p{L}\p{N}-]+/gu, "-") || code.id}.png`, blob, "image/png");
     } catch (downloadError) {
       setError(`Não foi possível baixar o PNG: ${errorMessage(downloadError)}`);
     }
   }
 
-  async function downloadSvg() {
-    if (!canDownloadPreview) return;
+  async function downloadSavedSvg(code: SavedQrCode) {
     try {
-      let svg = await QRCode.toString(previewContent, {
+      let svg = await QRCode.toString(getSavedQrContent(code), {
         type: "svg",
         errorCorrectionLevel: "H",
         margin: 4,
-        width: 360,
-        color: { dark: foregroundColor, light: backgroundColor },
+        width: 720,
+        color: { dark: code.foregroundColor, light: code.backgroundColor },
       });
-      if (logoDataUrl) {
-        const overlay = `<rect x="38%" y="38%" width="24%" height="24%" rx="3%" fill="${backgroundColor}"/><image href="${logoDataUrl}" x="40%" y="40%" width="20%" height="20%" preserveAspectRatio="xMidYMid meet"/>`;
+      if (code.logoDataUrl) {
+        const escapedBackground = code.backgroundColor.replace(/[&<>"']/g, (character) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          "\"": "&quot;",
+          "'": "&apos;",
+        })[character] || character);
+        const escapedLogo = code.logoDataUrl.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+        const overlay = `<rect x="38%" y="38%" width="24%" height="24%" rx="3%" fill="${escapedBackground}"/><image href="${escapedLogo}" x="40%" y="40%" width="20%" height="20%" preserveAspectRatio="xMidYMid meet"/>`;
         svg = svg.replace("</svg>", `${overlay}</svg>`);
       }
-      downloadFile("qr-code-lucrazi.svg", svg, "image/svg+xml;charset=utf-8");
+      const filename = code.name.trim().replace(/[^\p{L}\p{N}-]+/gu, "-") || code.id;
+      downloadFile(`qr-code-${filename}.svg`, svg, "image/svg+xml;charset=utf-8");
     } catch (downloadError) {
       setError(`Não foi possível baixar o SVG: ${errorMessage(downloadError)}`);
     }
@@ -919,14 +969,6 @@ export default function QrCodeDashboard() {
                   height={360}
                 />
                 <p className="qr-preview-hint">Escaneie o código com a câmera antes de imprimir ou compartilhar.</p>
-                <div className="qr-download-actions">
-                  <button className="button button-dark" onClick={() => void downloadPng()} type="button">
-                    Baixar PNG <span aria-hidden="true">↓</span>
-                  </button>
-                  <button className="qr-secondary-button" onClick={() => void downloadSvg()} type="button">
-                    Baixar SVG
-                  </button>
-                </div>
                 {!access.hasMetrics && contentType === "url" && (
                   <div className="qr-preview-upsell">
                     <p>
@@ -1016,6 +1058,8 @@ export default function QrCodeDashboard() {
                             {code.trackingEnabled && (
                               <button onClick={() => viewMetrics(code)} disabled={busy} type="button" className="qr-action-button qr-action-metrics">Métricas</button>
                             )}
+                            <button onClick={() => void downloadSavedPng(code)} disabled={busy} type="button" className="qr-action-button qr-action-download">Baixar PNG</button>
+                            <button onClick={() => void downloadSavedSvg(code)} disabled={busy} type="button" className="qr-action-button qr-action-download">Baixar SVG</button>
                             <button onClick={() => editCode(code)} disabled={busy} type="button" className="qr-action-button qr-action-edit">Editar</button>
                             <button onClick={() => void removeCode(code)} disabled={busy} type="button" className="qr-action-button qr-action-delete">Excluir</button>
                           </div>

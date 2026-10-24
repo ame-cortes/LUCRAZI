@@ -3944,21 +3944,7 @@ button:focus-visible {
   margin: 0;
 }
 
-.qr-download-actions {
-  display: flex;
-  width: 100%;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 20px;
-}
 
-.qr-download-actions .button {
-  min-height: 46px;
-  gap: 11px;
-  margin: 0;
-  font-size: 13px;
-}
 
 .qr-secondary-button {
   min-height: 46px;
@@ -5069,6 +5055,16 @@ button:focus-visible {
   border-color: #8a9b68;
 }
 
+.qr-action-download {
+  color: #394b67;
+  border-color: #ccd6e3;
+}
+
+.qr-action-download:hover {
+  background: #f1f5fa;
+  border-color: #8ea2bc;
+}
+
 .qr-saved-actions button:disabled,
 .qr-account-switch:disabled {
   cursor: wait;
@@ -5379,14 +5375,6 @@ button:focus-visible {
     max-width: 300px;
   }
 
-  .qr-download-actions {
-    gap: 10px;
-  }
-
-  .qr-download-actions .button {
-    min-height: 44px;
-  }
-
   .qr-editor-heading h2 {
     font-size: 20px;
   }
@@ -5558,15 +5546,6 @@ button:focus-visible {
 
   .qr-preview-hint {
     font-size: 11px;
-  }
-
-  .qr-download-actions {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .qr-download-actions .button {
-    width: 100%;
   }
 
   .qr-preview-upsell {
