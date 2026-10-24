@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 import type { User } from "firebase/auth";
 
 interface MetricsData {
@@ -14,6 +15,13 @@ interface MetricsData {
   topCountries: { country: string; count: number }[];
   topRegions: { region: string; count: number }[];
   scansByRegion: { region: string; count: number }[];
+  scanLocations: {
+    city: string | null;
+    region: string | null;
+    latitude: number | null;
+    longitude: number | null;
+    count: number;
+  }[];
   deviceTypes: { type: string; count: number; percentage: number }[];
   operatingSystems: { os: string; count: number; percentage: number }[];
   browsers: { browser: string; count: number; percentage: number }[];
@@ -31,60 +39,10 @@ interface QrMetricsDashboardProps {
 const HOURS = ["00h", "02h", "04h", "06h", "08h", "10h", "12h", "14h", "16h", "18h", "20h", "22h"];
 const DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-const BRAZILIAN_STATES = [
-  { uf: "AC", name: "Acre", x: 54, y: 294 },
-  { uf: "AL", name: "Alagoas", x: 383, y: 339 },
-  { uf: "AP", name: "Amapá", x: 259, y: 116 },
-  { uf: "AM", name: "Amazonas", x: 158, y: 224 },
-  { uf: "BA", name: "Bahia", x: 335, y: 378 },
-  { uf: "CE", name: "Ceará", x: 367, y: 257 },
-  { uf: "DF", name: "Distrito Federal", x: 294, y: 388 },
-  { uf: "ES", name: "Espírito Santo", x: 374, y: 453 },
-  { uf: "GO", name: "Goiás", x: 276, y: 385 },
-  { uf: "MA", name: "Maranhão", x: 316, y: 281 },
-  { uf: "MT", name: "Mato Grosso", x: 220, y: 372 },
-  { uf: "MS", name: "Mato Grosso do Sul", x: 235, y: 452 },
-  { uf: "MG", name: "Minas Gerais", x: 334, y: 433 },
-  { uf: "PA", name: "Pará", x: 240, y: 220 },
-  { uf: "PB", name: "Paraíba", x: 389, y: 286 },
-  { uf: "PR", name: "Paraná", x: 292, y: 500 },
-  { uf: "PE", name: "Pernambuco", x: 378, y: 310 },
-  { uf: "PI", name: "Piauí", x: 343, y: 300 },
-  { uf: "RJ", name: "Rio de Janeiro", x: 357, y: 476 },
-  { uf: "RN", name: "Rio Grande do Norte", x: 397, y: 267 },
-  { uf: "RS", name: "Rio Grande do Sul", x: 278, y: 555 },
-  { uf: "RO", name: "Rondônia", x: 133, y: 350 },
-  { uf: "RR", name: "Roraima", x: 181, y: 105 },
-  { uf: "SC", name: "Santa Catarina", x: 306, y: 527 },
-  { uf: "SP", name: "São Paulo", x: 317, y: 474 },
-  { uf: "SE", name: "Sergipe", x: 373, y: 358 },
-  { uf: "TO", name: "Tocantins", x: 273, y: 310 },
-] as const;
-
-const STATE_NAMES = new Map(
-  BRAZILIAN_STATES.flatMap((state) => [
-    [state.uf, state.uf],
-    [state.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(), state.uf],
-  ]),
-);
-
-function getBrazilStatePoints(regions: MetricsData["scansByRegion"]) {
-  const countsByState = new Map<string, number>();
-
-  regions.forEach(({ region, count }) => {
-    const normalizedRegion = region.trim().normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .replace(/^(estado de|estado do|state of)\s+/, "");
-    const stateCode = STATE_NAMES.get(normalizedRegion);
-    if (stateCode) countsByState.set(stateCode, (countsByState.get(stateCode) || 0) + count);
-  });
-
-  return BRAZILIAN_STATES.flatMap((state) => {
-    const count = countsByState.get(state.uf);
-    return count ? [{ ...state, count }] : [];
-  });
-}
+const QrMetricsMap = dynamic(() => import("@/components/qr-metrics-map"), {
+  ssr: false,
+  loading: () => <div className="qr-brazil-map-loading">Carregando mapa…</div>,
+});
 
 export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: QrMetricsDashboardProps) {
   const [metrics, setMetrics] = useState<MetricsData | null>(null);
@@ -182,8 +140,6 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
   const maxHourlyScans = Math.max(...metrics.scansByHour, 1);
   const maxDailyScans = Math.max(...metrics.scansByDay, 1);
   const maxDailyDateScans = Math.max(...metrics.scansByDate, 1);
-  const brazilStatePoints = getBrazilStatePoints(metrics.scansByRegion || metrics.topRegions || []);
-  const maxStateScans = Math.max(...brazilStatePoints.map((state) => state.count), 1);
 
   return (
     <div className="qr-modal-overlay" onClick={onClose}>
@@ -285,54 +241,10 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
               </svg>
               Métricas Geográficas
             </h3>
-            <div className="qr-brazil-map-card">
-              <div className="qr-brazil-map-heading">
-                <div>
-                  <h4>Escaneamentos por estado</h4>
-                  <p>Distribuição aproximada com base na localização do IP.</p>
-                </div>
-                {brazilStatePoints.length > 0 && (
-                  <span>{brazilStatePoints.reduce((total, state) => total + state.count, 0).toLocaleString("pt-BR")} scans</span>
-                )}
-              </div>
-              {brazilStatePoints.length > 0 ? (
-                <>
-                  <div className="qr-brazil-map">
-                    <svg viewBox="0 0 620 520" role="img" aria-label="Mapa do Brasil com volume de escaneamentos por estado">
-                      <path
-                        className="qr-brazil-map-land"
-                        transform="translate(0 15) scale(1.3 0.82)"
-                        d="M184 24 217 34 241 51 271 48 294 64 319 72 333 96 363 105 374 128 397 142 403 163 426 181 417 200 431 216 419 235 426 254 412 272 417 293 400 309 403 330 387 345 394 363 381 376 386 397 370 411 376 432 363 447 366 466 349 480 349 499 334 510 331 529 314 542 307 561 288 576 272 561 259 545 253 527 239 516 227 497 213 488 202 469 184 459 171 439 155 426 145 405 128 392 119 373 102 361 98 340 80 325 79 306 61 291 58 272 43 254 48 235 65 222 67 202 84 187 87 165 105 149 111 128 130 113 137 91 157 80 163 58 181 46Z"
-                      />
-                      {brazilStatePoints.map((state) => {
-                        const radius = 7 + Math.sqrt(state.count / maxStateScans) * 13;
-                        const intensity = state.count / maxStateScans;
-                        return (
-                          <g key={state.uf} className="qr-brazil-map-point">
-                            <title>{`${state.name}: ${state.count} scans`}</title>
-                            <circle
-                              cx={state.x * 1.3}
-                              cy={state.y * 0.82 + 15}
-                              r={radius}
-                              fill={intensity > 0.66 ? "#3e6b39" : intensity > 0.33 ? "#78924c" : "#a8bd78"}
-                              fillOpacity="0.82"
-                            />
-                            <text x={state.x * 1.3} y={state.y * 0.82 + 18} textAnchor="middle">{state.uf}</text>
-                          </g>
-                        );
-                      })}
-                    </svg>
-                  </div>
-                  <div className="qr-brazil-map-legend">
-                    <span><i className="qr-map-legend-low" />Menor volume</span>
-                    <span><i className="qr-map-legend-high" />Maior volume</span>
-                    <span>O tamanho do ponto representa a quantidade de scans</span>
-                  </div>
-                </>
-              ) : (
-                <p className="qr-metrics-empty">Ainda não há scans identificados em estados brasileiros neste período.</p>
-              )}
-            </div>
+            <QrMetricsMap
+              scansByRegion={metrics.scansByRegion || metrics.topRegions || []}
+              scanLocations={metrics.scanLocations || []}
+            />
             <div className="qr-metrics-grid qr-metrics-grid-3">
               <div className="qr-metrics-list">
                 <h4>Top Cidades</h4>

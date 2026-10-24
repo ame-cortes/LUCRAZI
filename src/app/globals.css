@@ -5834,8 +5834,9 @@ button:focus-visible {
 
 .qr-brazil-map-heading {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
@@ -5851,47 +5852,55 @@ button:focus-visible {
   font-size: 12px;
 }
 
-.qr-brazil-map-heading > span {
-  color: #4e6c2d;
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.qr-brazil-map {
+.qr-map-state-select {
   display: grid;
-  min-height: 300px;
+  gap: 4px;
+  min-width: min(220px, 100%);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.qr-map-state-select select {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 6px 10px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+
+.qr-brazil-map-status {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.qr-brazil-map-status:empty {
+  display: none;
+}
+
+.qr-brazil-map-status [role="alert"] {
+  color: #a33326;
+}
+
+.qr-brazil-map-loading {
+  display: grid;
+  min-height: 420px;
   place-items: center;
-  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--muted);
+  background: #f7f8f3;
+}
+
+.qr-brazil-leaflet-map {
+  z-index: 0;
+  width: 100%;
+  height: min(62vh, 580px);
+  min-height: 380px;
   border-radius: 8px;
-  background:
-    radial-gradient(ellipse at center, rgba(226, 235, 211, 0.5), transparent 72%),
-    #f7f8f3;
-}
-
-.qr-brazil-map svg {
-  display: block;
-  width: min(100%, 390px);
-  max-height: 480px;
-}
-
-.qr-brazil-map-land {
-  fill: #e6ecd9;
-  stroke: #9aab7b;
-  stroke-width: 2;
-  stroke-linejoin: round;
-}
-
-.qr-brazil-map-point circle {
-  stroke: #fff;
-  stroke-width: 2;
-}
-
-.qr-brazil-map-point text {
-  fill: #fff;
-  font-size: 8px;
-  font-weight: 700;
-  pointer-events: none;
+  background: #eaf0f3;
 }
 
 .qr-brazil-map-legend {
@@ -5915,12 +5924,23 @@ button:focus-visible {
   border-radius: 50%;
 }
 
-.qr-map-legend-low {
-  background: #a8bd78;
+.qr-map-legend-state {
+  background: #78924c;
 }
 
-.qr-map-legend-high {
-  background: #3e6b39;
+.qr-map-legend-point {
+  background: #c44f37;
+}
+
+@media (max-width: 600px) {
+  .qr-brazil-leaflet-map {
+    height: 55vh;
+    min-height: 320px;
+  }
+
+  .qr-map-state-select {
+    width: 100%;
+  }
 }
 
 .qr-metrics-cards {

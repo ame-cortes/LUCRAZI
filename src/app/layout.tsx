@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import { siteUrl } from "@/lib/site-config";
+import "leaflet/dist/leaflet.css";
 import "@uiw/react-md-editor/markdown-editor.css";
 import "./globals.css";
 

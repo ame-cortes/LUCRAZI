@@ -74,6 +74,8 @@ export async function GET(
         city: data.city,
         country: data.country,
         region: data.region,
+        latitude: data.latitude,
+        longitude: data.longitude,
         deviceType: data.deviceType,
         os: data.os,
         browser: data.browser,
@@ -102,6 +104,13 @@ export async function GET(
     const scansByCity = new Map<string, number>();
     const scansByCountry = new Map<string, number>();
     const scansByRegion = new Map<string, number>();
+    const scansByLocation = new Map<string, {
+      city: string | null;
+      region: string | null;
+      latitude: number | null;
+      longitude: number | null;
+      count: number;
+    }>();
 
     scans.forEach(scan => {
       const date = scan.timestamp;
@@ -130,6 +139,35 @@ export async function GET(
       }
       if (scan.region) {
         scansByRegion.set(scan.region, (scansByRegion.get(scan.region) || 0) + 1);
+      }
+      if (scan.city || scan.region) {
+        const latitude = typeof scan.latitude === "number" &&
+          Number.isFinite(scan.latitude) &&
+          scan.latitude >= -90 &&
+          scan.latitude <= 90
+          ? Math.round(scan.latitude * 100) / 100
+          : null;
+        const longitude = typeof scan.longitude === "number" &&
+          Number.isFinite(scan.longitude) &&
+          scan.longitude >= -180 &&
+          scan.longitude <= 180
+          ? Math.round(scan.longitude * 100) / 100
+          : null;
+        const locationKey = latitude !== null && longitude !== null
+          ? `${latitude},${longitude},${scan.city || ""},${scan.region || ""}`
+          : `${scan.city || ""},${scan.region || ""}`;
+        const existingLocation = scansByLocation.get(locationKey);
+        if (existingLocation) {
+          existingLocation.count++;
+        } else {
+          scansByLocation.set(locationKey, {
+            city: scan.city || null,
+            region: scan.region || null,
+            latitude,
+            longitude,
+            count: 1,
+          });
+        }
       }
     });
 
@@ -178,6 +216,7 @@ export async function GET(
       scansByRegion: Array.from(scansByRegion.entries())
         .map(([region, count]) => ({ region, count }))
         .sort((a, b) => b.count - a.count),
+      scanLocations: Array.from(scansByLocation.values()),
       deviceTypes,
       operatingSystems,
       browsers,

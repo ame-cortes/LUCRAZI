@@ -10,6 +10,8 @@ interface ScanData {
   city?: string | null;
   country?: string | null;
   region?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   deviceType?: string;
   os?: string;
   browser?: string;
@@ -20,10 +22,18 @@ interface GeoLocation {
   city: string | null;
   country: string | null;
   region: string | null;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 function geoField(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function geoCoordinate(value: unknown, min: number, max: number): number | null {
+  return typeof value === "number" && Number.isFinite(value) && value >= min && value <= max
+    ? value
+    : null;
 }
 
 function parseUserAgent(userAgent: string) {
@@ -72,6 +82,8 @@ async function getGeoLocation(ip: string) {
           city: geoField(data.city),
           country: geoField(data.country),
           region: geoField(data.region),
+          latitude: geoCoordinate(data.latitude, -90, 90),
+          longitude: geoCoordinate(data.longitude, -180, 180),
         };
       },
     },
@@ -84,6 +96,8 @@ async function getGeoLocation(ip: string) {
           city: geoField(data.city),
           country: geoField(data.country_name) || geoField(data.country),
           region: geoField(data.region),
+          latitude: geoCoordinate(data.latitude, -90, 90),
+          longitude: geoCoordinate(data.longitude, -180, 180),
         };
       },
     },
@@ -181,6 +195,8 @@ export async function GET(
           city: geoData?.city || null,
           country: geoData?.country || null,
           region: geoData?.region || null,
+          latitude: geoData?.latitude ?? null,
+          longitude: geoData?.longitude ?? null,
           deviceType,
           os,
           browser,
