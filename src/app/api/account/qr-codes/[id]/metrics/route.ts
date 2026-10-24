@@ -56,7 +56,6 @@ export async function GET(
     // Time-based metrics
     const scansByHour = new Array(24).fill(0);
     const scansByDay = new Array(7).fill(0);
-    const scansByWeek = new Map<string, number>();
 
     // Device metrics
     const devicesByType = new Map<string, number>();
@@ -72,12 +71,10 @@ export async function GET(
       const date = scan.timestamp;
       const hour = date.getHours();
       const day = date.getDay();
-      const weekKey = getWeekKey(date);
 
       // Time metrics
       scansByHour[hour]++;
       scansByDay[day]++;
-      scansByWeek.set(weekKey, (scansByWeek.get(weekKey) || 0) + 1);
 
       // Device metrics
       devicesByType.set(scan.deviceType || "Unknown", (devicesByType.get(scan.deviceType || "Unknown") || 0) + 1);
@@ -121,16 +118,11 @@ export async function GET(
     const browsers = Array.from(devicesByBrowser.entries())
       .map(([browser, count]) => ({ browser, count, percentage: (count / totalScans) * 100 }));
 
-    const weeklyData = Array.from(scansByWeek.entries())
-      .map(([week, count]) => ({ week, count }))
-      .sort((a, b) => a.week.localeCompare(b.week));
-
     return NextResponse.json({
       totalScans,
       uniqueUsers: uniqueIPs,
       scansByHour,
       scansByDay,
-      weeklyData,
       topCities,
       topCountries,
       topRegions,
@@ -143,13 +135,4 @@ export async function GET(
     console.error("Não foi possível carregar as métricas.", error);
     return jsonError("Não foi possível carregar as métricas. Tente novamente mais tarde.", 503);
   }
-}
-
-function getWeekKey(date: Date): string {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  const monday = new Date(d.setDate(diff));
-  return monday.toISOString().split('T')[0];
 }

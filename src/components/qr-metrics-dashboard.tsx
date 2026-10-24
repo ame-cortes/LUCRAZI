@@ -8,7 +8,6 @@ interface MetricsData {
   uniqueUsers: number;
   scansByHour: number[];
   scansByDay: number[];
-  weeklyData: { week: string; count: number }[];
   topCities: { city: string; count: number }[];
   topCountries: { country: string; count: number }[];
   topRegions: { region: string; count: number }[];
@@ -32,6 +31,18 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
   const [metrics, setMetrics] = useState<MetricsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Reorder days to start from current day (last 7 days)
+  const getTodayDayIndex = () => new Date().getDay();
+  const reorderDaysByCurrent = (scansByDay: number[]) => {
+    const today = getTodayDayIndex();
+    const reordered = [];
+    for (let i = 6; i >= 0; i--) {
+      const dayIndex = (today - i + 7) % 7;
+      reordered.push({ day: dayIndex, count: scansByDay[dayIndex] });
+    }
+    return reordered;
+  };
 
   useEffect(() => {
     async function loadMetrics() {
@@ -105,7 +116,9 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
 
   const maxHourlyScans = Math.max(...metrics.scansByHour, 1);
   const maxDailyScans = Math.max(...metrics.scansByDay, 1);
-  const maxWeeklyScans = Math.max(...metrics.weeklyData.map((d) => d.count), 1);
+
+  // Reorder days to show last 7 days dynamically
+  const orderedDays = reorderDaysByCurrent(metrics.scansByDay);
 
   // Ensure minimum height for bars (at least 10% if there's data)
   const getBarHeight = (count: number, max: number) => {
@@ -154,25 +167,6 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
                 <span>Usuários Únicos</span>
                 <strong>{metrics.uniqueUsers.toLocaleString("pt-BR")}</strong>
               </article>
-            </div>
-            <div className="qr-metrics-chart">
-              <h4>Evolução Semanal</h4>
-              <div className="qr-chart-container">
-                {metrics.weeklyData.length > 0 ? (
-                  metrics.weeklyData.map((item) => (
-                    <div key={item.week} className="qr-chart-bar-wrapper">
-                      <div
-                        className="qr-chart-bar"
-                        style={{ height: getBarHeight(item.count, maxWeeklyScans) }}
-                        title={`${item.count} escaneamentos`}
-                      />
-                      <span className="qr-chart-label">{new Date(item.week).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}</span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="qr-chart-empty">Sem dados suficientes</p>
-                )}
-              </div>
             </div>
           </section>
 
@@ -314,7 +308,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
               </svg>
               Métricas de Tempo
             </h3>
-            <div className="qr-metrics-grid">
+            <div className="qr-metrics-grid qr-metrics-grid-2">
               <div className="qr-metrics-chart">
                 <h4>Horário de Pico (24h)</h4>
                 <div className="qr-chart-container qr-chart-horizontal">
@@ -331,9 +325,9 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
                 </div>
               </div>
               <div className="qr-metrics-chart">
-                <h4>Dias da Semana</h4>
+                <h4>Últimos 7 Dias</h4>
                 <div className="qr-chart-container">
-                  {metrics.scansByDay.map((count, day) => (
+                  {orderedDays.map(({ day, count }) => (
                     <div key={day} className="qr-chart-bar-wrapper">
                       <div
                         className="qr-chart-bar"
