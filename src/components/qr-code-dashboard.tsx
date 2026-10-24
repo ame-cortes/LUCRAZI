@@ -336,7 +336,7 @@ export default function QrCodeDashboard() {
     }, 100);
 
     return () => clearTimeout(timeoutId);
-  }, []);
+  }, [user]);
 
   function resetEditor() {
     setSelectedId("");
