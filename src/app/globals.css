@@ -4213,9 +4213,13 @@ button:focus-visible {
 
 .qr-account-grid {
   display: grid;
-  grid-template-columns: 1fr 360px;
+  grid-template-columns: minmax(0, 1fr) 360px;
   align-items: start;
   gap: 24px;
+}
+
+.qr-account-grid > section {
+  min-width: 0;
 }
 
 .qr-account-grid > section:nth-child(1) {
@@ -4896,7 +4900,7 @@ button:focus-visible {
 
 .qr-code-item {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: 120px minmax(0, 1fr);
   gap: 16px;
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -4904,6 +4908,7 @@ button:focus-visible {
   background: #fff;
   transition: border-color 160ms ease, box-shadow 160ms ease;
   align-items: start;
+  min-width: 0;
 }
 
 .qr-code-item:hover {
@@ -4916,21 +4921,30 @@ button:focus-visible {
   place-items: center;
   width: 120px;
   height: 120px;
+  max-width: 100%;
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 8px;
   background: #fff;
-  flex-shrink: 0;
+  grid-column: 1;
 }
 
 .qr-code-preview img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
 
+.qr-code-details {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+}
+
 .qr-code-info {
   display: grid;
+  min-width: 0;
   gap: 10px;
 }
 
@@ -4938,13 +4952,17 @@ button:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 10px;
+  min-width: 0;
 }
 
 .qr-code-header strong {
+  min-width: 0;
   font-size: 16px;
   font-weight: 600;
   color: var(--ink);
+  overflow-wrap: anywhere;
 }
 
 .qr-code-badge {
@@ -4961,11 +4979,11 @@ button:focus-visible {
 }
 
 .qr-code-content {
-  overflow: hidden;
+  min-width: 0;
   color: var(--muted);
   font-size: 13px;
   line-height: 1.6;
-  word-break: break-all;
+  overflow-wrap: anywhere;
 }
 
 .qr-code-metrics {
@@ -4998,9 +5016,11 @@ button:focus-visible {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .qr-action-button {
+  min-width: 0;
   min-height: 36px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -5011,6 +5031,7 @@ button:focus-visible {
   font-size: 12px;
   font-weight: 600;
   transition: all 160ms ease;
+  white-space: nowrap;
 }
 
 .qr-action-button:hover {
@@ -5237,11 +5258,12 @@ button:focus-visible {
   }
 
   .qr-code-item {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .qr-saved-actions {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(76px, 1fr));
     gap: 8px;
   }
 
@@ -5400,8 +5422,9 @@ button:focus-visible {
   }
 
   .qr-code-preview {
-    width: 100%;
-    height: 180px;
+    width: 120px;
+    height: 120px;
+    justify-self: center;
   }
 
   .qr-saved-heading p {
@@ -5627,12 +5650,13 @@ button:focus-visible {
   }
 
   .qr-code-item {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .qr-code-preview {
-    width: 100%;
-    height: 180px;
+    width: 120px;
+    height: 120px;
+    justify-self: center;
   }
 
   .qr-saved-updated {
@@ -5685,14 +5709,16 @@ button:focus-visible {
   }
 
   .qr-saved-actions {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(76px, 1fr));
     gap: 8px;
-    margin-top: 12px;
+    margin-top: 4px;
   }
 
   .qr-action-button {
     width: 100%;
     min-height: 36px;
+    padding-inline: 8px;
     font-size: 12px;
   }
 

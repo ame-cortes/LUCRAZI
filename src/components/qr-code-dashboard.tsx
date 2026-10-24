@@ -970,53 +970,55 @@ export default function QrCodeDashboard() {
                             <img src={code.qrImage} alt={`QR Code: ${code.name}`} />
                           </div>
                         )}
-                        <div className="qr-code-info">
-                          <div className="qr-code-header">
-                            <strong>{code.name}</strong>
-                            {code.trackingEnabled && (
-                              <span className="qr-code-badge">Dinâmico</span>
-                            )}
-                          </div>
-                          <span className="qr-code-content">{code.contentType === "url" ? code.content : `${code.content.slice(0, 90)}${code.content.length > 90 ? "…" : ""}`}</span>
-                          <div className="qr-code-metrics">
-                            {code.trackingEnabled ? (
-                              <>
-                                <span className="qr-metric">
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                  </svg>
-                                  {code.scanCount} escaneamentos
-                                </span>
-                                {code.createdAt && (
+                        <div className="qr-code-details">
+                          <div className="qr-code-info">
+                            <div className="qr-code-header">
+                              <strong>{code.name}</strong>
+                              {code.trackingEnabled && (
+                                <span className="qr-code-badge">Dinâmico</span>
+                              )}
+                            </div>
+                            <span className="qr-code-content">{code.contentType === "url" ? code.content : `${code.content.slice(0, 90)}${code.content.length > 90 ? "…" : ""}`}</span>
+                            <div className="qr-code-metrics">
+                              {code.trackingEnabled ? (
+                                <>
                                   <span className="qr-metric">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                      <line x1="16" y1="2" x2="16" y2="6"></line>
-                                      <line x1="8" y1="2" x2="8" y2="6"></line>
-                                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                      <circle cx="12" cy="12" r="3"></circle>
                                     </svg>
-                                    Criado em {new Date(code.createdAt).toLocaleDateString("pt-BR")}
+                                    {code.scanCount} escaneamentos
                                   </span>
-                                )}
-                              </>
-                            ) : (
-                              <span className="qr-metric qr-metric-static">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                                  <polyline points="13 2 13 9 20 9"></polyline>
-                                </svg>
-                                Estático (sem métricas)
-                              </span>
-                            )}
+                                  {code.createdAt && (
+                                    <span className="qr-metric">
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                      </svg>
+                                      Criado em {new Date(code.createdAt).toLocaleDateString("pt-BR")}
+                                    </span>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="qr-metric qr-metric-static">
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                                    <polyline points="13 2 13 9 20 9"></polyline>
+                                  </svg>
+                                  Estático (sem métricas)
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                        <div className="qr-saved-actions">
-                          {code.trackingEnabled && (
-                            <button onClick={() => viewMetrics(code)} disabled={busy} type="button" className="qr-action-button qr-action-metrics">Métricas</button>
-                          )}
-                          <button onClick={() => editCode(code)} disabled={busy} type="button" className="qr-action-button qr-action-edit">Editar</button>
-                          <button onClick={() => void removeCode(code)} disabled={busy} type="button" className="qr-action-button qr-action-delete">Excluir</button>
+                          <div className="qr-saved-actions">
+                            {code.trackingEnabled && (
+                              <button onClick={() => viewMetrics(code)} disabled={busy} type="button" className="qr-action-button qr-action-metrics">Métricas</button>
+                            )}
+                            <button onClick={() => editCode(code)} disabled={busy} type="button" className="qr-action-button qr-action-edit">Editar</button>
+                            <button onClick={() => void removeCode(code)} disabled={busy} type="button" className="qr-action-button qr-action-delete">Excluir</button>
+                          </div>
                         </div>
                       </li>
                     ))}
