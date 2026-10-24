@@ -29,6 +29,7 @@ type SavedQrCode = {
   trackingEnabled: boolean;
   scanCount: number;
   createdAt: string | null;
+  qrImage?: string;
 };
 
 type ApiResult = Record<string, unknown>;
@@ -178,7 +179,30 @@ export default function QrCodeDashboard() {
     if (!Array.isArray(body.codes)) throw new Error("A lista de QR Codes retornada é inválida.");
     const nextAccess = readAccess(body.access);
     if (!nextAccess) throw new Error("O plano da conta retornado é inválido.");
-    setCodes(body.codes.map(readSavedCode).filter((code): code is SavedQrCode => code !== null));
+
+    const codesWithImages = await Promise.all(
+      body.codes.map(async (code: unknown) => {
+        const savedCode = readSavedCode(code);
+        if (!savedCode) return null;
+
+        // Gerar imagem do QR Code para preview
+        try {
+          const qrDataUrl = await QRCode.toDataURL(savedCode.content, {
+            width: 120,
+            margin: 1,
+            color: {
+              dark: savedCode.foregroundColor,
+              light: savedCode.backgroundColor,
+            },
+          });
+          return { ...savedCode, qrImage: qrDataUrl };
+        } catch {
+          return savedCode;
+        }
+      })
+    );
+
+    setCodes(codesWithImages.filter((code): code is SavedQrCode => code !== null));
     setAccess(nextAccess);
     setPendingCheckoutUrl(typeof body.checkoutUrl === "string" ? body.checkoutUrl : "");
   }, []);
@@ -941,6 +965,11 @@ export default function QrCodeDashboard() {
                   <ul>
                     {filteredCodes.map((code) => (
                       <li key={code.id} className="qr-code-item">
+                        {code.qrImage && (
+                          <div className="qr-code-preview">
+                            <img src={code.qrImage} alt={`QR Code: ${code.name}`} />
+                          </div>
+                        )}
                         <div className="qr-code-info">
                           <div className="qr-code-header">
                             <strong>{code.name}</strong>
