@@ -172,22 +172,52 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
               </article>
             </div>
             <div className="qr-metrics-chart">
-              <h4>Evolução Diária</h4>
+              <h4>{range === "all" ? "Evolução Mensal" : "Evolução Diária"}</h4>
               <div className="qr-chart-container">
                 {metrics.scansByDate.length > 0 ? (
-                  metrics.scansByDate.map((count, index) => (
-                    <div key={index} className="qr-chart-bar-wrapper">
-                      <div
-                        className="qr-chart-bar"
-                        style={{
-                          height: `${Math.max((count / maxDailyDateScans) * 100, count > 0 ? 10 : 0)}%`,
-                          opacity: count > 0 ? 1 : 0.3
-                        }}
-                        title={`${count} escaneamentos`}
-                      />
-                      <span className="qr-chart-label">{metrics.dateLabels[index] || ""}</span>
-                    </div>
-                  ))
+                  (() => {
+                    // Agrupar dados por mês para "todo o período"
+                    if (range === "all") {
+                      const monthlyData: { [key: string]: number } = {};
+                      metrics.scansByDate.forEach((count, index) => {
+                        const date = new Date(metrics.dateLabels[index] || "");
+                        const monthKey = date.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" });
+                        monthlyData[monthKey] = (monthlyData[monthKey] || 0) + count;
+                      });
+
+                      const months = Object.entries(monthlyData);
+                      const maxMonthly = Math.max(...months.map(([, count]) => count), 1);
+
+                      return months.map(([month, count]) => (
+                        <div key={month} className="qr-chart-bar-wrapper">
+                          <div
+                            className="qr-chart-bar"
+                            style={{
+                              height: `${Math.max((count / maxMonthly) * 100, count > 0 ? 20 : 0)}%`,
+                              opacity: count > 0 ? 1 : 0.3
+                            }}
+                            title={`${count} escaneamentos`}
+                          />
+                          <span className="qr-chart-label">{month}</span>
+                        </div>
+                      ));
+                    }
+
+                    // Mostrar dados diários para 7d e 30d
+                    return metrics.scansByDate.map((count, index) => (
+                      <div key={index} className="qr-chart-bar-wrapper">
+                        <div
+                          className="qr-chart-bar"
+                          style={{
+                            height: `${Math.max((count / maxDailyDateScans) * 100, count > 0 ? 20 : 0)}%`,
+                            opacity: count > 0 ? 1 : 0.3
+                          }}
+                          title={`${count} escaneamentos`}
+                        />
+                        <span className="qr-chart-label">{metrics.dateLabels[index] || ""}</span>
+                      </div>
+                    ));
+                  })()
                 ) : (
                   <p className="qr-chart-empty">Sem dados suficientes</p>
                 )}
