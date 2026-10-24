@@ -228,19 +228,47 @@ export default function QrCodeDashboard() {
       width: 360,
       color: { dark: foregroundColor, light: backgroundColor },
     }).then(() => {
-      if (cancelled || !logoDataUrl) return;
+      if (cancelled) return;
 
-      const image = new Image();
-      image.onload = () => {
-        if (cancelled) return;
-        const context = canvas.getContext("2d");
-        if (!context) {
-          setError("Seu navegador não conseguiu desenhar a prévia.");
-          return;
-        }
-        const logoSize = canvas.width * 0.2;
-        const backingSize = logoSize * 1.25;
-        const center = canvas.width / 2;
+      const context = canvas.getContext("2d");
+      if (!context) {
+        setError("Seu navegador não conseguiu desenhar a prévia.");
+        return;
+      }
+
+      const logoSize = canvas.width * 0.2;
+      const backingSize = logoSize * 1.25;
+      const center = canvas.width / 2;
+
+      // Se tiver logo, desenha o logo
+      if (logoDataUrl) {
+        const image = new Image();
+        image.onload = () => {
+          if (cancelled) return;
+          context.fillStyle = backgroundColor;
+          context.beginPath();
+          context.roundRect(
+            center - backingSize / 2,
+            center - backingSize / 2,
+            backingSize,
+            backingSize,
+            backingSize * 0.12,
+          );
+          context.fill();
+          context.drawImage(
+            image,
+            center - logoSize / 2,
+            center - logoSize / 2,
+            logoSize,
+            logoSize,
+          );
+        };
+        image.onerror = () => {
+          if (cancelled) setError("Não foi possível carregar o logo escolhido.");
+        };
+        image.src = logoDataUrl;
+      } else {
+        // Se não tiver logo, desenha um ícone padrão no centro
         context.fillStyle = backgroundColor;
         context.beginPath();
         context.roundRect(
@@ -251,18 +279,43 @@ export default function QrCodeDashboard() {
           backingSize * 0.12,
         );
         context.fill();
-        context.drawImage(
-          image,
-          center - logoSize / 2,
-          center - logoSize / 2,
-          logoSize,
-          logoSize,
-        );
-      };
-      image.onerror = () => {
-        if (cancelled) setError("Não foi possível carregar o logo escolhido.");
-      };
-      image.src = logoDataUrl;
+
+        // Desenha ícone de upload no centro
+        context.strokeStyle = foregroundColor;
+        context.lineWidth = 2;
+        context.fillStyle = foregroundColor;
+
+        // Círculo
+        context.beginPath();
+        context.arc(center, center - 4, 3, 0, Math.PI * 2);
+        context.fill();
+
+        // Linha vertical
+        context.beginPath();
+        context.moveTo(center, center - 1);
+        context.lineTo(center, center + 10);
+        context.stroke();
+
+        // Linha base
+        context.beginPath();
+        context.moveTo(center - 8, center + 10);
+        context.lineTo(center + 8, center + 10);
+        context.stroke();
+
+        // Seta esquerda
+        context.beginPath();
+        context.moveTo(center - 8, center + 10);
+        context.lineTo(center - 8, center + 6);
+        context.lineTo(center - 4, center + 10);
+        context.stroke();
+
+        // Seta direita
+        context.beginPath();
+        context.moveTo(center + 8, center + 10);
+        context.lineTo(center + 8, center + 6);
+        context.lineTo(center + 4, center + 10);
+        context.stroke();
+      }
     }).catch((error: unknown) => {
       if (cancelled) return;
       console.error("Não foi possível gerar a prévia do QR Code.", error);
@@ -797,30 +850,14 @@ export default function QrCodeDashboard() {
                 </form>
                 <div className="qr-account-preview">
                   <span className="qr-preview-label">PRÉVIA EM TEMPO REAL</span>
-                  <div className="qr-preview-wrapper">
-                    <canvas
-                      aria-label="Prévia do QR Code"
-                      className="qr-preview-canvas"
-                      ref={canvasRef}
-                      role="img"
-                      width={360}
-                      height={360}
-                    />
-                    {!logoDataUrl && (
-                      <button
-                        className="qr-upload-overlay"
-                        onClick={() => document.getElementById('qr-logo')?.click()}
-                        type="button"
-                      >
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                          <polyline points="17 8 12 3 7 8"></polyline>
-                          <line x1="12" y1="3" x2="12" y2="15"></line>
-                        </svg>
-                        <span>Adicionar logo</span>
-                      </button>
-                    )}
-                  </div>
+                  <canvas
+                    aria-label="Prévia do QR Code"
+                    className="qr-preview-canvas"
+                    ref={canvasRef}
+                    role="img"
+                    width={360}
+                    height={360}
+                  />
                   <p className="qr-preview-hint">Escaneie o código com a câmera antes de imprimir ou compartilhar.</p>
                   <div className="qr-download-actions">
                     <button className="button button-dark" onClick={() => void downloadPng()} type="button">
