@@ -107,6 +107,19 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
   const maxDailyScans = Math.max(...metrics.scansByDay, 1);
   const maxWeeklyScans = Math.max(...metrics.weeklyData.map((d) => d.count), 1);
 
+  // Ensure minimum height for bars (at least 10% if there's data)
+  const getBarHeight = (count: number, max: number) => {
+    if (count === 0) return "4px";
+    const percentage = (count / max) * 100;
+    return `${Math.max(percentage, 10)}%`;
+  };
+
+  const getBarWidth = (count: number, max: number) => {
+    if (count === 0) return "4px";
+    const percentage = (count / max) * 100;
+    return `${Math.max(percentage, 10)}%`;
+  };
+
   return (
     <div className="qr-modal-overlay" onClick={onClose}>
       <div className="qr-modal-content qr-metrics-modal" onClick={(e) => e.stopPropagation()}>
@@ -150,7 +163,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
                     <div key={item.week} className="qr-chart-bar-wrapper">
                       <div
                         className="qr-chart-bar"
-                        style={{ height: `${(item.count / maxWeeklyScans) * 100}%` }}
+                        style={{ height: getBarHeight(item.count, maxWeeklyScans) }}
                         title={`${item.count} escaneamentos`}
                       />
                       <span className="qr-chart-label">{new Date(item.week).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}</span>
@@ -309,7 +322,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
                     <div key={hour} className="qr-chart-bar-wrapper">
                       <div
                         className="qr-chart-bar"
-                        style={{ width: `${(count / maxHourlyScans) * 100}%` }}
+                        style={{ width: getBarWidth(count, maxHourlyScans) }}
                         title={`${count} escaneamentos às ${hour}h`}
                       />
                       <span className="qr-chart-label">{hour % 2 === 0 ? HOURS[Math.floor(hour / 2)] : ""}</span>
@@ -324,7 +337,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
                     <div key={day} className="qr-chart-bar-wrapper">
                       <div
                         className="qr-chart-bar"
-                        style={{ height: `${(count / maxDailyScans) * 100}%` }}
+                        style={{ height: getBarHeight(count, maxDailyScans) }}
                         title={`${count} escaneamentos em ${DAYS[day]}`}
                       />
                       <span className="qr-chart-label">{DAYS[day]}</span>

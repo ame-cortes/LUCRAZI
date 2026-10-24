@@ -4322,6 +4322,7 @@ button:focus-visible {
   background: #fff;
   box-shadow: 0 20px 60px rgb(0 0 0 / 20%);
   overflow-y: auto;
+  overflow-x: hidden;
   animation: qr-slide-up 300ms ease;
 }
 
@@ -4372,6 +4373,7 @@ button:focus-visible {
 
 .qr-modal-body {
   padding: 28px;
+  overflow-x: hidden;
 }
 
 /* Mobile Modal Improvements */
@@ -5663,7 +5665,7 @@ button:focus-visible {
 
 /* QR Metrics Dashboard Styles */
 .qr-metrics-modal {
-  max-width: 900px;
+  max-width: 1100px;
 }
 
 .qr-metrics-updated {
@@ -5675,6 +5677,7 @@ button:focus-visible {
 .qr-metrics-body {
   display: grid;
   gap: 28px;
+  overflow-x: hidden;
 }
 
 .qr-metrics-section {
@@ -5732,6 +5735,39 @@ button:focus-visible {
 
 .qr-metrics-grid.qr-metrics-grid-3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* Better responsiveness for larger screens */
+@media (min-width: 1200px) {
+  .qr-metrics-modal {
+    max-width: 1200px;
+  }
+
+  .qr-metrics-grid.qr-metrics-grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .qr-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .qr-metrics-chart {
+    padding: 20px;
+  }
+
+  .qr-metrics-list {
+    padding: 18px;
+  }
+
+  .qr-chart-container {
+    min-height: 160px;
+  }
+}
+
+@media (min-width: 1400px) {
+  .qr-metrics-modal {
+    max-width: 1300px;
+  }
 }
 
 .qr-metrics-list {
@@ -5827,7 +5863,7 @@ button:focus-visible {
   grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
   gap: 8px;
   align-items: end;
-  min-height: 120px;
+  min-height: 140px;
   padding-bottom: 24px;
   border-bottom: 1px solid var(--line);
 }
@@ -5857,7 +5893,7 @@ button:focus-visible {
 
 .qr-chart-bar {
   width: 100%;
-  min-height: 4px;
+  min-height: 8px;
   max-height: 100px;
   background: linear-gradient(180deg, #8a9b68, #c8f169);
   border-radius: 4px 4px 0 0;
@@ -5893,6 +5929,21 @@ button:focus-visible {
   font-style: italic;
   text-align: center;
   padding: 20px;
+}
+
+/* Tablet Responsiveness */
+@media (max-width: 1024px) {
+  .qr-metrics-modal {
+    max-width: 95%;
+  }
+
+  .qr-metrics-grid.qr-metrics-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .qr-chart-container {
+    min-height: 120px;
+  }
 }
 
 /* Mobile Responsiveness - Focus on Small Screens */
@@ -6009,6 +6060,7 @@ button:focus-visible {
 
   .qr-chart-bar {
     max-height: 80px;
+    min-height: 6px;
   }
 
   .qr-chart-label {
@@ -6178,5 +6230,20 @@ button:focus-visible {
   .qr-modal-body {
     padding: 14px;
     gap: 14px;
+  }
+}
+
+/* Medium tablet improvements */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .qr-metrics-modal {
+    max-width: 90%;
+  }
+
+  .qr-metrics-grid.qr-metrics-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .qr-chart-container {
+    min-height: 130px;
   }
 }
