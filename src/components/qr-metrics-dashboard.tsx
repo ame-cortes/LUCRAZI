@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import type { User } from "firebase/auth";
 
 interface MetricsData {
@@ -8,7 +8,8 @@ interface MetricsData {
   uniqueUsers: number;
   scansByHour: number[];
   scansByDay: number[];
-  weeklyData: { week: string; count: number }[];
+  scansByDate: number[];
+  dateLabels: string[];
   topCities: { city: string; count: number }[];
   topCountries: { country: string; count: number }[];
   topRegions: { region: string; count: number }[];
@@ -16,6 +17,7 @@ interface MetricsData {
   operatingSystems: { os: string; count: number; percentage: number }[];
   browsers: { browser: string; count: number; percentage: number }[];
   lastUpdated: string;
+  range: string;
 }
 
 interface QrMetricsDashboardProps {
@@ -32,36 +34,54 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
   const [metrics, setMetrics] = useState<MetricsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [range, setRange] = useState("7d");
 
-  useEffect(() => {
-    async function loadMetrics() {
-      setLoading(true);
-      setError("");
-      try {
-        const idToken = await user.getIdToken();
-        const response = await fetch(`/api/account/qr-codes/${codeId}/metrics`, {
-          headers: { authorization: `Bearer ${idToken}` },
-          cache: "no-store",
-        });
+  const loadMetrics = useCallback(async (currentRange: string) => {
+    setLoading(true);
+    setError("");
+    try {
+      const idToken = await user.getIdToken();
+      const response = await fetch(`/api/account/qr-codes/${codeId}/metrics?range=${currentRange}`, {
+        headers: { authorization: `Bearer ${idToken}` },
+        cache: "no-store",
+      });
 
-        if (!response.ok) {
-          const body = await response.json();
-          throw new Error(body.error || "N├úo foi poss├¡vel carregar as m├®tricas.");
-        }
-
-        const data = await response.json();
-        setMetrics(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Ocorreu um erro ao carregar as m├®tricas.");
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        const body = await response.json();
+        throw new Error(body.error || "N├úo foi poss├¡vel carregar as m├®tricas.");
       }
-    }
 
-    loadMetrics();
+      const data = await response.json();
+      setMetrics(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ocorreu um erro ao carregar as m├®tricas.");
+    } finally {
+      setLoading(false);
+    }
   }, [user, codeId]);
 
-  if (loading) {
+  useEffect(() => {
+    loadMetrics(range);
+  }, [range, loadMetrics]);
+
+  const downloadCsv = () => {
+    if (!metrics) return;
+    const rows = [
+      ["Métrica", "Valor"],
+      ["Total de Escaneamentos", metrics.totalScans],
+      ["Usuários Únicos", metrics.uniqueUsers],
+      ["Período", range]
+    ];
+    const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
+    const link = document.createElement("a");
+    link.setAttribute("href", encodeURI(csvContent));
+    link.setAttribute("download", `metricas-${codeName.replace(/ /g, "-")}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  if (loading && !metrics) {
     return (
       <div className="qr-modal-overlay" onClick={onClose}>
         <div className="qr-modal-content" onClick={(e) => e.stopPropagation()}>
@@ -105,7 +125,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
 
   const maxHourlyScans = Math.max(...metrics.scansByHour, 1);
   const maxDailyScans = Math.max(...metrics.scansByDay, 1);
-  const maxWeeklyScans = Math.max(...metrics.weeklyData.map((d) => d.count), 1);
+  const maxDailyDateScans = Math.max(...metrics.scansByDate, 1);
 
   return (
     <div className="qr-modal-overlay" onClick={onClose}>
@@ -115,14 +135,23 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
             <h2>M├®tricas: {codeName}</h2>
             <p className="qr-metrics-updated">Atualizado em {new Date(metrics.lastUpdated).toLocaleString("pt-BR")}</p>
           </div>
-          <button className="qr-modal-close" onClick={onClose} type="button">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
+          <div className="qr-metrics-actions">
+            <button className="qr-secondary-button" onClick={() => loadMetrics(range)} type="button">Atualizar</button>
+            <button className="qr-modal-close" onClick={onClose} type="button">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
         </div>
         <div className="qr-modal-body qr-metrics-body">
+          <div className="qr-metrics-range">
+            <button aria-pressed={range === "7d"} onClick={() => setRange("7d")}>7 dias</button>
+            <button aria-pressed={range === "30d"} onClick={() => setRange("30d")}>30 dias</button>
+            <button aria-pressed={range === "all"} onClick={() => setRange("all")}>Todo o período</button>
+            <button className="qr-secondary-button" onClick={downloadCsv}>Baixar CSV</button>
+          </div>
           {/* Volume Metrics */}
           <section className="qr-metrics-section">
             <h3 className="qr-metrics-section-title">
@@ -143,17 +172,17 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
               </article>
             </div>
             <div className="qr-metrics-chart">
-              <h4>Evolu├º├úo Semanal</h4>
+              <h4>Evolu├º├úo Diária</h4>
               <div className="qr-chart-container">
-                {metrics.weeklyData.length > 0 ? (
-                  metrics.weeklyData.map((item) => (
-                    <div key={item.week} className="qr-chart-bar-wrapper">
+                {metrics.scansByDate.length > 0 ? (
+                  metrics.scansByDate.map((count, index) => (
+                    <div key={index} className="qr-chart-bar-wrapper">
                       <div
                         className="qr-chart-bar"
-                        style={{ height: `${(item.count / maxWeeklyScans) * 100}%` }}
-                        title={`${item.count} escaneamentos`}
+                        style={{ height: `${(count / maxDailyDateScans) * 100}%` }}
+                        title={`${count} escaneamentos`}
                       />
-                      <span className="qr-chart-label">{new Date(item.week).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}</span>
+                      <span className="qr-chart-label">{metrics.dateLabels[index] || ""}</span>
                     </div>
                   ))
                 ) : (

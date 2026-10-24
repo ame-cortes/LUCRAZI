@@ -5674,10 +5674,52 @@ button:focus-visible {
   font-size: 12px;
 }
 
+.qr-metrics-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .qr-metrics-body {
   display: grid;
   gap: 20px;
   overflow-x: hidden;
+}
+
+.qr-metrics-range {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.qr-metrics-range button {
+  min-height: 36px;
+  border: 1px solid #d7d8cf;
+  border-radius: 99px;
+  padding: 0 16px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.qr-metrics-range button:hover {
+  border-color: var(--green);
+  background: #f5f8ed;
+}
+
+.qr-metrics-range button[aria-pressed="true"] {
+  background: var(--ink);
+  color: white;
+  border-color: var(--ink);
+}
+
+.qr-metrics-range button[aria-pressed="true"]:hover {
+  background: #3f4834;
 }
 
 .qr-metrics-section {
