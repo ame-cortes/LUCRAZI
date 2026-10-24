@@ -202,7 +202,7 @@ export default function QrCodeDashboard() {
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const firebaseConfigured = isFirebaseConfigured();
   const [user, setUser] = useState<User | null>(null);
-  const [today, setToday] = useState(() => new Date());
+  const [today, setToday] = useState<Date | null>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(firebaseConfigured);
   const [registering, setRegistering] = useState(false);
@@ -239,7 +239,7 @@ export default function QrCodeDashboard() {
     nextMidnight.setHours(24, 0, 0, 0);
     const timeoutId = window.setTimeout(
       () => setToday(new Date()),
-      nextMidnight.getTime() - now.getTime(),
+      today ? nextMidnight.getTime() - now.getTime() : 0,
     );
     return () => window.clearTimeout(timeoutId);
   }, [today]);
@@ -331,7 +331,7 @@ export default function QrCodeDashboard() {
   const totalScans = codes.reduce((total, code) => total + (code.trackingEnabled ? code.scanCount : 0), 0);
   const dynamicCodes = codes.filter((code) => code.trackingEnabled).length;
   const trialTimeRemaining = access.isTrial && access.trialEndsAt
-    ? getTrialTimeRemaining(access.trialEndsAt, today)
+    ? today ? getTrialTimeRemaining(access.trialEndsAt, today) : null
     : null;
   const filteredCodes = codes.filter((code) =>
     `${code.name} ${code.content}`.toLocaleLowerCase("pt-BR").includes(codeSearch.trim().toLocaleLowerCase("pt-BR")),
