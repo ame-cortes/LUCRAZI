@@ -4783,7 +4783,7 @@ button:focus-visible {
   align-items: center;
   padding: 26px;
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 0;
 }
 
 .qr-preview-header {
@@ -4860,6 +4860,7 @@ button:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  margin-bottom: 20px;
 }
 
 .qr-saved-heading > div {
