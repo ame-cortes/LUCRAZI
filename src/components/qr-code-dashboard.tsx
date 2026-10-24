@@ -223,6 +223,7 @@ export default function QrCodeDashboard() {
 
     const generateQR = async () => {
       try {
+        // Primeiro gera o QR Code base
         await QRCode.toCanvas(canvas, qrCanvasContent, {
           errorCorrectionLevel: "H",
           margin: 4,
@@ -230,25 +231,26 @@ export default function QrCodeDashboard() {
           color: { dark: foregroundColor, light: backgroundColor },
         });
 
-        if (cancelled || !logoDataUrl) return;
-
-        const image = new Image();
-        image.onload = () => {
-          if (cancelled) return;
-          const context = canvas.getContext("2d");
-          if (!context) {
-            setError("Seu navegador não conseguiu preparar a prévia do logo.");
-            return;
-          }
-          const center = canvas.width / 2;
-          const logoSize = canvas.width * 0.2;
-          const backingSize = logoSize * 1.25;
-          context.fillStyle = backgroundColor;
-          context.fillRect(center - backingSize / 2, center - backingSize / 2, backingSize, backingSize);
-          context.drawImage(image, center - logoSize / 2, center - logoSize / 2, logoSize, logoSize);
-        };
-        image.onerror = () => setError("Não foi possível carregar o logo salvo.");
-        image.src = logoDataUrl;
+        // Se tiver logo, adiciona sobre o QR Code
+        if (!cancelled && logoDataUrl) {
+          const image = new Image();
+          image.onload = () => {
+            if (cancelled) return;
+            const context = canvas.getContext("2d");
+            if (!context) {
+              setError("Seu navegador não conseguiu preparar a prévia do logo.");
+              return;
+            }
+            const center = canvas.width / 2;
+            const logoSize = canvas.width * 0.2;
+            const backingSize = logoSize * 1.25;
+            context.fillStyle = backgroundColor;
+            context.fillRect(center - backingSize / 2, center - backingSize / 2, backingSize, backingSize);
+            context.drawImage(image, center - logoSize / 2, center - logoSize / 2, logoSize, logoSize);
+          };
+          image.onerror = () => setError("Não foi possível carregar o logo salvo.");
+          image.src = logoDataUrl;
+        }
       } catch (previewError: unknown) {
         if (cancelled) return;
         console.error("Não foi possível gerar a prévia do QR Code salvo.", previewError);
@@ -262,23 +264,6 @@ export default function QrCodeDashboard() {
       cancelled = true;
     };
   }, [backgroundColor, foregroundColor, logoDataUrl, qrCanvasContent]);
-
-  // Garante que o QR Code seja gerado na montagem inicial
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const timeoutId = setTimeout(() => {
-      void QRCode.toCanvas(canvas, qrCanvasContent, {
-        errorCorrectionLevel: "H",
-        margin: 4,
-        width: 360,
-        color: { dark: foregroundColor, light: backgroundColor },
-      });
-    }, 100);
-
-    return () => clearTimeout(timeoutId);
-  }, []);
 
   function resetEditor() {
     setSelectedId("");
@@ -803,7 +788,14 @@ export default function QrCodeDashboard() {
                 </form>
                 <div className="qr-account-preview">
                   <span className="qr-preview-label">PRÉVIA EM TEMPO REAL</span>
-                  <canvas aria-label="Prévia do QR Code" className="qr-preview-canvas" ref={canvasRef} role="img" />
+                  <canvas
+                    aria-label="Prévia do QR Code"
+                    className="qr-preview-canvas"
+                    ref={canvasRef}
+                    role="img"
+                    width={360}
+                    height={360}
+                  />
                   <p className="qr-preview-hint">Escaneie o código com a câmera antes de imprimir ou compartilhar.</p>
                   <div className="qr-download-actions">
                     <button className="button button-dark" onClick={() => void downloadPng()} type="button">
