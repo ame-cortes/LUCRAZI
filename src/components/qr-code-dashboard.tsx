@@ -716,45 +716,129 @@ export default function QrCodeDashboard() {
                   {selectedId && <button className="qr-account-switch" onClick={resetEditor} type="button">+ Novo</button>}
                 </div>
                 <form className="qr-account-form" onSubmit={(event) => void saveCode(event)}>
-                  <label>
-                    Nome para identificar
-                    <input maxLength={80} required value={name} onChange={(event) => setName(event.target.value)} placeholder="Ex.: Cardápio da loja" />
-                  </label>
-                  <label>
-                    Tipo de conteúdo
-                    <select value={contentType} onChange={(event) => setContentType(event.target.value === "text" ? "text" : "url")}>
+                  <div className="qr-field">
+                    <label htmlFor="qr-name">Nome para identificar</label>
+                    <input
+                      id="qr-name"
+                      maxLength={80}
+                      required
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
+                      placeholder="Ex.: Cardápio da loja"
+                    />
+                  </div>
+                  <div className="qr-field">
+                    <label htmlFor="qr-content-type">Tipo de conteúdo</label>
+                    <select
+                      id="qr-content-type"
+                      value={contentType}
+                      onChange={(event) => setContentType(event.target.value === "text" ? "text" : "url")}
+                    >
                       <option value="url">Link (URL)</option>
                       <option value="text">Texto</option>
                     </select>
-                  </label>
-                  <label>
-                    {contentType === "url" ? "Endereço do site" : "Texto"}
-                    <textarea maxLength={2048} required rows={4} value={content} onChange={(event) => setContent(event.target.value)} placeholder={contentType === "url" ? "https://exemplo.com" : "Digite o texto"} />
-                  </label>
-                  <div className="qr-account-colors">
-                    <label>Cor do código<input type="color" value={foregroundColor} onChange={(event) => setForegroundColor(event.target.value)} /></label>
-                    <label>Cor do fundo<input type="color" value={backgroundColor} onChange={(event) => setBackgroundColor(event.target.value)} /></label>
                   </div>
-                  <label>
-                    Logo no centro (PNG ou JPEG, até 256 KB)
-                    <input accept="image/png,image/jpeg" disabled={!access.hasLogo} onChange={(event) => void handleLogoChange(event)} type="file" />
-                  </label>
-                  {!access.hasLogo && <p className="qr-plan-contact">Logo e métricas estão incluídos nos planos pagos.</p>}
+                  <div className="qr-field">
+                    <label htmlFor="qr-content">{contentType === "url" ? "Endereço do site" : "Texto"}</label>
+                    <textarea
+                      id="qr-content"
+                      maxLength={2048}
+                      required
+                      rows={4}
+                      value={content}
+                      onChange={(event) => setContent(event.target.value)}
+                      placeholder={contentType === "url" ? "https://exemplo.com" : "Digite o texto"}
+                    />
+                    <span className="qr-field-hint">{content.length}/2048 caracteres</span>
+                  </div>
+                  <fieldset className="qr-color-fields">
+                    <legend>Cores do QR Code</legend>
+                    <div className="qr-color-row">
+                      <label htmlFor="qr-foreground">Código</label>
+                      <input
+                        id="qr-foreground"
+                        type="color"
+                        value={foregroundColor}
+                        onChange={(event) => setForegroundColor(event.target.value)}
+                      />
+                      <output htmlFor="qr-foreground">{foregroundColor}</output>
+                    </div>
+                    <div className="qr-color-row">
+                      <label htmlFor="qr-background">Fundo</label>
+                      <input
+                        id="qr-background"
+                        type="color"
+                        value={backgroundColor}
+                        onChange={(event) => setBackgroundColor(event.target.value)}
+                      />
+                      <output htmlFor="qr-background">{backgroundColor}</output>
+                    </div>
+                  </fieldset>
+                  <div className="qr-field">
+                    <label htmlFor="qr-logo">Logo no centro (PNG ou JPEG, até 256 KB)</label>
+                    <input
+                      id="qr-logo"
+                      accept="image/png,image/jpeg"
+                      disabled={!access.hasLogo}
+                      onChange={(event) => void handleLogoChange(event)}
+                      type="file"
+                    />
+                    {!access.hasLogo && (
+                      <span className="qr-field-hint qr-field-hint-upsell">
+                        Disponível nos planos pagos. Adicione logo e métricas para acompanhar escaneamentos.
+                      </span>
+                    )}
+                  </div>
                   {access.hasMetrics && contentType === "url" && (
-                    <p className="qr-plan-contact">Este QR Code é dinâmico: os escaneamentos são contabilizados e encaminhados ao seu link.</p>
+                    <p className="qr-plan-contact qr-plan-contact-info">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                      </svg>
+                      Este QR Code será dinâmico: os escaneamentos serão contabilizados e encaminhados ao seu link.
+                    </p>
                   )}
                   <div className="qr-account-form-actions">
-                    <button className="button button-dark" disabled={busy || !content.trim() || (!selectedId && codes.length >= access.qrLimit)} type="submit">{busy ? "Salvando…" : selectedId ? "Salvar alterações" : codes.length >= access.qrLimit ? "Limite do plano atingido" : "Salvar QR Code"}</button>
-                    {selectedId && <button className="qr-secondary-button" disabled={busy} onClick={resetEditor} type="button">Cancelar edição</button>}
+                    <button
+                      className="button button-dark"
+                      disabled={busy || !content.trim() || (!selectedId && codes.length >= access.qrLimit)}
+                      type="submit"
+                    >
+                      {busy ? "Salvando…" : selectedId ? "Salvar alterações" : codes.length >= access.qrLimit ? "Limite do plano atingido" : "Salvar QR Code"}
+                    </button>
+                    {selectedId && (
+                      <button className="qr-secondary-button" disabled={busy} onClick={resetEditor} type="button">
+                        Cancelar edição
+                      </button>
+                    )}
                   </div>
                 </form>
                 <div className="qr-account-preview">
-                  <canvas aria-label="Prévia do QR Code" ref={canvasRef} role="img" />
-                  {!canDownloadPreview && <p>Digite um link ou texto para atualizar a prévia.</p>}
-                  <div className="qr-download-actions">
-                    <button className="qr-secondary-button" disabled={!canDownloadPreview} onClick={() => void downloadPng()} type="button">Baixar PNG</button>
-                    <button className="qr-secondary-button" disabled={!canDownloadPreview} onClick={() => void downloadSvg()} type="button">Baixar SVG</button>
-                  </div>
+                  <span className="qr-preview-label">PRÉVIA EM TEMPO REAL</span>
+                  <canvas aria-label="Prévia do QR Code" className="qr-preview-canvas" ref={canvasRef} role="img" />
+                  <p className="qr-preview-hint">Escaneie o código com a câmera antes de imprimir ou compartilhar.</p>
+                  {!canDownloadPreview && <p className="qr-preview-notice">Digite um link ou texto para atualizar a prévia.</p>}
+                  {canDownloadPreview && (
+                    <div className="qr-download-actions">
+                      <button className="button button-dark" disabled={!canDownloadPreview} onClick={() => void downloadPng()} type="button">
+                        Baixar PNG <span aria-hidden="true">↓</span>
+                      </button>
+                      <button className="qr-secondary-button" disabled={!canDownloadPreview} onClick={() => void downloadSvg()} type="button">
+                        Baixar SVG
+                      </button>
+                    </div>
+                  )}
+                  {!access.hasLogo && (
+                    <div className="qr-preview-upsell">
+                      <p>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 2v20M2 12h20"></path>
+                        </svg>
+                        Adicione logo e métricas com um plano pago
+                      </p>
+                    </div>
+                  )}
                 </div>
               </section>
               <section className="qr-account-card qr-saved-list">

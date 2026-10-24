@@ -4410,6 +4410,116 @@ button:focus-visible {
   gap: 16px;
 }
 
+.qr-field {
+  display: grid;
+  gap: 6px;
+}
+
+.qr-field label {
+  color: #41443a;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.qr-field input:not([type="color"]),
+.qr-field textarea,
+.qr-field select {
+  width: 100%;
+  border: 1px solid #d8d8cf;
+  border-radius: 8px;
+  padding: 11px 12px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 400;
+}
+
+.qr-field input[type="file"] {
+  padding: 9px;
+  font-size: 12px;
+}
+
+.qr-field textarea {
+  resize: vertical;
+}
+
+.qr-field input:focus,
+.qr-field textarea:focus,
+.qr-field select:focus {
+  outline: 2px solid #789a3f;
+  outline-offset: 2px;
+}
+
+.qr-field-hint {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.qr-field-hint-upsell {
+  color: #8a7a5a;
+  font-style: italic;
+}
+
+.qr-color-fields {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.qr-color-fields legend {
+  color: #41443a;
+  font-size: 13px;
+  font-weight: 650;
+  padding: 0;
+}
+
+.qr-color-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.qr-color-row label {
+  color: #41443a;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.qr-color-row input[type="color"] {
+  width: 44px;
+  height: 44px;
+  border: 1px solid #d8d8cf;
+  border-radius: 6px;
+  padding: 2px;
+  cursor: pointer;
+}
+
+.qr-color-row output {
+  color: var(--muted);
+  font-size: 12px;
+  font-family: var(--font-mono), monospace;
+}
+
+.qr-plan-contact-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #e8f0dc;
+  color: #4e6c2d;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.qr-plan-contact-info svg {
+  flex-shrink: 0;
+}
+
 .qr-account-form > label,
 .qr-account-colors label {
   display: grid;
@@ -4510,11 +4620,60 @@ button:focus-visible {
   margin-top: 22px;
   border-top: 1px solid var(--line);
   padding-top: 18px;
+  gap: 14px;
 }
 
-.qr-account-preview canvas {
+.qr-preview-label {
+  color: #4e6c2d;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.qr-preview-canvas {
   width: min(100%, 300px);
   height: auto;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 4%);
+}
+
+.qr-preview-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.qr-preview-notice {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.qr-preview-upsell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #f1f7e7;
+  color: #4e6c2d;
+  font-size: 12px;
+}
+
+.qr-preview-upsell p {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.qr-preview-upsell svg {
+  flex-shrink: 0;
 }
 
 .qr-saved-heading {
