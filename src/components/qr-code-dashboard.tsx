@@ -208,7 +208,7 @@ export default function QrCodeDashboard() {
   const previewContent = access.hasMetrics && publicId
     ? new URL(`/q/${publicId}`, siteUrl).toString()
     : content.trim();
-  const qrCanvasContent = previewContent || "https://lucrazi.com";
+  const qrCanvasContent = previewContent || "https://www.lucrazi.com.br";
   const canDownloadPreview = true;
   const totalScans = codes.reduce((total, code) => total + (code.trackingEnabled ? code.scanCount : 0), 0);
   const dynamicCodes = codes.filter((code) => code.trackingEnabled).length;
@@ -222,55 +222,25 @@ export default function QrCodeDashboard() {
 
     let cancelled = false;
     setError("");
-    
-    // Força o redesenho imediato
     QRCode.toCanvas(canvas, qrCanvasContent, {
       errorCorrectionLevel: "H",
       margin: 4,
       width: 360,
       color: { dark: foregroundColor, light: backgroundColor },
     }).then(() => {
-      if (cancelled) return;
+      if (cancelled || !logoDataUrl) return;
 
-      const context = canvas.getContext("2d");
-      if (!context) {
-        setError("Seu navegador não conseguiu desenhar a prévia.");
-        return;
-      }
-
-      const logoSize = canvas.width * 0.2;
-      const backingSize = logoSize * 1.25;
-      const center = canvas.width / 2;
-
-      // Se tiver logo, desenha o logo
-      if (logoDataUrl) {
-        const image = new Image();
-        image.onload = () => {
-          if (cancelled) return;
-          context.fillStyle = backgroundColor;
-          context.beginPath();
-          context.roundRect(
-            center - backingSize / 2,
-            center - backingSize / 2,
-            backingSize,
-            backingSize,
-            backingSize * 0.12,
-          );
-          context.fill();
-          context.drawImage(
-            image,
-            center - logoSize / 2,
-            center - logoSize / 2,
-            logoSize,
-            logoSize,
-          );
-        };
-        image.onerror = () => {
-          if (cancelled) setError("Não foi possível carregar o logo escolhido.");
-        };
-        image.src = logoDataUrl;
-      } else {
-        // Se não tiver logo, desenha um ícone padrão no centro
+      const image = new Image();
+      image.onload = () => {
+        if (cancelled) return;
+        const context = canvas.getContext("2d");
+        if (!context) {
+          setError("Seu navegador não conseguiu desenhar a prévia.");
+          return;
+        }
+        const logoSize = canvas.width * 0.2;
+        const backingSize = logoSize * 1.25;
+        const center = canvas.width / 2;
         context.fillStyle = backgroundColor;
         context.beginPath();
         context.roundRect(
@@ -281,43 +251,18 @@ export default function QrCodeDashboard() {
           backingSize * 0.12,
         );
         context.fill();
-
-        // Desenha ícone de upload no centro
-        context.strokeStyle = foregroundColor;
-        context.lineWidth = 2;
-        context.fillStyle = foregroundColor;
-
-        // Círculo
-        context.beginPath();
-        context.arc(center, center - 4, 3, 0, Math.PI * 2);
-        context.fill();
-
-        // Linha vertical
-        context.beginPath();
-        context.moveTo(center, center - 1);
-        context.lineTo(center, center + 10);
-        context.stroke();
-
-        // Linha base
-        context.beginPath();
-        context.moveTo(center - 8, center + 10);
-        context.lineTo(center + 8, center + 10);
-        context.stroke();
-
-        // Seta esquerda
-        context.beginPath();
-        context.moveTo(center - 8, center + 10);
-        context.lineTo(center - 8, center + 6);
-        context.lineTo(center - 4, center + 10);
-        context.stroke();
-
-        // Seta direita
-        context.beginPath();
-        context.moveTo(center + 8, center + 10);
-        context.lineTo(center + 8, center + 6);
-        context.lineTo(center + 4, center + 10);
-        context.stroke();
-      }
+        context.drawImage(
+          image,
+          center - logoSize / 2,
+          center - logoSize / 2,
+          logoSize,
+          logoSize,
+        );
+      };
+      image.onerror = () => {
+        if (!cancelled) setError("Não foi possível carregar o logo escolhido.");
+      };
+      image.src = logoDataUrl;
     }).catch((error: unknown) => {
       if (cancelled) return;
       console.error("Não foi possível gerar a prévia do QR Code.", error);
@@ -859,7 +804,6 @@ export default function QrCodeDashboard() {
                     role="img"
                     width={360}
                     height={360}
-                    style={{ backgroundColor: backgroundColor, display: 'block' }}
                   />
                   <p className="qr-preview-hint">Escaneie o código com a câmera antes de imprimir ou compartilhar.</p>
                   <div className="qr-download-actions">
