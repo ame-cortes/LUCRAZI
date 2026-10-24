@@ -15,6 +15,7 @@ import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEv
 import { getPersistentFirebaseAuth, getFirebaseAuth, isFirebaseConfigured } from "@/lib/firebase";
 import { billingPlans, type BillingAccess, type PaidPlanId, type PlanId } from "@/lib/billing-plans";
 import { siteUrl } from "@/lib/site-config";
+import QrMetricsDashboard from "@/components/qr-metrics-dashboard";
 
 type SavedQrCode = {
   id: string;
@@ -168,6 +169,9 @@ export default function QrCodeDashboard() {
   const [error, setError] = useState(firebaseConfigured ? "" : "O painel ainda não está configurado. Tente novamente mais tarde.");
   const [notice, setNotice] = useState("");
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showMetricsModal, setShowMetricsModal] = useState(false);
+  const [metricsCodeId, setMetricsCodeId] = useState("");
+  const [metricsCodeName, setMetricsCodeName] = useState("");
 
   const refreshCodes = useCallback(async (currentUser: User) => {
     const body = await accountRequest(currentUser, "/api/account/qr-codes");
@@ -376,6 +380,12 @@ export default function QrCodeDashboard() {
     setError("");
     setNotice("");
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function viewMetrics(code: SavedQrCode) {
+    setMetricsCodeId(code.id);
+    setMetricsCodeName(code.name);
+    setShowMetricsModal(true);
   }
 
   async function handleAuth(event: FormEvent<HTMLFormElement>) {
@@ -762,6 +772,38 @@ export default function QrCodeDashboard() {
                 </div>
               </article>
             </section>
+            <section className="qr-account-card qr-preview-section">
+              <div className="qr-preview-header">
+                <span className="qr-preview-label">PRÉVIA EM TEMPO REAL</span>
+              </div>
+              <canvas
+                aria-label="Prévia do QR Code"
+                className="qr-preview-canvas"
+                ref={canvasRef}
+                role="img"
+                width={360}
+                height={360}
+              />
+              <p className="qr-preview-hint">Escaneie o código com a câmera antes de imprimir ou compartilhar.</p>
+              <div className="qr-download-actions">
+                <button className="button button-dark" onClick={() => void downloadPng()} type="button">
+                  Baixar PNG <span aria-hidden="true">↓</span>
+                </button>
+                <button className="qr-secondary-button" onClick={() => void downloadSvg()} type="button">
+                  Baixar SVG
+                </button>
+              </div>
+              {!access.hasMetrics && contentType === "url" && (
+                <div className="qr-preview-upsell">
+                  <p>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 2v20M2 12h20"></path>
+                    </svg>
+                    Ative métricas de escaneamento com um plano pago
+                  </p>
+                </div>
+              )}
+            </section>
             <div className="qr-account-grid">
               <section className="qr-account-card">
                 <div className="qr-editor-heading">
@@ -867,36 +909,6 @@ export default function QrCodeDashboard() {
                     )}
                   </div>
                 </form>
-                <div className="qr-account-preview">
-                  <span className="qr-preview-label">PRÉVIA EM TEMPO REAL</span>
-                  <canvas
-                    aria-label="Prévia do QR Code"
-                    className="qr-preview-canvas"
-                    ref={canvasRef}
-                    role="img"
-                    width={360}
-                    height={360}
-                  />
-                  <p className="qr-preview-hint">Escaneie o código com a câmera antes de imprimir ou compartilhar.</p>
-                  <div className="qr-download-actions">
-                    <button className="button button-dark" onClick={() => void downloadPng()} type="button">
-                      Baixar PNG <span aria-hidden="true">↓</span>
-                    </button>
-                    <button className="qr-secondary-button" onClick={() => void downloadSvg()} type="button">
-                      Baixar SVG
-                    </button>
-                  </div>
-                  {!access.hasMetrics && contentType === "url" && (
-                    <div className="qr-preview-upsell">
-                      <p>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M12 2v20M2 12h20"></path>
-                        </svg>
-                        Ative métricas de escaneamento com um plano pago
-                      </p>
-                    </div>
-                  )}
-                </div>
               </section>
               <section className="qr-account-card qr-saved-list">
                 <div className="qr-saved-heading">
@@ -967,6 +979,9 @@ export default function QrCodeDashboard() {
                           </div>
                         </div>
                         <div className="qr-saved-actions">
+                          {code.trackingEnabled && (
+                            <button onClick={() => viewMetrics(code)} disabled={busy} type="button" className="qr-action-button qr-action-metrics">Métricas</button>
+                          )}
                           <button onClick={() => editCode(code)} disabled={busy} type="button" className="qr-action-button qr-action-edit">Editar</button>
                           <button onClick={() => void removeCode(code)} disabled={busy} type="button" className="qr-action-button qr-action-delete">Excluir</button>
                         </div>
@@ -1020,6 +1035,15 @@ export default function QrCodeDashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {showMetricsModal && user && (
+        <QrMetricsDashboard
+          user={user}
+          codeId={metricsCodeId}
+          codeName={metricsCodeName}
+          onClose={() => setShowMetricsModal(false)}
+        />
       )}
     </main>
   );
