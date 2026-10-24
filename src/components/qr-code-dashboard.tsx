@@ -167,7 +167,7 @@ export default function QrCodeDashboard() {
   const [billingBusy, setBillingBusy] = useState(false);
   const [error, setError] = useState(firebaseConfigured ? "" : "O painel ainda não está configurado. Tente novamente mais tarde.");
   const [notice, setNotice] = useState("");
-  const [showPlanSelector, setShowPlanSelector] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const refreshCodes = useCallback(async (currentUser: User) => {
     const body = await accountRequest(currentUser, "/api/account/qr-codes");
@@ -209,7 +209,7 @@ export default function QrCodeDashboard() {
     ? new URL(`/q/${publicId}`, siteUrl).toString()
     : content.trim();
   const qrCanvasContent = previewContent || siteUrl.toString();
-  const canDownloadPreview = Boolean(previewContent);
+  const canDownloadPreview = Boolean(content.trim());
   const totalScans = codes.reduce((total, code) => total + (code.trackingEnabled ? code.scanCount : 0), 0);
   const dynamicCodes = codes.filter((code) => code.trackingEnabled).length;
   const filteredCodes = codes.filter((code) =>
@@ -468,12 +468,6 @@ export default function QrCodeDashboard() {
     }
   }
 
-  function getNextPlanId(currentPlanId: PlanId): PaidPlanId {
-    if (currentPlanId === "free") return "solo";
-    if (currentPlanId === "solo") return "duo";
-    return "studio";
-  }
-
   async function cancelSubscription() {
     if (!user) return;
     const pendingCheckout = access.status === "pending";
@@ -624,36 +618,11 @@ export default function QrCodeDashboard() {
                 ) : access.status === "creating" ? (
                   <p className="qr-plan-contact">Preparando checkout…</p>
                 ) : (
-                  <button className="qr-upgrade-button" disabled={billingBusy} onClick={() => void startCheckout(access.planId === "free" ? "solo" : getNextPlanId(access.planId))} type="button">
+                  <button className="qr-upgrade-button" disabled={billingBusy} onClick={() => setShowUpgradeModal(true)} type="button">
                     {billingBusy ? "Aguarde…" : "Fazer upgrade"}
                   </button>
                 )}
               </div>
-              {access.status !== "authorized" && access.status !== "pending" && access.status !== "creating" && showPlanSelector && (
-                <div className="qr-plan-selector">
-                  <div className="qr-plan-interval" role="group" aria-label="Frequência de cobrança">
-                    <button aria-pressed={billingInterval === "monthly"} onClick={() => setBillingInterval("monthly")} type="button">Mensal</button>
-                    <button aria-pressed={billingInterval === "quarterly"} onClick={() => setBillingInterval("quarterly")} type="button">Trimestral · 5% off</button>
-                  </div>
-                  <div className="qr-plan-grid">
-                    {paidPlanIds.map((planId) => {
-                      const plan = billingPlans[planId];
-                      const price = billingInterval === "monthly" ? plan.monthlyPriceCents : plan.quarterlyPriceCents;
-                      return (
-                        <article className={`qr-plan-option${planId === "solo" ? " qr-plan-option-test" : ""}`} key={planId}>
-                          <span>{planId === "solo" ? "Premium · teste" : plan.name}</span>
-                          <strong>{money(price)}<small>/{billingInterval === "monthly" ? "mês" : "trim"}</small></strong>
-                          <p>{plan.qrLimit} QR Code{plan.qrLimit > 1 ? "s" : ""} · Logo · Métricas</p>
-                          <button className="button button-dark" disabled={billingBusy} onClick={() => void startCheckout(planId)} type="button">
-                            {billingBusy ? "Abrindo…" : "Assinar"}
-                          </button>
-                        </article>
-                      );
-                    })}
-                  </div>
-                  <p className="qr-plan-contact">Precisa de QR Codes ilimitados? <Link href="/contato">Fale conosco.</Link></p>
-                </div>
-              )}
             </section>
             {notice && <p className="admin-message" role="status">{notice}</p>}
             {error && <p className="admin-message admin-error" role="alert">{error}</p>}
@@ -914,6 +883,48 @@ export default function QrCodeDashboard() {
           </>
         )}
       </div>
+
+      {showUpgradeModal && (
+        <div className="qr-modal-overlay" onClick={() => setShowUpgradeModal(false)}>
+          <div className="qr-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="qr-modal-header">
+              <h2>Escolha seu plano</h2>
+              <button className="qr-modal-close" onClick={() => setShowUpgradeModal(false)} type="button">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <div className="qr-modal-body">
+              <div className="qr-plan-interval" role="group" aria-label="Frequência de cobrança">
+                <button aria-pressed={billingInterval === "monthly"} onClick={() => setBillingInterval("monthly")} type="button">Mensal</button>
+                <button aria-pressed={billingInterval === "quarterly"} onClick={() => setBillingInterval("quarterly")} type="button">Trimestral · 5% off</button>
+              </div>
+              <div className="qr-plan-grid">
+                {paidPlanIds.map((planId) => {
+                  const plan = billingPlans[planId];
+                  const price = billingInterval === "monthly" ? plan.monthlyPriceCents : plan.quarterlyPriceCents;
+                  return (
+                    <article className={`qr-plan-option${planId === "solo" ? " qr-plan-option-test" : ""}`} key={planId}>
+                      <span>{planId === "solo" ? "Premium · teste" : plan.name}</span>
+                      <strong>{money(price)}<small>/{billingInterval === "monthly" ? "mês" : "trim"}</small></strong>
+                      <p>{plan.qrLimit} QR Code{plan.qrLimit > 1 ? "s" : ""} · Logo · Métricas</p>
+                      <button className="button button-dark" disabled={billingBusy} onClick={() => {
+                        setShowUpgradeModal(false);
+                        void startCheckout(planId);
+                      }} type="button">
+                        {billingBusy ? "Abrindo…" : "Assinar"}
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+              <p className="qr-plan-contact">Precisa de QR Codes ilimitados? <Link href="/contato">Fale conosco.</Link></p>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

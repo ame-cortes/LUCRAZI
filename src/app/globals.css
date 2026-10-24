@@ -4284,6 +4284,94 @@ button:focus-visible {
   border-top: 1px solid var(--line);
 }
 
+.qr-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(0 0 0 / 50%);
+  animation: qr-fade-in 200ms ease;
+}
+
+@keyframes qr-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.qr-modal-content {
+  width: 100%;
+  max-width: 700px;
+  max-height: 90vh;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgb(0 0 0 / 20%);
+  overflow-y: auto;
+  animation: qr-slide-up 300ms ease;
+}
+
+@keyframes qr-slide-up {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.qr-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 28px;
+  border-bottom: 1px solid var(--line);
+}
+
+.qr-modal-header h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+.qr-modal-close {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.qr-modal-close:hover {
+  background: #f1f0e9;
+  color: var(--ink);
+}
+
+.qr-modal-body {
+  padding: 28px;
+}
+
+.qr-modal-body .qr-plan-interval {
+  margin: 0 0 20px;
+}
+
+.qr-modal-body .qr-plan-grid {
+  margin-bottom: 20px;
+}
+
 .qr-plan-interval {
   display: inline-flex;
   gap: 4px;
