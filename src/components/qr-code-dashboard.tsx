@@ -157,7 +157,7 @@ export default function QrCodeDashboard() {
   const [selectedId, setSelectedId] = useState("");
   const [publicId, setPublicId] = useState("");
   const [name, setName] = useState("");
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState("seu-site-aqui.com.br");
   const [contentType, setContentType] = useState<"url" | "text">("url");
   const [foregroundColor, setForegroundColor] = useState("#243B2B");
   const [backgroundColor, setBackgroundColor] = useState("#FFFFFF");
@@ -279,7 +279,7 @@ export default function QrCodeDashboard() {
     setSelectedId("");
     setPublicId("");
     setName("");
-    setContent("");
+    setContent("seu-site-aqui.com.br");
     setContentType("url");
     setForegroundColor("#243B2B");
     setBackgroundColor("#FFFFFF");
