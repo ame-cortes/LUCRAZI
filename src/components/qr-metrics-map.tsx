@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import L from "leaflet";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
 import {
-  CircleMarker,
+  Circle,
   GeoJSON,
   MapContainer,
   Popup,
@@ -28,6 +28,7 @@ interface ScanLocation {
   region: string | null;
   latitude: number | null;
   longitude: number | null;
+  locationSource?: "browser" | "ip" | "mixed";
   count: number;
 }
 
@@ -276,17 +277,39 @@ export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetrics
     });
     return Array.from(locationsByCity.values());
   }, [scanLocations, selectedStateId]);
-  const locationsForBrazil = useMemo(
-    () => scanLocations.filter((location) => location.latitude !== null && location.longitude !== null),
-    [scanLocations],
-  );
+  const heatAreas = useMemo(() => {
+    const areas = new Map<string, ScanLocation>();
+    scanLocations.forEach((location) => {
+      if (
+        location.latitude === null
+        || location.longitude === null
+        || (selectedState && getRegionState(location.region)?.id !== selectedStateId)
+      ) return;
+
+      const areaSize = location.locationSource === "browser" ? 0.02 : 0.1;
+      const gridLat = Math.floor(location.latitude / areaSize);
+      const gridLng = Math.floor(location.longitude / areaSize);
+      const key = `${areaSize}:${gridLat}:${gridLng}`;
+      const existingArea = areas.get(key);
+      if (existingArea) {
+        existingArea.count += location.count;
+        if (existingArea.locationSource !== location.locationSource) {
+          existingArea.locationSource = "mixed";
+        }
+      } else {
+        areas.set(key, {
+          ...location,
+          latitude: (gridLat + 0.5) * areaSize,
+          longitude: (gridLng + 0.5) * areaSize,
+        });
+      }
+    });
+    return Array.from(areas.values());
+  }, [scanLocations, selectedState, selectedStateId]);
 
   const mapGeometry = selectedState ? municipalityGeometry : statesGeometry;
   const maxStateCount = Math.max(...scansByState.values(), 1);
-  const maxLocationCount = Math.max(
-    ...(selectedState ? locationsForSelectedState : locationsForBrazil).map((location) => location.count),
-    1,
-  );
+  const maxLocationCount = Math.max(...heatAreas.map((area) => area.count), 1);
 
   const municipalityCounts = new Map<string, number>();
   locationsForSelectedState.forEach((location) => {
@@ -296,13 +319,8 @@ export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetrics
   });
 
   const maxMunicipalityCount = Math.max(...municipalityCounts.values(), 1);
-  const municipalityCenters = new Map<string, L.LatLng>();
-  municipalityGeometry?.features.forEach((feature) => {
-    const name = String(feature.properties?.name || "");
-    if (name) municipalityCenters.set(normalizeName(name), L.geoJSON(feature).getBounds().getCenter());
-  });
 
-  const displayedLocations = selectedState ? locationsForSelectedState : locationsForBrazil;
+  const displayedLocations = heatAreas;
 
   function getStateStyle(feature?: MapFeature): L.PathOptions {
     const stateId = String(feature?.properties?.stateId || feature?.properties?.codarea || "");
@@ -343,22 +361,12 @@ export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetrics
     layer.bindTooltip(`${name}: ${count.toLocaleString("pt-BR")} scans`);
   }
 
-  function getMarkerPosition(location: ScanLocation): L.LatLng | null {
-    if (selectedState) {
-      return location.city ? municipalityCenters.get(normalizeName(location.city)) || null : null;
-    }
-    if (location.latitude !== null && location.longitude !== null) {
-      return L.latLng(location.latitude, location.longitude);
-    }
-    return null;
-  }
-
   return (
     <div className="qr-brazil-map-card">
       <div className="qr-brazil-map-heading">
         <div>
           <h4>Mapa de escaneamentos</h4>
-          <p>O IP estima uma cidade ou região, não um endereço. No detalhe do estado, os marcadores ficam no centro do município identificado.</p>
+          <p>Com permissão, a localização do aparelho é agrupada em áreas de cerca de 2 km. Sem ela, o IP pode estimar apenas a cidade. Nenhuma área indica uma casa ou endereço.</p>
         </div>
         <label className="qr-map-state-select">
           <span>Estado</span>
@@ -408,17 +416,20 @@ export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetrics
             />
           ) : null}
           {displayedLocations.map((location, index) => {
-            const position = getMarkerPosition(location);
-            if (!position) return null;
-            const radius = 8 + Math.sqrt(location.count / maxLocationCount) * 14;
+            if (location.latitude === null || location.longitude === null) return null;
+            const intensity = Math.log1p(location.count) / Math.log1p(Math.max(maxLocationCount, 10));
+            const fillColor = intensity > 0.72 ? "#b42318" : intensity > 0.4 ? "#e4572e" : "#f4a340";
+            const radius = location.locationSource === "browser"
+              ? 1500 + intensity * 1500
+              : 12000 + intensity * 8000;
             const stateName = getRegionState(location.region)?.name || location.region || "Brasil";
             const label = location.city ? `${location.city}, ${stateName}` : stateName;
             return (
-              <CircleMarker
-                key={`${location.latitude}-${location.longitude}-${location.city}-${index}`}
-                center={position}
+              <Circle
+                key={`${location.latitude}-${location.longitude}-${index}`}
+                center={[location.latitude, location.longitude]}
                 radius={radius}
-                pathOptions={{ color: "#fff", weight: 2, fillColor: "#c44f37", fillOpacity: 0.82 }}
+                pathOptions={{ color: fillColor, weight: 1, fillColor, fillOpacity: 0.38 + intensity * 0.38 }}
               >
                 <Popup>
                   <strong>{label}</strong>
@@ -426,19 +437,21 @@ export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetrics
                   {location.count.toLocaleString("pt-BR")} scans
                   <br />
                   <small>
-                    {selectedState
-                      ? "Município estimado pelo IP; marcador no centro do município, sem indicar endereço."
-                      : "Localização aproximada pelo IP; não representa um endereço."}
+                    {location.locationSource === "browser"
+                      ? "Localização do aparelho compartilhada com permissão e precisão reportada de até 3 km; área agrupada em uma zona aproximada de 2 km."
+                      : location.locationSource === "mixed"
+                        ? "Combina localização do aparelho com permissão e estimativa por IP; área agrupada em zonas aproximadas."
+                        : "Área aproximada pelo IP, agrupada em uma zona ampla de cerca de 10 km."}
                   </small>
                 </Popup>
-              </CircleMarker>
+              </Circle>
             );
           })}
         </MapContainer>
       )}
       <div className="qr-brazil-map-legend">
         <span><i className="qr-map-legend-state" />Área preenchida: volume por estado/município</span>
-        <span><i className="qr-map-legend-point" />Marcadores: local estimado; tamanho = volume, não precisão</span>
+        <span><i className="qr-map-legend-point" />Áreas: cores mais fortes indicam mais scans; cada zona é aproximada</span>
         <span>Fonte dos limites: IBGE</span>
       </div>
     </div>

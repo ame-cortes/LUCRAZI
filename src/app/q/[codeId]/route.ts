@@ -12,10 +12,10 @@ interface ScanData {
   region?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  locationSource?: "browser" | "ip";
   deviceType?: string;
   os?: string;
   browser?: string;
-  timestamp: Date;
 }
 
 interface GeoLocation {
@@ -26,6 +26,10 @@ interface GeoLocation {
   longitude: number | null;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function geoField(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
@@ -34,6 +38,132 @@ function geoCoordinate(value: unknown, min: number, max: number): number | null 
   return typeof value === "number" && Number.isFinite(value) && value >= min && value <= max
     ? value
     : null;
+}
+
+function blurCoordinate(value: number, cellSize: number): number {
+  return (Math.floor(value / cellSize) + 0.5) * cellSize;
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (character) => {
+    switch (character) {
+      case "&": return "&amp;";
+      case "<": return "&lt;";
+      case ">": return "&gt;";
+      case "\"": return "&quot;";
+      case "'": return "&#39;";
+      default: return character;
+    }
+  });
+}
+
+function createLocationConsentPage(codeId: string, destination: string): Response {
+  const safeDestination = escapeHtml(destination);
+  const html = `<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Abrindo o link…</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;background:#f5f6f0;color:#243127;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+    main{width:min(100%,440px);padding:28px;border:1px solid #e0e3d8;border-radius:18px;background:#fff;box-shadow:0 16px 48px #24312712}
+    h1{margin:0 0 10px;font-size:22px}p{color:#667064;font-size:14px;line-height:1.55}
+    .actions{display:grid;gap:10px;margin-top:22px}button,a{min-height:46px;display:flex;align-items:center;justify-content:center;border:1px solid #d9ddd2;border-radius:9px;padding:10px 14px;background:#fff;color:#243127;font:inherit;font-weight:650;text-align:center;text-decoration:none;cursor:pointer}
+    button:disabled{opacity:.6;cursor:wait}
+    #status{min-height:22px;margin:14px 0 0;font-size:13px}#fallback[hidden]{display:none}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Abrir destino</h1>
+    <p>Seu navegador perguntará se você permite usar a localização do aparelho para melhorar a região mostrada nas métricas. Salvamos apenas uma área aproximada, em células de cerca de 2 km, nunca a coordenada exata. Se a precisão do aparelho for baixa ou você não permitir, usamos a estimativa por IP, que pode mostrar apenas a cidade. Você pode continuar sem compartilhar.</p>
+    <div class="actions">
+      <button id="continue" type="button">Continuar sem compartilhar</button>
+      <a id="fallback" href="${safeDestination}" rel="noreferrer">Abrir destino</a>
+    </div>
+    <p id="status" role="status" aria-live="polite"></p>
+  </main>
+  <script>
+    (() => {
+      const continueButton = document.getElementById("continue");
+      const fallback = document.getElementById("fallback");
+      const status = document.getElementById("status");
+      let submitted = false;
+      let requestingLocation = false;
+
+      async function finishScan(position) {
+        if (submitted) return;
+        submitted = true;
+        continueButton.disabled = true;
+        status.textContent = "Registrando e abrindo o destino…";
+        const body = position ? {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy
+        } : {};
+        try {
+          const response = await fetch("/q/${codeId}", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(body),
+            cache: "no-store",
+            credentials: "same-origin"
+          });
+          const result = await response.json();
+          if (!response.ok || typeof result.redirectUrl !== "string") {
+            throw new Error("Não foi possível concluir o redirecionamento.");
+          }
+          window.location.replace(result.redirectUrl);
+        } catch {
+          status.textContent = "Não foi possível registrar o scan. Você ainda pode abrir o destino diretamente.";
+          fallback.hidden = false;
+          continueButton.disabled = false;
+          submitted = false;
+        }
+      }
+
+      function requestLocation() {
+        if (submitted || requestingLocation) return;
+        status.textContent = "Aguardando a permissão do navegador…";
+        if (!navigator.geolocation) {
+          status.textContent = "Este navegador não oferece localização. Continuando com a estimativa por IP…";
+          finishScan(null);
+          return;
+        }
+        requestingLocation = true;
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            requestingLocation = false;
+            finishScan(position);
+          },
+          () => {
+            requestingLocation = false;
+            status.textContent = "Localização não compartilhada. Continuando com a estimativa por IP…";
+            finishScan(null);
+          },
+          { enableHighAccuracy: true, maximumAge: 300000, timeout: 10000 }
+        );
+      }
+
+      continueButton.addEventListener("click", () => finishScan(null));
+      requestLocation();
+    })();
+  </script>
+</body>
+</html>`;
+
+  return new Response(html, {
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      "cache-control": "no-store, private",
+      "referrer-policy": "no-referrer",
+      "x-content-type-options": "nosniff",
+      "permissions-policy": "geolocation=(self)",
+      "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+    },
+  });
 }
 
 function parseUserAgent(userAgent: string) {
@@ -158,112 +288,139 @@ export async function GET(
 
     const data = codeDoc.data();
     const destination = typeof data.content === "string" ? data.content : "";
-    
-    console.log("QR Code encontrado:", { 
-      codeId, 
-      contentType: data.contentType, 
-      destination, 
-      trackingEnabled: data.trackingEnabled,
-      allData: data 
-    });
-    
     if (data.contentType !== "url" || !/^https?:\/\//i.test(destination)) {
-      console.error("QR Code não possui destino válido:", { contentType: data.contentType, destination });
       return NextResponse.json({ error: "Este QR Code não possui um destino web válido." }, { status: 404 });
     }
 
-    if (data.trackingEnabled === true) {
-      const userId = codeDoc.ref.parent.parent?.id;
-      console.log("Tentando registrar scan para userId:", userId);
-      
-      if (userId) {
-        const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() 
-          || request.headers.get("x-real-ip") 
-          || "unknown";
-        const userAgent = request.headers.get("user-agent") || "unknown";
-        const { os, browser, deviceType } = parseUserAgent(userAgent);
-        
-        console.log("Dados do scan:", { ip, os, browser, deviceType });
-        
-        // Get geo location (async, don't block redirect)
-        const geoData = await getGeoLocation(ip);
-        console.log("Geo location:", geoData);
-        
-        const scanData: ScanData = {
-          ip,
-          userAgent,
-          city: geoData?.city || null,
-          country: geoData?.country || null,
-          region: geoData?.region || null,
-          latitude: geoData?.latitude ?? null,
-          longitude: geoData?.longitude ?? null,
-          deviceType,
-          os,
-          browser,
-          timestamp: new Date(),
-        };
-
-        try {
-          await db.runTransaction(async (transaction) => {
-            const billingRef = db.collection("users").doc(userId).collection("billing").doc("current");
-            const [currentCode, billing] = await Promise.all([
-              transaction.get(codeDoc.ref),
-              transaction.get(billingRef),
-            ]);
-            
-            const billingAccess = getBillingAccess(billing.data());
-            console.log("Billing access:", { 
-              hasMetrics: billingAccess.hasMetrics, 
-              userId,
-              billingData: billing.data()
-            });
-            
-            if (!currentCode.exists) {
-              console.error("QR Code não existe na transação");
-              return;
-            }
-            
-            if (!billingAccess.hasMetrics) {
-              console.log("Skipping tracking - no metrics access");
-              return;
-            }
-            
-            console.log("Registrando scan...");
-            
-            // Increment scan count
-            transaction.update(codeDoc.ref, {
-              scanCount: FieldValue.increment(1),
-              lastScannedAt: FieldValue.serverTimestamp(),
-            });
-
-            // Add detailed scan data to scans subcollection
-            // Filter out undefined values to avoid Firestore errors
-            const filteredScanData = Object.fromEntries(
-              Object.entries(scanData).filter(([, value]) => value !== undefined)
-            );
-            const scanRef = codeDoc.ref.collection("scans").doc();
-            transaction.set(scanRef, {
-              ...filteredScanData,
-              createdAt: FieldValue.serverTimestamp(),
-            });
-            
-            console.log("Scan registrado com sucesso");
-          });
-        } catch (transactionError) {
-          console.error("Erro na transação de tracking:", transactionError);
-          // Não bloqueia o redirect se o tracking falhar
-        }
-      } else {
-        console.error("userId não encontrado");
+    const userId = codeDoc.ref.parent.parent?.id;
+    if (data.trackingEnabled === true && userId) {
+      const billingRef = db.collection("users").doc(userId).collection("billing").doc("current");
+      const billing = await billingRef.get();
+      if (getBillingAccess(billing.data()).hasMetrics) {
+        return createLocationConsentPage(codeId, destination);
       }
-    } else {
-      console.log("Tracking não habilitado para este QR Code");
     }
 
-    console.log("Redirecionando para:", destination);
     return NextResponse.redirect(destination, { status: 302 });
   } catch (error) {
     console.error("Não foi possível encaminhar o QR Code:", error);
+    return NextResponse.json({ error: "Este QR Code está temporariamente indisponível." }, { status: 503 });
+  }
+}
+
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ codeId: string }> },
+) {
+  const { codeId } = await params;
+  if (!/^[a-f\d-]{36}$/i.test(codeId)) {
+    return NextResponse.json({ error: "QR Code não encontrado." }, { status: 404 });
+  }
+
+  const origin = request.headers.get("origin");
+  if (origin && origin !== new URL(request.url).origin) {
+    return NextResponse.json({ error: "Origem da solicitação inválida." }, { status: 403 });
+  }
+  const contentLength = Number(request.headers.get("content-length"));
+  if (Number.isFinite(contentLength) && contentLength > 2048) {
+    return NextResponse.json({ error: "Dados de localização inválidos." }, { status: 413 });
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Dados de localização inválidos." }, { status: 400 });
+  }
+  if (!isRecord(body)) {
+    return NextResponse.json({ error: "Dados de localização inválidos." }, { status: 400 });
+  }
+
+  const hasLatitude = body.latitude !== undefined;
+  const hasLongitude = body.longitude !== undefined;
+  const latitude = hasLatitude ? geoCoordinate(body.latitude, -90, 90) : null;
+  const longitude = hasLongitude ? geoCoordinate(body.longitude, -180, 180) : null;
+  const accuracy = geoCoordinate(body.accuracy, 0, 3000);
+  if (hasLatitude !== hasLongitude || (hasLatitude && (latitude === null || longitude === null))) {
+    return NextResponse.json({ error: "Coordenadas de localização inválidas." }, { status: 400 });
+  }
+
+  try {
+    const db = getFirebaseAdminDb();
+    const result = await db.collectionGroup("qrCodes")
+      .where("publicId", "==", codeId)
+      .limit(1)
+      .get();
+    const codeDoc = result.docs[0];
+    if (!codeDoc) {
+      return NextResponse.json({ error: "QR Code não encontrado." }, { status: 404 });
+    }
+
+    const data = codeDoc.data();
+    const destination = typeof data.content === "string" ? data.content : "";
+    if (data.contentType !== "url" || !/^https?:\/\//i.test(destination)) {
+      return NextResponse.json({ error: "Este QR Code não possui um destino web válido." }, { status: 404 });
+    }
+
+    const userId = codeDoc.ref.parent.parent?.id;
+    if (data.trackingEnabled !== true || !userId) {
+      return NextResponse.json({ redirectUrl: destination });
+    }
+
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+      || request.headers.get("x-real-ip")
+      || "unknown";
+    const userAgent = request.headers.get("user-agent") || "unknown";
+    const { os, browser, deviceType } = parseUserAgent(userAgent);
+    const geoData = await getGeoLocation(ip);
+    const browserLocationProvided = latitude !== null && longitude !== null && accuracy !== null;
+    const scanData: ScanData = {
+      ip,
+      userAgent,
+      city: geoData?.city ?? null,
+      country: geoData?.country ?? null,
+      region: geoData?.region ?? null,
+      latitude: browserLocationProvided
+        ? blurCoordinate(latitude, 0.02)
+        : geoData?.latitude !== null && geoData?.latitude !== undefined
+          ? blurCoordinate(geoData.latitude, 0.1)
+          : null,
+      longitude: browserLocationProvided
+        ? blurCoordinate(longitude, 0.02)
+        : geoData?.longitude !== null && geoData?.longitude !== undefined
+          ? blurCoordinate(geoData.longitude, 0.1)
+          : null,
+      locationSource: browserLocationProvided ? "browser" : "ip",
+      deviceType,
+      os,
+      browser,
+    };
+
+    try {
+      await db.runTransaction(async (transaction) => {
+        const billingRef = db.collection("users").doc(userId).collection("billing").doc("current");
+        const [currentCode, billing] = await Promise.all([
+          transaction.get(codeDoc.ref),
+          transaction.get(billingRef),
+        ]);
+        if (!currentCode.exists || !getBillingAccess(billing.data()).hasMetrics) return;
+
+        transaction.update(codeDoc.ref, {
+          scanCount: FieldValue.increment(1),
+          lastScannedAt: FieldValue.serverTimestamp(),
+        });
+        transaction.set(codeDoc.ref.collection("scans").doc(), {
+          ...scanData,
+          createdAt: FieldValue.serverTimestamp(),
+        });
+      });
+    } catch (transactionError) {
+      console.error("Não foi possível registrar as métricas do scan.", transactionError);
+    }
+
+    return NextResponse.json({ redirectUrl: destination });
+  } catch (error) {
+    console.error("Não foi possível processar o scan do QR Code.", error);
     return NextResponse.json({ error: "Este QR Code está temporariamente indisponível." }, { status: 503 });
   }
 }

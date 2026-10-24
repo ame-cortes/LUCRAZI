@@ -6182,7 +6182,10 @@ button:focus-visible {
 }
 
 .qr-map-legend-point {
-  background: #c44f37;
+  width: 18px !important;
+  height: 10px !important;
+  border: 1px solid #e4572e;
+  background: linear-gradient(90deg, #f4a340, #e4572e, #b42318);
 }
 
 @media (max-width: 600px) {

@@ -21,6 +21,7 @@ interface MetricsData {
     region: string | null;
     latitude: number | null;
     longitude: number | null;
+    locationSource?: "browser" | "ip" | "mixed";
     count: number;
   }[];
   deviceTypes: { type: string; count: number; percentage: number }[];

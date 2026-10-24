@@ -90,6 +90,7 @@ export async function GET(
         region: data.region,
         latitude: data.latitude,
         longitude: data.longitude,
+        locationSource: data.locationSource,
         deviceType: data.deviceType,
         os: data.os,
         browser: data.browser,
@@ -128,6 +129,7 @@ export async function GET(
       region: string | null;
       latitude: number | null;
       longitude: number | null;
+      locationSource: "browser" | "ip" | "mixed";
       count: number;
     }>();
 
@@ -163,7 +165,7 @@ export async function GET(
       if (scan.region) {
         scansByRegion.set(scan.region, (scansByRegion.get(scan.region) || 0) + 1);
       }
-      if (scan.city || scan.region) {
+      if (scan.city || scan.region || (typeof scan.latitude === "number" && typeof scan.longitude === "number")) {
         const latitude = typeof scan.latitude === "number" &&
           Number.isFinite(scan.latitude) &&
           scan.latitude >= -90 &&
@@ -176,9 +178,10 @@ export async function GET(
           scan.longitude <= 180
           ? Math.round(scan.longitude * 100) / 100
           : null;
+        const locationSource = scan.locationSource === "browser" ? "browser" : "ip";
         const locationKey = latitude !== null && longitude !== null
-          ? `${latitude},${longitude},${scan.city || ""},${scan.region || ""}`
-          : `${scan.city || ""},${scan.region || ""}`;
+          ? `${latitude},${longitude},${scan.city || ""},${scan.region || ""},${locationSource}`
+          : `${scan.city || ""},${scan.region || ""},${locationSource}`;
         const existingLocation = scansByLocation.get(locationKey);
         if (existingLocation) {
           existingLocation.count++;
@@ -188,6 +191,7 @@ export async function GET(
             region: scan.region || null,
             latitude,
             longitude,
+            locationSource,
             count: 1,
           });
         }
