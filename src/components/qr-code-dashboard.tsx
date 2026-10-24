@@ -208,7 +208,7 @@ export default function QrCodeDashboard() {
   const previewContent = access.hasMetrics && publicId
     ? new URL(`/q/${publicId}`, siteUrl).toString()
     : content.trim();
-  const qrCanvasContent = previewContent || " ";
+  const qrCanvasContent = previewContent || "https://lucrazi.com";
   const canDownloadPreview = true;
   const totalScans = codes.reduce((total, code) => total + (code.trackingEnabled ? code.scanCount : 0), 0);
   const dynamicCodes = codes.filter((code) => code.trackingEnabled).length;
@@ -222,6 +222,8 @@ export default function QrCodeDashboard() {
 
     let cancelled = false;
     setError("");
+    
+    // Força o redesenho imediato
     QRCode.toCanvas(canvas, qrCanvasContent, {
       errorCorrectionLevel: "H",
       margin: 4,
@@ -857,6 +859,7 @@ export default function QrCodeDashboard() {
                     role="img"
                     width={360}
                     height={360}
+                    style={{ backgroundColor: backgroundColor, display: 'block' }}
                   />
                   <p className="qr-preview-hint">Escaneie o código com a câmera antes de imprimir ou compartilhar.</p>
                   <div className="qr-download-actions">

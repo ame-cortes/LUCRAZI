@@ -3937,6 +3937,7 @@ button:focus-visible {
   border-radius: 10px;
   background: #fff;
   image-rendering: pixelated;
+  min-height: 360px;
 }
 
 .qr-preview-hint {
@@ -4720,6 +4721,7 @@ button:focus-visible {
   border-radius: 8px;
   background: #fff;
   box-shadow: 0 2px 8px rgb(0 0 0 / 4%);
+  min-height: 300px;
 }
 
 .qr-preview-hint {
