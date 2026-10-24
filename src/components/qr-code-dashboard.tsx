@@ -208,7 +208,7 @@ export default function QrCodeDashboard() {
   const previewContent = access.hasMetrics && publicId
     ? new URL(`/q/${publicId}`, siteUrl).toString()
     : content.trim();
-  const qrCanvasContent = previewContent || siteUrl.toString();
+  const qrCanvasContent = previewContent || " ";
   const canDownloadPreview = true;
   const totalScans = codes.reduce((total, code) => total + (code.trackingEnabled ? code.scanCount : 0), 0);
   const dynamicCodes = codes.filter((code) => code.trackingEnabled).length;
@@ -219,46 +219,55 @@ export default function QrCodeDashboard() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
     let cancelled = false;
+    setError("");
+    QRCode.toCanvas(canvas, qrCanvasContent, {
+      errorCorrectionLevel: "H",
+      margin: 4,
+      width: 360,
+      color: { dark: foregroundColor, light: backgroundColor },
+    }).then(() => {
+      if (cancelled || !logoDataUrl) return;
 
-    const generateQR = async () => {
-      try {
-        // Primeiro gera o QR Code base
-        await QRCode.toCanvas(canvas, qrCanvasContent, {
-          errorCorrectionLevel: "H",
-          margin: 4,
-          width: 360,
-          color: { dark: foregroundColor, light: backgroundColor },
-        });
-
-        // Se tiver logo, adiciona sobre o QR Code
-        if (!cancelled && logoDataUrl) {
-          const image = new Image();
-          image.onload = () => {
-            if (cancelled) return;
-            const context = canvas.getContext("2d");
-            if (!context) {
-              setError("Seu navegador não conseguiu preparar a prévia do logo.");
-              return;
-            }
-            const center = canvas.width / 2;
-            const logoSize = canvas.width * 0.2;
-            const backingSize = logoSize * 1.25;
-            context.fillStyle = backgroundColor;
-            context.fillRect(center - backingSize / 2, center - backingSize / 2, backingSize, backingSize);
-            context.drawImage(image, center - logoSize / 2, center - logoSize / 2, logoSize, logoSize);
-          };
-          image.onerror = () => setError("Não foi possível carregar o logo salvo.");
-          image.src = logoDataUrl;
-        }
-      } catch (previewError: unknown) {
+      const image = new Image();
+      image.onload = () => {
         if (cancelled) return;
-        console.error("Não foi possível gerar a prévia do QR Code salvo.", previewError);
-        setError(`Não foi possível gerar a prévia: ${errorMessage(previewError)}`);
-      }
-    };
-
-    void generateQR();
+        const context = canvas.getContext("2d");
+        if (!context) {
+          setError("Seu navegador não conseguiu desenhar a prévia.");
+          return;
+        }
+        const logoSize = canvas.width * 0.2;
+        const backingSize = logoSize * 1.25;
+        const center = canvas.width / 2;
+        context.fillStyle = backgroundColor;
+        context.beginPath();
+        context.roundRect(
+          center - backingSize / 2,
+          center - backingSize / 2,
+          backingSize,
+          backingSize,
+          backingSize * 0.12,
+        );
+        context.fill();
+        context.drawImage(
+          image,
+          center - logoSize / 2,
+          center - logoSize / 2,
+          logoSize,
+          logoSize,
+        );
+      };
+      image.onerror = () => {
+        if (cancelled) setError("Não foi possível carregar o logo escolhido.");
+      };
+      image.src = logoDataUrl;
+    }).catch((error: unknown) => {
+      if (cancelled) return;
+      console.error("Não foi possível gerar a prévia do QR Code.", error);
+      setError("Não foi possível gerar a prévia. Confira o conteúdo informado.");
+    });
 
     return () => {
       cancelled = true;
