@@ -13,7 +13,7 @@ import {
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { getPersistentFirebaseAuth, getFirebaseAuth, isFirebaseConfigured } from "@/lib/firebase";
-import { billingPlans, type BillingAccess, type PaidPlanId } from "@/lib/billing-plans";
+import { billingPlans, type BillingAccess, type PaidPlanId, type PlanId } from "@/lib/billing-plans";
 import { siteUrl } from "@/lib/site-config";
 
 type SavedQrCode = {
@@ -167,6 +167,7 @@ export default function QrCodeDashboard() {
   const [billingBusy, setBillingBusy] = useState(false);
   const [error, setError] = useState(firebaseConfigured ? "" : "O painel ainda não está configurado. Tente novamente mais tarde.");
   const [notice, setNotice] = useState("");
+  const [showPlanSelector, setShowPlanSelector] = useState(false);
 
   const refreshCodes = useCallback(async (currentUser: User) => {
     const body = await accountRequest(currentUser, "/api/account/qr-codes");
@@ -472,6 +473,12 @@ export default function QrCodeDashboard() {
     }
   }
 
+  function getNextPlanId(currentPlanId: PlanId): PaidPlanId {
+    if (currentPlanId === "free") return "solo";
+    if (currentPlanId === "solo") return "duo";
+    return "studio";
+  }
+
   async function cancelSubscription() {
     if (!user) return;
     const pendingCheckout = access.status === "pending";
@@ -585,8 +592,8 @@ export default function QrCodeDashboard() {
             <header className="qr-account-title">
               <div>
                 <span className="eyebrow">MEUS QR CODES</span>
-                <h1>Gerencie seus códigos.</h1>
-                <p>Salve, edite e baixe seus códigos. Planos pagos incluem logos e métricas de escaneamento.</p>
+                <h1>Gerencie seus códigos</h1>
+                <p>Crie, edite e acompanhe o desempenho dos seus QR Codes</p>
               </div>
               <div className="qr-account-user">
                 <span>{user.email}</span>
@@ -607,27 +614,31 @@ export default function QrCodeDashboard() {
                       : "1 QR Code personalizado, sem logo nem métricas."}
                   </p>
                 </div>
-                {access.status === "authorized" && (
-                  <button className="qr-secondary-button" disabled={billingBusy} onClick={() => void cancelSubscription()} type="button">
-                    {billingBusy ? "Aguarde…" : "Cancelar assinatura"}
+                {access.status === "authorized" ? (
+                  <div className="qr-billing-actions">
+                    <button className="qr-secondary-button" disabled={billingBusy} onClick={() => void cancelSubscription()} type="button">
+                      {billingBusy ? "Aguarde…" : "Cancelar"}
+                    </button>
+                  </div>
+                ) : access.status === "pending" ? (
+                  <div className="qr-pending-checkout">
+                    <p>Há um checkout pendente.</p>
+                    {pendingCheckoutUrl && <a className="button button-dark" href={pendingCheckoutUrl}>Continuar <span aria-hidden="true">↗</span></a>}
+                    <button className="qr-secondary-button" disabled={billingBusy} onClick={() => void cancelSubscription()} type="button">Cancelar</button>
+                  </div>
+                ) : access.status === "creating" ? (
+                  <p className="qr-plan-contact">Preparando checkout…</p>
+                ) : (
+                  <button className="qr-upgrade-button" disabled={billingBusy} onClick={() => void startCheckout(access.planId === "free" ? "solo" : getNextPlanId(access.planId))} type="button">
+                    {billingBusy ? "Aguarde…" : "Fazer upgrade"}
                   </button>
                 )}
               </div>
-              {access.status === "pending" && (
-                <div className="qr-pending-checkout">
-                  <p>Há um checkout pendente nesta conta. Continue o pagamento no Mercado Pago ou cancele para escolher outro plano.</p>
-                  {pendingCheckoutUrl && <a className="button button-dark" href={pendingCheckoutUrl}>Continuar checkout <span aria-hidden="true">↗</span></a>}
-                  <button className="qr-secondary-button" disabled={billingBusy} onClick={() => void cancelSubscription()} type="button">Cancelar checkout</button>
-                </div>
-              )}
-              {access.status === "creating" && (
-                <p className="qr-plan-contact">Estamos preparando seu checkout. Atualize esta página em instantes.</p>
-              )}
-              {access.status !== "authorized" && access.status !== "pending" && access.status !== "creating" && (
-                <>
+              {access.status !== "authorized" && access.status !== "pending" && access.status !== "creating" && showPlanSelector && (
+                <div className="qr-plan-selector">
                   <div className="qr-plan-interval" role="group" aria-label="Frequência de cobrança">
                     <button aria-pressed={billingInterval === "monthly"} onClick={() => setBillingInterval("monthly")} type="button">Mensal</button>
-                    <button aria-pressed={billingInterval === "quarterly"} onClick={() => setBillingInterval("quarterly")} type="button">Trimestral · 5% de desconto</button>
+                    <button aria-pressed={billingInterval === "quarterly"} onClick={() => setBillingInterval("quarterly")} type="button">Trimestral · 5% off</button>
                   </div>
                   <div className="qr-plan-grid">
                     {paidPlanIds.map((planId) => {
@@ -635,8 +646,8 @@ export default function QrCodeDashboard() {
                       const price = billingInterval === "monthly" ? plan.monthlyPriceCents : plan.quarterlyPriceCents;
                       return (
                         <article className={`qr-plan-option${planId === "solo" ? " qr-plan-option-test" : ""}`} key={planId}>
-                          <span>{planId === "solo" ? "Premium · preço de teste" : plan.name}</span>
-                          <strong>{money(price)}<small>/{billingInterval === "monthly" ? "mês" : "trimestre"}</small></strong>
+                          <span>{planId === "solo" ? "Premium · teste" : plan.name}</span>
+                          <strong>{money(price)}<small>/{billingInterval === "monthly" ? "mês" : "trim"}</small></strong>
                           <p>{plan.qrLimit} QR Code{plan.qrLimit > 1 ? "s" : ""} · Logo · Métricas</p>
                           <button className="button button-dark" disabled={billingBusy} onClick={() => void startCheckout(planId)} type="button">
                             {billingBusy ? "Abrindo…" : "Assinar"}
@@ -645,22 +656,64 @@ export default function QrCodeDashboard() {
                       );
                     })}
                   </div>
-                  <p className="qr-plan-contact">Precisa de QR Codes ilimitados? <Link href="/contato">Fale conosco para consultar.</Link></p>
-                </>
+                  <p className="qr-plan-contact">Precisa de QR Codes ilimitados? <Link href="/contato">Fale conosco.</Link></p>
+                </div>
               )}
             </section>
             {notice && <p className="admin-message" role="status">{notice}</p>}
             {error && <p className="admin-message admin-error" role="alert">{error}</p>}
             <section className="qr-account-stats" aria-label="Resumo da conta">
-              <article><span>QR Codes</span><strong>{codes.length}<small> de {access.qrLimit}</small></strong></article>
-              <article><span>Escaneamentos</span><strong>{access.hasMetrics ? totalScans : "—"}</strong></article>
-              <article><span>Códigos dinâmicos</span><strong>{access.hasMetrics ? dynamicCodes : "—"}</strong></article>
+              <article className="qr-stat-card">
+                <div className="qr-stat-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                  </svg>
+                </div>
+                <div>
+                  <span>QR Codes</span>
+                  <strong>{codes.length}<small> de {access.qrLimit}</small></strong>
+                  <div className="qr-stat-progress">
+                    <div className="qr-stat-bar" style={{ width: `${(codes.length / access.qrLimit) * 100}%` }}></div>
+                  </div>
+                </div>
+              </article>
+              <article className="qr-stat-card">
+                <div className="qr-stat-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </div>
+                <div>
+                  <span>Escaneamentos</span>
+                  <strong>{access.hasMetrics ? totalScans.toLocaleString("pt-BR") : "—"}</strong>
+                  {!access.hasMetrics && <small>Upgrade para ver métricas</small>}
+                </div>
+              </article>
+              <article className="qr-stat-card">
+                <div className="qr-stat-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                  </svg>
+                </div>
+                <div>
+                  <span>Códigos dinâmicos</span>
+                  <strong>{access.hasMetrics ? dynamicCodes : "—"}</strong>
+                  {!access.hasMetrics && <small>Upgrade para ativá-los</small>}
+                </div>
+              </article>
             </section>
             <div className="qr-account-grid">
               <section className="qr-account-card">
                 <div className="qr-editor-heading">
-                  <h2>{selectedId ? "Editar QR Code" : "Criar QR Code"}</h2>
-                  {selectedId && <button className="qr-account-switch" onClick={resetEditor} type="button">+ Novo QR Code</button>}
+                  <div>
+                    <h2>{selectedId ? "Editar QR Code" : "Criar QR Code"}</h2>
+                    <p>{selectedId ? "Modifique as configurações do seu código" : "Configure seu novo QR Code"}</p>
+                  </div>
+                  {selectedId && <button className="qr-account-switch" onClick={resetEditor} type="button">+ Novo</button>}
                 </div>
                 <form className="qr-account-form" onSubmit={(event) => void saveCode(event)}>
                   <label>
@@ -706,7 +759,10 @@ export default function QrCodeDashboard() {
               </section>
               <section className="qr-account-card qr-saved-list">
                 <div className="qr-saved-heading">
-                  <h2>Seus QR Codes</h2>
+                  <div>
+                    <h2>Seus QR Codes</h2>
+                    <p className="qr-saved-count">{filteredCodes.length} código{filteredCodes.length !== 1 ? "s" : ""}</p>
+                  </div>
                   <button className="qr-secondary-button" disabled={refreshingCodes || loadingCodes} onClick={() => void refreshDashboard()} type="button">
                     {refreshingCodes || loadingCodes ? "Atualizando…" : "Atualizar"}
                   </button>
@@ -727,15 +783,51 @@ export default function QrCodeDashboard() {
                 ) : (
                   <ul>
                     {filteredCodes.map((code) => (
-                      <li key={code.id}>
-                        <div>
-                          <strong>{code.name}</strong>
-                          <span>{code.contentType === "url" ? code.content : `${code.content.slice(0, 90)}${code.content.length > 90 ? "…" : ""}`}</span>
-                          {code.trackingEnabled && <small>{code.scanCount} escaneamentos</small>}
+                      <li key={code.id} className="qr-code-item">
+                        <div className="qr-code-info">
+                          <div className="qr-code-header">
+                            <strong>{code.name}</strong>
+                            {code.trackingEnabled && (
+                              <span className="qr-code-badge">Dinâmico</span>
+                            )}
+                          </div>
+                          <span className="qr-code-content">{code.contentType === "url" ? code.content : `${code.content.slice(0, 90)}${code.content.length > 90 ? "…" : ""}`}</span>
+                          <div className="qr-code-metrics">
+                            {code.trackingEnabled ? (
+                              <>
+                                <span className="qr-metric">
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                  </svg>
+                                  {code.scanCount} escaneamentos
+                                </span>
+                                {code.createdAt && (
+                                  <span className="qr-metric">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    </svg>
+                                    Criado em {new Date(code.createdAt).toLocaleDateString("pt-BR")}
+                                  </span>
+                                )}
+                              </>
+                            ) : (
+                              <span className="qr-metric qr-metric-static">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                                  <polyline points="13 2 13 9 20 9"></polyline>
+                                </svg>
+                                Estático (sem métricas)
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <div className="qr-saved-actions">
-                          <button onClick={() => editCode(code)} disabled={busy} type="button">Editar</button>
-                          <button onClick={() => void removeCode(code)} disabled={busy} type="button">Excluir</button>
+                          <button onClick={() => editCode(code)} disabled={busy} type="button" className="qr-action-button qr-action-edit">Editar</button>
+                          <button onClick={() => void removeCode(code)} disabled={busy} type="button" className="qr-action-button qr-action-delete">Excluir</button>
                         </div>
                       </li>
                     ))}
