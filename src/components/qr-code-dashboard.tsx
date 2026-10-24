@@ -109,12 +109,22 @@ function getTrialTimeRemaining(trialEndsAt: string, now: Date): string | null {
   const endTime = new Date(trialEndsAt).getTime();
   if (!Number.isFinite(endTime)) return null;
 
-  const remainingMs = endTime - now.getTime();
-  if (remainingMs <= 0) return "Seu período de teste está terminando";
+  const remainingMinutes = Math.floor((endTime - now.getTime()) / (1000 * 60));
+  if (remainingMinutes < 0) return "Período de teste encerrado";
+  if (remainingMinutes === 0) return "Menos de 1 minuto restante";
 
-  const remainingDays = Math.ceil(remainingMs / (1000 * 60 * 60 * 24));
-  if (remainingDays === 1) return "Resta 1 dia de teste";
-  return `Restam ${remainingDays} dias de teste`;
+  const days = Math.floor(remainingMinutes / (60 * 24));
+  const hours = Math.floor((remainingMinutes % (60 * 24)) / 60);
+  const minutes = remainingMinutes % 60;
+  const parts: string[] = [];
+
+  if (days > 0) parts.push(`${days} ${days === 1 ? "dia" : "dias"}`);
+  if (hours > 0 || days > 0) parts.push(`${hours} ${hours === 1 ? "hora" : "horas"}`);
+  if (minutes > 0 && (days === 0 || hours === 0)) {
+    parts.push(`${minutes} ${minutes === 1 ? "minuto" : "minutos"}`);
+  }
+
+  return `Restam ${parts.join(" e ")}`;
 }
 
 async function accountRequest(user: User, url: string, init: RequestInit = {}) {
@@ -234,15 +244,13 @@ export default function QrCodeDashboard() {
   const [metricsCodeName, setMetricsCodeName] = useState("");
 
   useEffect(() => {
-    const now = new Date();
-    const nextMidnight = new Date(now);
-    nextMidnight.setHours(24, 0, 0, 0);
-    const timeoutId = window.setTimeout(
-      () => setToday(new Date()),
-      today ? nextMidnight.getTime() - now.getTime() : 0,
-    );
-    return () => window.clearTimeout(timeoutId);
-  }, [today]);
+    const initialTimeoutId = window.setTimeout(() => setToday(new Date()), 0);
+    const intervalId = window.setInterval(() => setToday(new Date()), 60_000);
+    return () => {
+      window.clearTimeout(initialTimeoutId);
+      window.clearInterval(intervalId);
+    };
+  }, []);
 
   useEffect(() => {
     if (!showProfileMenu) return;
