@@ -5943,6 +5943,42 @@ button:focus-visible {
   background: #3f4834;
 }
 
+.qr-metrics-date-field {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.qr-metrics-date-field input {
+  min-height: 36px;
+  border: 1px solid #d7d8cf;
+  border-radius: 8px;
+  padding: 0 9px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+}
+
+.qr-metrics-range button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.qr-metrics-date-error {
+  margin: -10px 0 0;
+  color: #a33b2b;
+  font-size: 12px;
+}
+
+.qr-metrics-period-chart {
+  min-width: 0;
+  overflow-x: auto;
+  padding-top: 12px;
+}
+
 .qr-metrics-monthly-summary {
   display: grid;
   gap: 8px;

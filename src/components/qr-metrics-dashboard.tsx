@@ -11,6 +11,7 @@ interface MetricsData {
   scansByDay: number[];
   scansByDate: number[];
   dateLabels: string[];
+  monthlyAggregation: boolean;
   topCities: { city: string; count: number }[];
   topCountries: { country: string; count: number }[];
   topRegions: { region: string; count: number }[];
@@ -39,6 +40,25 @@ interface QrMetricsDashboardProps {
 const HOURS = ["00h", "02h", "04h", "06h", "08h", "10h", "12h", "14h", "16h", "18h", "20h", "22h"];
 const DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
+function dateInputValue(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function addCalendarMonths(value: string, months: number) {
+  const [year, month, day] = value.split("-").map(Number);
+  const targetMonth = new Date(Date.UTC(year, month - 1 + months, 1));
+  const lastDay = new Date(Date.UTC(targetMonth.getUTCFullYear(), targetMonth.getUTCMonth() + 1, 0)).getUTCDate();
+  targetMonth.setUTCDate(Math.min(day, lastDay));
+  return targetMonth.toISOString().slice(0, 10);
+}
+
+function isValidDateRange(start: string, end: string, today: string) {
+  return Boolean(start && end && start <= end && end <= today && end <= addCalendarMonths(start, 24));
+}
+
 const QrMetricsMap = dynamic(() => import("@/components/qr-metrics-map"), {
   ssr: false,
   loading: () => <div className="qr-brazil-map-loading">Carregando mapa…</div>,
@@ -48,14 +68,37 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
   const [metrics, setMetrics] = useState<MetricsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [range, setRange] = useState("7d");
+  const [today, setToday] = useState("");
+  const [earliestDate, setEarliestDate] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [appliedStartDate, setAppliedStartDate] = useState("");
+  const [appliedEndDate, setAppliedEndDate] = useState("");
 
-  const loadMetrics = useCallback(async (currentRange: string) => {
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      const currentDate = new Date();
+      const todayValue = dateInputValue(currentDate);
+      const start = new Date(currentDate);
+      start.setDate(start.getDate() - 29);
+      const startValue = dateInputValue(start);
+      setToday(todayValue);
+      setEarliestDate(addCalendarMonths(todayValue, -24));
+      setStartDate(startValue);
+      setEndDate(todayValue);
+      setAppliedStartDate(startValue);
+      setAppliedEndDate(todayValue);
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  const loadMetrics = useCallback(async (currentStart: string, currentEnd: string) => {
     setLoading(true);
     setError("");
     try {
       const idToken = await user.getIdToken();
-      const response = await fetch(`/api/account/qr-codes/${codeId}/metrics?range=${currentRange}`, {
+      const params = new URLSearchParams({ start: currentStart, end: currentEnd });
+      const response = await fetch(`/api/account/qr-codes/${codeId}/metrics?${params}`, {
         headers: { authorization: `Bearer ${idToken}` },
         cache: "no-store",
       });
@@ -75,8 +118,14 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
   }, [user, codeId]);
 
   useEffect(() => {
-    loadMetrics(range);
-  }, [range, loadMetrics]);
+    if (!appliedStartDate || !appliedEndDate) return;
+    const timeoutId = window.setTimeout(() => {
+      void loadMetrics(appliedStartDate, appliedEndDate);
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [appliedStartDate, appliedEndDate, loadMetrics]);
+
+  const dateRangeValid = isValidDateRange(startDate, endDate, today);
 
   const downloadCsv = () => {
     if (!metrics) return;
@@ -84,7 +133,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
       ["Métrica", "Valor"],
       ["Total de Escaneamentos", metrics.totalScans],
       ["Usuários Únicos", metrics.uniqueUsers],
-      ["Período", range]
+      ["Período", `${appliedStartDate} até ${appliedEndDate}`]
     ];
     const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
     const link = document.createElement("a");
@@ -150,7 +199,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
             <p className="qr-metrics-updated">Atualizado em {new Date(metrics.lastUpdated).toLocaleString("pt-BR")}</p>
           </div>
           <div className="qr-metrics-actions">
-            <button className="qr-secondary-button" onClick={() => loadMetrics(range)} type="button">Atualizar</button>
+            <button className="qr-secondary-button" onClick={() => void loadMetrics(appliedStartDate, appliedEndDate)} type="button">Atualizar</button>
             <button className="qr-modal-close" onClick={onClose} type="button">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -161,11 +210,44 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
         </div>
         <div className="qr-modal-body qr-metrics-body">
           <div className="qr-metrics-range">
-            <button aria-pressed={range === "7d"} onClick={() => setRange("7d")}>7 dias</button>
-            <button aria-pressed={range === "30d"} onClick={() => setRange("30d")}>30 dias</button>
-            <button aria-pressed={range === "all"} onClick={() => setRange("all")}>Todo o período</button>
+            <label className="qr-metrics-date-field">
+              <span>De</span>
+              <input
+                type="date"
+                value={startDate}
+                min={earliestDate}
+                max={today}
+                onChange={(event) => setStartDate(event.target.value)}
+              />
+            </label>
+            <label className="qr-metrics-date-field">
+              <span>Até</span>
+              <input
+                type="date"
+                value={endDate}
+                min={startDate || earliestDate}
+                max={today}
+                onChange={(event) => setEndDate(event.target.value)}
+              />
+            </label>
+            <button
+              className="qr-secondary-button"
+              disabled={!dateRangeValid || loading || (startDate === appliedStartDate && endDate === appliedEndDate)}
+              onClick={() => {
+                setAppliedStartDate(startDate);
+                setAppliedEndDate(endDate);
+              }}
+              type="button"
+            >
+              Aplicar período
+            </button>
             <button className="qr-secondary-button" onClick={downloadCsv}>Baixar CSV</button>
           </div>
+          {!dateRangeValid && (
+            <p className="qr-metrics-date-error" role="alert">
+              Escolha datas válidas, com no máximo 24 meses entre elas e sem datas futuras.
+            </p>
+          )}
           {/* Volume Metrics */}
           <section className="qr-metrics-section">
             <h3 className="qr-metrics-section-title">
@@ -186,48 +268,38 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
               </article>
             </div>
             <div className="qr-metrics-chart">
-              <h4>{range === "all" ? "Resumo Mensal" : "Evolução Diária"}</h4>
-              {range === "all" ? (
-                <div className="qr-metrics-monthly-summary">
-                  {(() => {
-                    const monthlyData: { [key: string]: number } = {};
-                    metrics.scansByDate.forEach((count, index) => {
-                      const date = new Date(metrics.dateLabels[index] || "");
-                      const monthKey = date.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
-                      monthlyData[monthKey] = (monthlyData[monthKey] || 0) + count;
-                    });
-
-                    const months = Object.entries(monthlyData).sort((a, b) => b[0].localeCompare(a[0]));
-
-                    return months.map(([month, count]) => (
-                      <div key={month} className="qr-metrics-monthly-item">
-                        <span className="qr-metrics-monthly-label">{month}</span>
-                        <span className="qr-metrics-monthly-count">{count} escaneamentos</span>
-                      </div>
-                    ));
-                  })()}
-                </div>
-              ) : (
-                <div className="qr-chart-container">
-                  {metrics.scansByDate.length > 0 ? (
-                    metrics.scansByDate.map((count, index) => (
-                      <div key={index} className="qr-chart-bar-wrapper">
+              <h4>{metrics.monthlyAggregation ? "Escaneamentos por mês" : "Evolução diária"}</h4>
+              <div
+                className="qr-chart-container qr-metrics-period-chart"
+                style={{ gridTemplateColumns: `repeat(${metrics.scansByDate.length}, minmax(32px, 1fr))` }}
+              >
+                {metrics.scansByDate.length > 0 ? (
+                  metrics.scansByDate.map((count, index) => {
+                    const label = metrics.dateLabels[index] || "";
+                    const date = new Date(`${metrics.monthlyAggregation ? `${label}-01` : label}T12:00:00.000Z`);
+                    const formattedLabel = Number.isNaN(date.getTime())
+                      ? label
+                      : date.toLocaleDateString("pt-BR", metrics.monthlyAggregation
+                        ? { month: "short", year: "2-digit", timeZone: "UTC" }
+                        : { day: "2-digit", month: "2-digit", timeZone: "UTC" });
+                    return (
+                      <div key={label} className="qr-chart-bar-wrapper">
                         <div
                           className="qr-chart-bar"
                           style={{
-                            height: count > 0 ? `${Math.max((count / maxDailyDateScans) * 100, 50)}%` : "4px",
+                            height: count > 0 ? `${Math.max((count / maxDailyDateScans) * 100, 8)}%` : "4px",
                             opacity: count > 0 ? 1 : 0.15
                           }}
-                          title={`${metrics.dateLabels[index] || ""}: ${count} escaneamentos`}
+                          title={`${formattedLabel}: ${count} escaneamentos`}
                         />
-                        <span className="qr-chart-label">{metrics.dateLabels[index] || ""}</span>
+                        <span className="qr-chart-label">{formattedLabel}</span>
                       </div>
-                    ))
-                  ) : (
-                    <p className="qr-chart-empty">Sem dados suficientes</p>
-                  )}
-                </div>
-              )}
+                    );
+                  })
+                ) : (
+                  <p className="qr-chart-empty">Sem dados suficientes</p>
+                )}
+              </div>
             </div>
           </section>
 
