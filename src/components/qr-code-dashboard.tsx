@@ -13,7 +13,7 @@ import {
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { getPersistentFirebaseAuth, getFirebaseAuth, isFirebaseConfigured } from "@/lib/firebase";
-import { billingPlans, type BillingAccess, type PaidPlanId, type PlanId } from "@/lib/billing-plans";
+import { billingPlans, type BillingAccess, type PaidPlanId } from "@/lib/billing-plans";
 import { siteUrl } from "@/lib/site-config";
 import QrMetricsDashboard from "@/components/qr-metrics-dashboard";
 
@@ -340,7 +340,7 @@ export default function QrCodeDashboard() {
     }, 100);
 
     return () => clearTimeout(timeoutId);
-  }, [user]);
+  }, [user, backgroundColor, foregroundColor, logoDataUrl, qrCanvasContent]);
 
   function resetEditor() {
     setSelectedId("");
@@ -396,7 +396,7 @@ export default function QrCodeDashboard() {
     try {
       const auth = await getPersistentFirebaseAuth();
       if (registering) {
-        const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+        await createUserWithEmailAndPassword(auth, email.trim(), password);
         setNotice("Conta criada. Seus QR Codes salvos ficarão disponíveis neste painel.");
       } else {
         await signInWithEmailAndPassword(auth, email.trim(), password);

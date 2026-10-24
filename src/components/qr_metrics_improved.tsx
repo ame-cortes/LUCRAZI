@@ -57,6 +57,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
   }, [user, codeId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadMetrics(range);
   }, [range, loadMetrics]);
 

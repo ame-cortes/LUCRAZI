@@ -165,7 +165,7 @@ export async function GET(
             // Add detailed scan data to scans subcollection
             // Filter out undefined values to avoid Firestore errors
             const filteredScanData = Object.fromEntries(
-              Object.entries(scanData).filter(([_, value]) => value !== undefined)
+              Object.entries(scanData).filter(([, value]) => value !== undefined)
             );
             const scanRef = codeDoc.ref.collection("scans").doc();
             transaction.set(scanRef, {
