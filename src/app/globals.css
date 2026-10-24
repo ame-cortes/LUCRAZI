@@ -5979,6 +5979,56 @@ button:focus-visible {
   padding-top: 12px;
 }
 
+.qr-metrics-period-table-wrap {
+  max-height: 320px;
+  min-width: 0;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.qr-metrics-period-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+
+.qr-metrics-period-table th,
+.qr-metrics-period-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.qr-metrics-period-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f7f8f3;
+}
+
+.qr-metrics-period-table thead th {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.qr-metrics-period-table tbody th {
+  font-weight: 500;
+}
+
+.qr-metrics-period-table td {
+  width: 35%;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.qr-metrics-period-table tbody tr:last-child th,
+.qr-metrics-period-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
 .qr-metrics-monthly-summary {
   display: grid;
   gap: 8px;
@@ -6740,5 +6790,79 @@ button:focus-visible {
 
   .qr-chart-container {
     min-height: 130px;
+  }
+}
+
+.qr-metrics-overlay {
+  overflow-y: auto;
+}
+
+.qr-metrics-modal {
+  display: flex;
+  max-height: min(92dvh, 900px);
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.qr-metrics-modal > .qr-modal-header {
+  flex: 0 0 auto;
+}
+
+.qr-metrics-modal > .qr-modal-body {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.qr-metrics-range {
+  align-items: end;
+}
+
+.qr-metrics-range .qr-metrics-date-field {
+  min-width: 0;
+  flex: 1 1 150px;
+}
+
+.qr-metrics-range .qr-metrics-date-field input {
+  width: 100%;
+  min-width: 0;
+}
+
+.qr-metrics-range > button {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 760px) {
+  .qr-metrics-modal,
+  .qr-metrics-modal.qr-modal-content {
+    width: 100%;
+    max-height: 95dvh;
+  }
+
+  .qr-metrics-modal > .qr-modal-header {
+    position: sticky;
+    top: 0;
+  }
+
+  .qr-metrics-range {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+  }
+
+  .qr-metrics-range .qr-metrics-date-field {
+    width: 100%;
+  }
+
+  .qr-metrics-range > button {
+    width: 100%;
+    min-width: 0;
+    padding-inline: 8px;
+    white-space: normal;
+  }
+
+  .qr-metrics-period-table-wrap {
+    max-height: 260px;
   }
 }

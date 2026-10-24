@@ -65,14 +65,22 @@ export async function GET(
     const { start, end } = dateRange;
 
     // Get scans within date range
-    const scansSnapshot = await codeRef.collection("scans")
+    const scansQuery = codeRef.collection("scans")
       .where("createdAt", ">=", start)
       .where("createdAt", "<=", end)
-      .orderBy("createdAt", "desc")
-      .limit(5000) // Increased limit for better coverage
-      .get();
+      .orderBy("createdAt", "desc");
+    const scanDocuments = [];
+    const pageSize = 1000;
+    let scansSnapshot = await scansQuery.limit(pageSize).get();
+    scanDocuments.push(...scansSnapshot.docs);
+    while (scansSnapshot.size === pageSize) {
+      const lastDocument = scansSnapshot.docs[scansSnapshot.docs.length - 1];
+      if (!lastDocument) break;
+      scansSnapshot = await scansQuery.startAfter(lastDocument).limit(pageSize).get();
+      scanDocuments.push(...scansSnapshot.docs);
+    }
 
-    const scans = scansSnapshot.docs.map(doc => {
+    const scans = scanDocuments.map(doc => {
       const data = doc.data();
       return {
         ip: data.ip,

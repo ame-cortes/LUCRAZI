@@ -129,24 +129,30 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
 
   const downloadCsv = () => {
     if (!metrics) return;
-    const rows = [
+    const rows: (string | number)[][] = [
       ["Métrica", "Valor"],
       ["Total de Escaneamentos", metrics.totalScans],
       ["Usuários Únicos", metrics.uniqueUsers],
-      ["Período", `${appliedStartDate} até ${appliedEndDate}`]
+      ["Período", `${appliedStartDate} até ${appliedEndDate}`],
+      [],
+      [metrics.monthlyAggregation ? "Mês" : "Data", "Escaneamentos"],
+      ...metrics.dateLabels.map((label, index) => [label, metrics.scansByDate[index] ?? 0]),
     ];
-    const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
+    const escapeCsvValue = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`;
+    const csvContent = `\uFEFF${rows.map((row) => row.map(escapeCsvValue).join(";")).join("\r\n")}`;
+    const url = URL.createObjectURL(new Blob([csvContent], { type: "text/csv;charset=utf-8" }));
     const link = document.createElement("a");
-    link.setAttribute("href", encodeURI(csvContent));
+    link.setAttribute("href", url);
     link.setAttribute("download", `metricas-${codeName.replace(/ /g, "-")}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   if (loading && !metrics) {
     return (
-      <div className="qr-modal-overlay" onClick={onClose}>
+      <div className="qr-modal-overlay qr-metrics-overlay" onClick={onClose}>
         <div className="qr-modal-content" onClick={(e) => e.stopPropagation()}>
           <div className="qr-modal-header">
             <h2>Métricas do QR Code</h2>
@@ -167,7 +173,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
 
   if (error || !metrics) {
     return (
-      <div className="qr-modal-overlay" onClick={onClose}>
+      <div className="qr-modal-overlay qr-metrics-overlay" onClick={onClose}>
         <div className="qr-modal-content" onClick={(e) => e.stopPropagation()}>
           <div className="qr-modal-header">
             <h2>Métricas do QR Code</h2>
@@ -188,10 +194,8 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
 
   const maxHourlyScans = Math.max(...metrics.scansByHour, 1);
   const maxDailyScans = Math.max(...metrics.scansByDay, 1);
-  const maxDailyDateScans = Math.max(...metrics.scansByDate, 1);
-
   return (
-    <div className="qr-modal-overlay" onClick={onClose}>
+    <div className="qr-modal-overlay qr-metrics-overlay" onClick={onClose}>
       <div className="qr-modal-content qr-metrics-modal" onClick={(e) => e.stopPropagation()}>
         <div className="qr-modal-header">
           <div>
@@ -241,7 +245,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
             >
               Aplicar período
             </button>
-            <button className="qr-secondary-button" onClick={downloadCsv}>Baixar CSV</button>
+            <button className="qr-secondary-button" disabled={loading} onClick={downloadCsv} type="button">Baixar CSV</button>
           </div>
           {!dateRangeValid && (
             <p className="qr-metrics-date-error" role="alert">
@@ -269,33 +273,33 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
             </div>
             <div className="qr-metrics-chart">
               <h4>{metrics.monthlyAggregation ? "Escaneamentos por mês" : "Evolução diária"}</h4>
-              <div
-                className="qr-chart-container qr-metrics-period-chart"
-                style={{ gridTemplateColumns: `repeat(${metrics.scansByDate.length}, minmax(32px, 1fr))` }}
-              >
+              <div className="qr-metrics-period-table-wrap">
                 {metrics.scansByDate.length > 0 ? (
-                  metrics.scansByDate.map((count, index) => {
-                    const label = metrics.dateLabels[index] || "";
-                    const date = new Date(`${metrics.monthlyAggregation ? `${label}-01` : label}T12:00:00.000Z`);
-                    const formattedLabel = Number.isNaN(date.getTime())
-                      ? label
-                      : date.toLocaleDateString("pt-BR", metrics.monthlyAggregation
-                        ? { month: "short", year: "2-digit", timeZone: "UTC" }
-                        : { day: "2-digit", month: "2-digit", timeZone: "UTC" });
-                    return (
-                      <div key={label} className="qr-chart-bar-wrapper">
-                        <div
-                          className="qr-chart-bar"
-                          style={{
-                            height: count > 0 ? `${Math.max((count / maxDailyDateScans) * 100, 8)}%` : "4px",
-                            opacity: count > 0 ? 1 : 0.15
-                          }}
-                          title={`${formattedLabel}: ${count} escaneamentos`}
-                        />
-                        <span className="qr-chart-label">{formattedLabel}</span>
-                      </div>
-                    );
-                  })
+                  <table className="qr-metrics-period-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">{metrics.monthlyAggregation ? "Mês" : "Data"}</th>
+                        <th scope="col">Escaneamentos</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {metrics.scansByDate.map((count, index) => {
+                        const label = metrics.dateLabels[index] || "";
+                        const date = new Date(`${metrics.monthlyAggregation ? `${label}-01` : label}T12:00:00.000Z`);
+                        const formattedLabel = Number.isNaN(date.getTime())
+                          ? label
+                          : date.toLocaleDateString("pt-BR", metrics.monthlyAggregation
+                            ? { month: "long", year: "numeric", timeZone: "UTC" }
+                            : { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" });
+                        return (
+                          <tr key={label}>
+                            <th scope="row">{formattedLabel}</th>
+                            <td>{count.toLocaleString("pt-BR")}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 ) : (
                   <p className="qr-chart-empty">Sem dados suficientes</p>
                 )}
