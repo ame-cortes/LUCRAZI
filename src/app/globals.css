@@ -4213,8 +4213,13 @@ button:focus-visible {
 
 .qr-account-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.8fr);
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
   align-items: start;
+  gap: 20px;
+}
+
+.qr-account-grid-right {
+  display: grid;
   gap: 20px;
 }
 
@@ -4362,6 +4367,74 @@ button:focus-visible {
 
 .qr-modal-body {
   padding: 28px;
+}
+
+/* Mobile Modal Improvements */
+@media (max-width: 760px) {
+  .qr-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .qr-modal-content {
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: 16px 16px 0 0;
+    animation: qr-slide-up-mobile 300ms ease;
+  }
+
+  @keyframes qr-slide-up-mobile {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .qr-modal-header {
+    padding: 16px 20px;
+  }
+
+  .qr-modal-header h2 {
+    font-size: 18px;
+  }
+
+  .qr-modal-close {
+    width: 36px;
+    height: 36px;
+  }
+
+  .qr-modal-body {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .qr-modal-content {
+    max-height: 95vh;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .qr-modal-header {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .qr-modal-header h2 {
+    font-size: 16px;
+  }
+
+  .qr-modal-close {
+    width: 32px;
+    height: 32px;
+  }
+
+  .qr-modal-body {
+    padding: 16px;
+  }
 }
 
 .qr-modal-body .qr-plan-interval {
@@ -5128,6 +5201,10 @@ button:focus-visible {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .qr-account-grid-right {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .qr-account-title {
     align-items: flex-start;
     flex-direction: column;
@@ -5162,16 +5239,135 @@ button:focus-visible {
   .qr-next-steps-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  /* Dashboard specific mobile improvements */
+  .qr-account-content {
+    width: calc(100% - 32px);
+    padding-block: 24px 40px;
+  }
+
+  .qr-account-header {
+    min-height: 64px;
+    padding-inline: 16px;
+  }
+
+  .qr-account-back {
+    font-size: 13px;
+  }
+
+  .qr-account-card {
+    padding: 18px;
+  }
+
+  .qr-billing-card {
+    padding: 18px;
+  }
+
+  .qr-billing-current h2 {
+    font-size: 20px;
+  }
+
+  .qr-billing-current p {
+    font-size: 13px;
+  }
+
+  .qr-upgrade-button {
+    min-height: 40px;
+    font-size: 12px;
+  }
+
+  .qr-account-stats {
+    gap: 10px;
+  }
+
+  .qr-stat-card {
+    padding: 16px;
+  }
+
+  .qr-account-stats article strong {
+    font-size: 22px;
+  }
+
+  .qr-preview-section {
+    padding: 18px;
+  }
+
+  .qr-preview-canvas {
+    max-width: 300px;
+  }
+
+  .qr-download-actions {
+    gap: 10px;
+  }
+
+  .qr-download-actions .button {
+    min-height: 44px;
+  }
+
+  .qr-editor-heading h2 {
+    font-size: 20px;
+  }
+
+  .qr-editor-heading p {
+    font-size: 14px;
+  }
+
+  .qr-field label {
+    font-size: 13px;
+  }
+
+  .qr-field input,
+  .qr-field textarea,
+  .qr-field select {
+    padding: 11px 13px;
+  }
+
+  .qr-field textarea {
+    min-height: 70px;
+  }
+
+  .qr-account-form-actions {
+    gap: 10px;
+  }
+
+  .qr-saved-heading h2 {
+    font-size: 20px;
+  }
+
+  .qr-saved-heading p {
+    font-size: 13px;
+  }
+
+  .qr-code-item {
+    padding: 16px;
+  }
+
+  .qr-code-header strong {
+    font-size: 15px;
+  }
+
+  .qr-code-content {
+    font-size: 13px;
+  }
+
+  .qr-metric {
+    font-size: 12px;
+  }
+
+  .qr-action-button {
+    min-height: 36px;
+    font-size: 12px;
+  }
 }
 
 @media (max-width: 480px) {
   .qr-account-content {
-    width: min(100% - 28px, 1160px);
-    padding-block: 30px 56px;
+    width: calc(100% - 28px);
+    padding-block: 20px 40px;
   }
 
   .qr-account-header {
-    min-height: 66px;
+    min-height: 60px;
     padding-inline: 14px;
   }
 
@@ -5180,17 +5376,250 @@ button:focus-visible {
   }
 
   .qr-account-card {
-    padding: 19px;
+    padding: 16px;
+  }
+
+  .qr-account-title {
+    gap: 12px;
+  }
+
+  .qr-account-title h1 {
+    font-size: 24px;
+  }
+
+  .qr-account-title p {
+    font-size: 13px;
   }
 
   .qr-account-user {
     align-items: flex-start;
     flex-direction: column;
+    gap: 8px;
+  }
+
+  .qr-account-user span {
+    font-size: 13px;
+  }
+
+  .qr-billing-card {
+    padding: 16px;
+  }
+
+  .qr-billing-current {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .qr-billing-current h2 {
+    font-size: 18px;
+  }
+
+  .qr-billing-current h2 span {
+    display: block;
+    margin-top: 2px;
+  }
+
+  .qr-billing-current p {
+    font-size: 12px;
+  }
+
+  .qr-billing-actions {
+    width: 100%;
+  }
+
+  .qr-upgrade-button {
+    width: 100%;
+  }
+
+  .qr-account-stats {
+    gap: 8px;
+  }
+
+  .qr-stat-card {
+    padding: 14px 16px;
+  }
+
+  .qr-stat-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .qr-account-stats article strong {
+    font-size: 20px;
+  }
+
+  .qr-account-stats article small {
+    font-size: 11px;
+  }
+
+  .qr-preview-section {
+    padding: 16px;
+  }
+
+  .qr-preview-canvas {
+    width: 100%;
+    max-width: 280px;
+    height: auto;
+  }
+
+  .qr-preview-hint {
+    font-size: 11px;
+  }
+
+  .qr-download-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .qr-download-actions .button {
+    width: 100%;
+  }
+
+  .qr-preview-upsell {
+    margin-top: 12px;
+  }
+
+  .qr-preview-upsell p {
+    font-size: 11px;
+  }
+
+  .qr-editor-heading h2 {
+    font-size: 18px;
+  }
+
+  .qr-editor-heading p {
+    font-size: 13px;
+  }
+
+  .qr-field label {
+    font-size: 12px;
+  }
+
+  .qr-field input,
+  .qr-field textarea,
+  .qr-field select {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .qr-field textarea {
+    min-height: 60px;
+  }
+
+  .qr-field-hint {
+    font-size: 10px;
+  }
+
+  .qr-color-fields {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .qr-color-row input[type="color"] {
+    width: 40px;
+    height: 40px;
+  }
+
+  .qr-color-row output {
+    font-size: 11px;
+  }
+
+  .qr-account-form-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .qr-account-form-actions .button {
+    width: 100%;
+  }
+
+  .qr-secondary-button {
+    width: 100%;
+  }
+
+  .qr-saved-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .qr-saved-heading h2 {
+    font-size: 18px;
+  }
+
+  .qr-saved-heading p {
+    font-size: 12px;
+  }
+
+  .qr-saved-heading button {
+    width: 100%;
+  }
+
+  .qr-saved-updated {
+    font-size: 10px;
+  }
+
+  .qr-code-search label {
+    font-size: 11px;
+  }
+
+  .qr-code-search input {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .qr-code-item {
+    padding: 14px;
+  }
+
+  .qr-code-header {
+    margin-bottom: 8px;
+  }
+
+  .qr-code-header strong {
+    font-size: 14px;
+  }
+
+  .qr-code-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+  }
+
+  .qr-code-content {
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+
+  .qr-code-metrics {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .qr-metric {
+    font-size: 11px;
+  }
+
+  .qr-metric svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .qr-saved-actions {
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .qr-action-button {
+    width: 100%;
+    min-height: 36px;
+    font-size: 12px;
   }
 
   .qr-page-heading h1 {
-    font-size: 42px;
-    letter-spacing: -2.7px;
+    font-size: 32px;
+    letter-spacing: -2px;
   }
 
   .qr-next-steps-actions {
@@ -5200,12 +5629,12 @@ button:focus-visible {
   .qr-settings,
   .qr-preview-card,
   .qr-email-card {
-    padding: 19px;
+    padding: 16px;
   }
 
   .qr-color-fields {
-    gap: 11px;
-    padding: 13px;
+    gap: 10px;
+    padding: 12px;
   }
 }
 
@@ -5443,6 +5872,7 @@ button:focus-visible {
   padding: 20px;
 }
 
+/* Mobile Responsiveness - Focus on Small Screens */
 @media (max-width: 760px) {
   .qr-metrics-cards,
   .qr-metrics-grid {
@@ -5455,9 +5885,275 @@ button:focus-visible {
 
   .qr-metrics-modal {
     max-width: 100%;
+    margin: 0;
+    border-radius: 16px 16px 0 0;
+    max-height: 90vh;
+  }
+
+  .qr-modal-content {
+    border-radius: 16px 16px 0 0;
+    max-height: 90vh;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .qr-modal-header {
+    padding: 16px 20px;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 10;
+  }
+
+  .qr-modal-header h2 {
+    font-size: 18px;
+  }
+
+  .qr-modal-body {
+    padding: 20px;
+    gap: 20px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .qr-metrics-section-title {
+    font-size: 16px;
+  }
+
+  .qr-metrics-cards {
+    gap: 10px;
+  }
+
+  .qr-metric-card {
+    padding: 14px 16px;
+  }
+
+  .qr-metric-card > strong {
+    font-size: 24px;
+  }
+
+  .qr-metrics-grid {
+    gap: 12px;
+  }
+
+  .qr-metrics-list {
+    padding: 14px;
+  }
+
+  .qr-metrics-list > h4 {
+    font-size: 13px;
+  }
+
+  .qr-metrics-list li {
+    grid-template-columns: 22px 1fr;
+    gap: 6px;
+  }
+
+  .qr-metric-rank {
+    width: 22px;
+    height: 22px;
+    font-size: 10px;
+  }
+
+  .qr-metric-name {
+    font-size: 12px;
+  }
+
+  .qr-metric-count {
+    grid-column: 2;
+    font-size: 11px;
+  }
+
+  .qr-metric-bar {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    height: 5px;
+  }
+
+  .qr-metrics-chart {
+    padding: 14px;
+  }
+
+  .qr-metrics-chart > h4 {
+    font-size: 13px;
+    margin-bottom: 12px;
   }
 
   .qr-chart-container {
     grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 6px;
+    min-height: 100px;
+    padding-bottom: 20px;
+  }
+
+  .qr-chart-bar {
+    max-height: 80px;
+  }
+
+  .qr-chart-label {
+    font-size: 9px;
+  }
+
+  .qr-chart-horizontal {
+    gap: 3px;
+  }
+
+  .qr-chart-horizontal .qr-chart-bar-wrapper {
+    grid-template-columns: 20px 1fr;
+    gap: 6px;
+  }
+
+  .qr-chart-horizontal .qr-chart-bar {
+    height: 14px;
+    max-height: 14px;
+    min-height: 14px;
+  }
+
+  .qr-chart-horizontal .qr-chart-label {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .qr-metrics-body {
+    gap: 16px;
+  }
+
+  .qr-metrics-section {
+    gap: 12px;
+  }
+
+  .qr-metrics-section-title {
+    font-size: 15px;
+  }
+
+  .qr-metrics-section-title svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .qr-metrics-cards {
+    gap: 8px;
+  }
+
+  .qr-metric-card {
+    padding: 12px 14px;
+  }
+
+  .qr-metric-card > span {
+    font-size: 11px;
+  }
+
+  .qr-metric-card > strong {
+    font-size: 20px;
+  }
+
+  .qr-metrics-grid {
+    gap: 10px;
+  }
+
+  .qr-metrics-list {
+    padding: 12px;
+  }
+
+  .qr-metrics-list > h4 {
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+
+  .qr-metrics-list ul {
+    gap: 8px;
+  }
+
+  .qr-metrics-list li {
+    grid-template-columns: 20px 1fr;
+    gap: 5px;
+  }
+
+  .qr-metric-rank {
+    width: 20px;
+    height: 20px;
+    font-size: 9px;
+  }
+
+  .qr-metric-name {
+    font-size: 11px;
+  }
+
+  .qr-metric-count {
+    font-size: 10px;
+  }
+
+  .qr-metric-bar {
+    height: 4px;
+  }
+
+  .qr-metrics-chart {
+    padding: 12px;
+  }
+
+  .qr-metrics-chart > h4 {
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+
+  .qr-chart-container {
+    gap: 4px;
+    min-height: 90px;
+    padding-bottom: 18px;
+  }
+
+  .qr-chart-bar {
+    max-height: 70px;
+    min-height: 3px;
+  }
+
+  .qr-chart-label {
+    font-size: 8px;
+  }
+
+  .qr-chart-horizontal .qr-chart-bar-wrapper {
+    grid-template-columns: 18px 1fr;
+    gap: 5px;
+  }
+
+  .qr-chart-horizontal .qr-chart-bar {
+    height: 12px;
+    max-height: 12px;
+    min-height: 12px;
+  }
+
+  .qr-chart-horizontal .qr-chart-label {
+    font-size: 9px;
+  }
+
+  .qr-chart-empty {
+    font-size: 11px;
+    padding: 16px;
+  }
+
+  /* Metrics modal specific for very small screens */
+  .qr-metrics-modal {
+    max-height: 95vh;
+  }
+
+  .qr-modal-content {
+    max-height: 95vh;
+  }
+
+  .qr-modal-header {
+    padding: 12px 16px;
+  }
+
+  .qr-modal-header h2 {
+    font-size: 15px;
+  }
+
+  .qr-modal-close {
+    width: 30px;
+    height: 30px;
+  }
+
+  .qr-modal-body {
+    padding: 14px;
+    gap: 14px;
   }
 }

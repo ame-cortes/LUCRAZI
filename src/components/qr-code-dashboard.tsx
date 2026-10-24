@@ -772,38 +772,6 @@ export default function QrCodeDashboard() {
                 </div>
               </article>
             </section>
-            <section className="qr-account-card qr-preview-section">
-              <div className="qr-preview-header">
-                <span className="qr-preview-label">PRÉVIA EM TEMPO REAL</span>
-              </div>
-              <canvas
-                aria-label="Prévia do QR Code"
-                className="qr-preview-canvas"
-                ref={canvasRef}
-                role="img"
-                width={360}
-                height={360}
-              />
-              <p className="qr-preview-hint">Escaneie o código com a câmera antes de imprimir ou compartilhar.</p>
-              <div className="qr-download-actions">
-                <button className="button button-dark" onClick={() => void downloadPng()} type="button">
-                  Baixar PNG <span aria-hidden="true">↓</span>
-                </button>
-                <button className="qr-secondary-button" onClick={() => void downloadSvg()} type="button">
-                  Baixar SVG
-                </button>
-              </div>
-              {!access.hasMetrics && contentType === "url" && (
-                <div className="qr-preview-upsell">
-                  <p>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M12 2v20M2 12h20"></path>
-                    </svg>
-                    Ative métricas de escaneamento com um plano pago
-                  </p>
-                </div>
-              )}
-            </section>
             <div className="qr-account-grid">
               <section className="qr-account-card">
                 <div className="qr-editor-heading">
@@ -909,6 +877,40 @@ export default function QrCodeDashboard() {
                     )}
                   </div>
                 </form>
+              </section>
+            </div>
+            <div className="qr-account-grid-right">
+              <section className="qr-account-card qr-preview-section">
+                <div className="qr-preview-header">
+                  <span className="qr-preview-label">PRÉVIA EM TEMPO REAL</span>
+                </div>
+                <canvas
+                  aria-label="Prévia do QR Code"
+                  className="qr-preview-canvas"
+                  ref={canvasRef}
+                  role="img"
+                  width={360}
+                  height={360}
+                />
+                <p className="qr-preview-hint">Escaneie o código com a câmera antes de imprimir ou compartilhar.</p>
+                <div className="qr-download-actions">
+                  <button className="button button-dark" onClick={() => void downloadPng()} type="button">
+                    Baixar PNG <span aria-hidden="true">↓</span>
+                  </button>
+                  <button className="qr-secondary-button" onClick={() => void downloadSvg()} type="button">
+                    Baixar SVG
+                  </button>
+                </div>
+                {!access.hasMetrics && contentType === "url" && (
+                  <div className="qr-preview-upsell">
+                    <p>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M12 2v20M2 12h20"></path>
+                      </svg>
+                      Ative métricas de escaneamento com um plano pago
+                    </p>
+                  </div>
+                )}
               </section>
               <section className="qr-account-card qr-saved-list">
                 <div className="qr-saved-heading">
