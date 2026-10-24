@@ -1,6 +1,22 @@
 "use client";
 
 import QRCode from "qrcode";
+import { createElement, useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import type { IconType } from "react-icons";
+import {
+  FaDiscord,
+  FaFacebookF,
+  FaInstagram,
+  FaLinkedinIn,
+  FaPinterestP,
+  FaSnapchat,
+  FaTelegram,
+  FaTiktok,
+  FaWhatsapp,
+  FaXTwitter,
+  FaYoutube,
+} from "react-icons/fa6";
 import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
@@ -11,9 +27,9 @@ import {
   type User,
 } from "firebase/auth";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { getPersistentFirebaseAuth, getFirebaseAuth, isFirebaseConfigured } from "@/lib/firebase";
 import { billingPlans, type BillingAccess, type PaidPlanId } from "@/lib/billing-plans";
+import { isSocialIconId, type SocialIconId } from "@/lib/social-icons";
 import { siteUrl } from "@/lib/site-config";
 import QrMetricsDashboard from "@/components/qr-metrics-dashboard";
 
@@ -26,6 +42,7 @@ type SavedQrCode = {
   foregroundColor: string;
   backgroundColor: string;
   logoDataUrl: string;
+  socialIcon: SocialIconId | "";
   trackingEnabled: boolean;
   scanCount: number;
   createdAt: string | null;
@@ -44,6 +61,24 @@ const freeAccess: BillingAccess = {
 };
 
 const paidPlanIds: PaidPlanId[] = ["solo", "duo", "studio"];
+
+const SOCIAL_ICONS: {
+  id: SocialIconId;
+  label: string;
+  Icon: IconType;
+}[] = [
+  { id: "instagram", label: "Instagram", Icon: FaInstagram },
+  { id: "facebook", label: "Facebook", Icon: FaFacebookF },
+  { id: "tiktok", label: "TikTok", Icon: FaTiktok },
+  { id: "whatsapp", label: "WhatsApp", Icon: FaWhatsapp },
+  { id: "youtube", label: "YouTube", Icon: FaYoutube },
+  { id: "linkedin", label: "LinkedIn", Icon: FaLinkedinIn },
+  { id: "x", label: "X", Icon: FaXTwitter },
+  { id: "telegram", label: "Telegram", Icon: FaTelegram },
+  { id: "pinterest", label: "Pinterest", Icon: FaPinterestP },
+  { id: "snapchat", label: "Snapchat", Icon: FaSnapchat },
+  { id: "discord", label: "Discord", Icon: FaDiscord },
+];
 
 function isRecord(value: unknown): value is ApiResult {
   return typeof value === "object" && value !== null;
@@ -73,6 +108,7 @@ function readSavedCode(value: unknown): SavedQrCode | null {
     foregroundColor: value.foregroundColor,
     backgroundColor: value.backgroundColor,
     logoDataUrl: typeof value.logoDataUrl === "string" ? value.logoDataUrl : "",
+    socialIcon: isSocialIconId(value.socialIcon) ? value.socialIcon : "",
     trackingEnabled: value.trackingEnabled === true,
     scanCount: typeof value.scanCount === "number" ? value.scanCount : 0,
     createdAt: typeof value.createdAt === "string" ? value.createdAt : null,
@@ -209,8 +245,36 @@ async function renderSavedQrCode(code: SavedQrCode) {
   return canvas;
 }
 
+async function renderSocialIconDataUrl(iconId: SocialIconId, color: string): Promise<string> {
+  const option = SOCIAL_ICONS.find((item) => item.id === iconId);
+  if (!option) throw new Error("Selecione um ícone de rede social válido.");
+
+  const svg = renderToStaticMarkup(createElement(option.Icon, { color, size: 180 }));
+  const imageUrl = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
+  try {
+    const image = new Image();
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve();
+      image.onerror = () => reject(new Error("Não foi possível preparar o ícone escolhido."));
+      image.src = imageUrl;
+    });
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 180;
+    canvas.height = 180;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("O navegador não conseguiu preparar o ícone.");
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/png");
+  } finally {
+    URL.revokeObjectURL(imageUrl);
+  }
+}
+
 export default function QrCodeDashboard() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const socialIconRequestRef = useRef(0);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const firebaseConfigured = isFirebaseConfigured();
   const [user, setUser] = useState<User | null>(null);
@@ -235,6 +299,8 @@ export default function QrCodeDashboard() {
   const [foregroundColor, setForegroundColor] = useState("#243B2B");
   const [backgroundColor, setBackgroundColor] = useState("#FFFFFF");
   const [logoDataUrl, setLogoDataUrl] = useState("");
+  const [socialIcon, setSocialIcon] = useState<SocialIconId | "">("");
+  const [renderingSocialIcon, setRenderingSocialIcon] = useState(false);
   const [billingInterval, setBillingInterval] = useState<"monthly" | "quarterly">("monthly");
   const [busy, setBusy] = useState(false);
   const [billingBusy, setBillingBusy] = useState(false);
@@ -470,6 +536,7 @@ export default function QrCodeDashboard() {
   }, [user, backgroundColor, foregroundColor, logoDataUrl, qrCanvasContent]);
 
   function resetEditor() {
+    socialIconRequestRef.current++;
     setSelectedId("");
     setPublicId("");
     setName("");
@@ -478,6 +545,9 @@ export default function QrCodeDashboard() {
     setForegroundColor("#243B2B");
     setBackgroundColor("#FFFFFF");
     setLogoDataUrl("");
+    setSocialIcon("");
+    setRenderingSocialIcon(false);
+    if (logoInputRef.current) logoInputRef.current.value = "";
   }
 
   async function refreshDashboard() {
@@ -496,6 +566,9 @@ export default function QrCodeDashboard() {
   }
 
   function editCode(code: SavedQrCode) {
+    socialIconRequestRef.current++;
+    setRenderingSocialIcon(false);
+    if (logoInputRef.current) logoInputRef.current.value = "";
     setSelectedId(code.id);
     setPublicId(code.publicId);
     setName(code.name);
@@ -504,6 +577,7 @@ export default function QrCodeDashboard() {
     setForegroundColor(code.foregroundColor);
     setBackgroundColor(code.backgroundColor);
     setLogoDataUrl(code.logoDataUrl || "");
+    setSocialIcon(code.socialIcon);
     setError("");
     setNotice("");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -550,50 +624,101 @@ export default function QrCodeDashboard() {
   }
 
   async function handleLogoChange(event: ChangeEvent<HTMLInputElement>) {
-    setError("");
     const input = event.currentTarget;
     const file = input.files?.[0];
-    if (!file) {
-      setLogoDataUrl("");
-      return;
-    }
-    if (file.size > 256 * 1024 || !["image/png", "image/jpeg"].includes(file.type)) {
-      setError("Escolha um logo PNG ou JPEG de até 256 KB.");
-      input.value = "";
-      return;
-    }
+    if (!file) return;
+
+    const requestId = ++socialIconRequestRef.current;
+    setError("");
+    setRenderingSocialIcon(false);
+    setSocialIcon("");
+    setLogoDataUrl("");
     try {
+      if (file.size > 256 * 1024 || !["image/png", "image/jpeg"].includes(file.type)) {
+        throw new Error("Escolha um logo PNG ou JPEG de até 256 KB.");
+      }
+
       const bytes = new Uint8Array(await file.arrayBuffer());
+      if (requestId !== socialIconRequestRef.current) return;
       const validPng = bytes.length >= 8
         && [137, 80, 78, 71, 13, 10, 26, 10].every((byte, index) => bytes[index] === byte);
       const validJpeg = bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
       if ((file.type === "image/png" && !validPng) || (file.type === "image/jpeg" && !validJpeg)) {
         throw new Error("O arquivo não corresponde a uma imagem PNG ou JPEG válida.");
       }
+
       const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result !== "string") {
-          setError("Não foi possível ler o logo.");
-          return;
-        }
-        const dataUrl = reader.result;
-        const image = new Image();
-        image.onload = () => {
-          if (image.naturalWidth > 2048 || image.naturalHeight > 2048) {
-            setError("O logo precisa ter no máximo 2048 por 2048 pixels.");
-            input.value = "";
-            return;
-          }
-          setLogoDataUrl(dataUrl);
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          if (typeof reader.result === "string") resolve(reader.result);
+          else reject(new Error("Não foi possível ler o logo."));
         };
-        image.onerror = () => setError("O arquivo não contém uma imagem PNG ou JPEG válida.");
+        reader.onerror = () => reject(new Error("Não foi possível ler o logo."));
+        reader.readAsDataURL(file);
+      });
+      if (requestId !== socialIconRequestRef.current) return;
+
+      const image = new Image();
+      await new Promise<void>((resolve, reject) => {
+        image.onload = () => resolve();
+        image.onerror = () => reject(new Error("O arquivo não contém uma imagem PNG ou JPEG válida."));
         image.src = dataUrl;
-      };
-      reader.onerror = () => setError("Não foi possível ler o logo.");
-      reader.readAsDataURL(file);
+      });
+      if (requestId !== socialIconRequestRef.current) return;
+      if (image.naturalWidth > 2048 || image.naturalHeight > 2048) {
+        throw new Error("O logo precisa ter no máximo 2048 por 2048 pixels.");
+      }
+      setLogoDataUrl(dataUrl);
     } catch (logoError) {
-      setError(errorMessage(logoError));
-      input.value = "";
+      if (requestId === socialIconRequestRef.current) {
+        setError(errorMessage(logoError));
+        input.value = "";
+      }
+    }
+  }
+
+  async function selectSocialIcon(iconId: SocialIconId | "") {
+    if (!iconId) {
+      socialIconRequestRef.current++;
+      setSocialIcon("");
+      setLogoDataUrl("");
+      setRenderingSocialIcon(false);
+      setError("");
+      if (logoInputRef.current) logoInputRef.current.value = "";
+      return;
+    }
+
+    setSocialIcon(iconId);
+    setLogoDataUrl("");
+    setError("");
+    if (logoInputRef.current) logoInputRef.current.value = "";
+    const requestId = ++socialIconRequestRef.current;
+    setRenderingSocialIcon(true);
+    try {
+      const dataUrl = await renderSocialIconDataUrl(iconId, foregroundColor);
+      if (requestId === socialIconRequestRef.current) setLogoDataUrl(dataUrl);
+    } catch (iconError) {
+      if (requestId === socialIconRequestRef.current) setError(errorMessage(iconError));
+    } finally {
+      if (requestId === socialIconRequestRef.current) setRenderingSocialIcon(false);
+    }
+  }
+
+  async function handleForegroundColorChange(event: ChangeEvent<HTMLInputElement>) {
+    const color = event.currentTarget.value;
+    setForegroundColor(color);
+    if (!socialIcon) return;
+
+    const iconId = socialIcon;
+    const requestId = ++socialIconRequestRef.current;
+    setRenderingSocialIcon(true);
+    try {
+      const dataUrl = await renderSocialIconDataUrl(iconId, color);
+      if (requestId === socialIconRequestRef.current) setLogoDataUrl(dataUrl);
+    } catch (iconError) {
+      if (requestId === socialIconRequestRef.current) setError(errorMessage(iconError));
+    } finally {
+      if (requestId === socialIconRequestRef.current) setRenderingSocialIcon(false);
     }
   }
 
@@ -631,6 +756,7 @@ export default function QrCodeDashboard() {
             foregroundColor,
             backgroundColor,
             logoDataUrl: access.hasLogo ? logoDataUrl : "",
+            socialIcon: access.hasLogo ? socialIcon : "",
           }),
         },
       );
@@ -1005,7 +1131,7 @@ export default function QrCodeDashboard() {
                         id="qr-foreground"
                         type="color"
                         value={foregroundColor}
-                        onChange={(event) => setForegroundColor(event.target.value)}
+                        onChange={(event) => void handleForegroundColorChange(event)}
                       />
                       <output htmlFor="qr-foreground">{foregroundColor}</output>
                     </div>
@@ -1021,15 +1147,45 @@ export default function QrCodeDashboard() {
                     </div>
                   </fieldset>
                   <div className="qr-field">
-                    <label htmlFor="qr-logo">Logo no centro (PNG ou JPEG, até 256 KB)</label>
+                    <span className="qr-field-label">Ícone no centro do QR Code</span>
+                    <div className="qr-social-icons" role="group" aria-label="Escolher ícone de rede social">
+                      <button
+                        aria-pressed={socialIcon === ""}
+                        className="qr-social-icon-option qr-social-icon-none"
+                        disabled={renderingSocialIcon}
+                        onClick={() => void selectSocialIcon("")}
+                        type="button"
+                      >
+                        <span aria-hidden="true">×</span>
+                        Sem ícone
+                      </button>
+                      {SOCIAL_ICONS.map(({ id, label, Icon }) => (
+                        <button
+                          key={id}
+                          aria-label={label}
+                          aria-pressed={socialIcon === id}
+                          className="qr-social-icon-option"
+                          disabled={renderingSocialIcon}
+                          onClick={() => void selectSocialIcon(id)}
+                          title={label}
+                          type="button"
+                        >
+                          <Icon aria-hidden="true" color={foregroundColor} size={20} />
+                          <span>{label}</span>
+                        </button>
+                      ))}
+                    </div>
+                    <span className="qr-field-hint">Ou envie seu próprio logo PNG ou JPEG (até 256 KB):</span>
                     <input
                       id="qr-logo"
+                      ref={logoInputRef}
                       accept="image/png,image/jpeg"
                       onChange={(event) => void handleLogoChange(event)}
                       type="file"
                     />
                     <span className="qr-field-hint">
-                      O logo será aplicado na prévia e no download. No plano gratuito, o logo não será salvo no servidor.
+                      O ícone ou logo aparece na prévia e nos downloads. Para salvar essa personalização na conta, é necessário um plano pago.
+                      {renderingSocialIcon ? " Preparando ícone…" : ""}
                     </span>
                   </div>
                   {access.hasMetrics && contentType === "url" && (
@@ -1045,7 +1201,7 @@ export default function QrCodeDashboard() {
                   <div className="qr-account-form-actions">
                     <button
                       className="button button-dark"
-                      disabled={busy || !content.trim() || (!selectedId && codes.length >= access.qrLimit)}
+                      disabled={busy || renderingSocialIcon || !content.trim() || (!selectedId && codes.length >= access.qrLimit)}
                       type="submit"
                     >
                       {busy ? "Salvando…" : selectedId ? "Salvar alterações" : codes.length >= access.qrLimit ? "Limite do plano atingido" : "Salvar QR Code"}

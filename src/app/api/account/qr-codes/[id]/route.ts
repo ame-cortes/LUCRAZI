@@ -2,6 +2,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
 import { getBillingAccess } from "@/lib/billing-plans";
 import { getFirebaseAdminDb, verifyFirebaseIdToken } from "@/lib/firebase-admin";
+import { isSocialIconId } from "@/lib/social-icons";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -49,6 +50,9 @@ export async function PATCH(
   const foregroundColor = body.foregroundColor;
   const backgroundColor = body.backgroundColor;
   const logoDataUrl = typeof body.logoDataUrl === "string" ? body.logoDataUrl : "";
+  const socialIcon = body.socialIcon === undefined || body.socialIcon === ""
+    ? ""
+    : isSocialIconId(body.socialIcon) ? body.socialIcon : null;
   if (
     name.length < 1 || name.length > 80
     || content.length < 1 || content.length > 2048
@@ -57,6 +61,8 @@ export async function PATCH(
     || typeof backgroundColor !== "string" || !/^#[\da-f]{6}$/i.test(backgroundColor)
     || logoDataUrl.length > 350_000
     || (logoDataUrl.length > 0 && !/^data:image\/(?:png|jpeg);base64,[A-Za-z\d+/]+=*$/.test(logoDataUrl))
+    || socialIcon === null
+    || (socialIcon !== "" && !logoDataUrl)
   ) return jsonError("Confira o nome, conteúdo, cores e arquivo do QR Code.", 400);
 
   if (contentType === "url") {
@@ -86,7 +92,7 @@ export async function PATCH(
       ]);
       if (!codeSnapshot.exists) return "not_found";
       const access = getBillingAccess(billingSnapshot.data());
-      if (logoDataUrl && !access.hasLogo) return "logo_not_included";
+      if ((logoDataUrl || socialIcon) && !access.hasLogo) return "logo_not_included";
       transaction.update(codeRef, {
         name,
         content,
@@ -94,6 +100,7 @@ export async function PATCH(
         foregroundColor,
         backgroundColor,
         logoDataUrl: access.hasLogo ? logoDataUrl : "",
+        socialIcon: access.hasLogo ? socialIcon : "",
         trackingEnabled: access.hasMetrics && contentType === "url",
         updatedAt: FieldValue.serverTimestamp(),
       });

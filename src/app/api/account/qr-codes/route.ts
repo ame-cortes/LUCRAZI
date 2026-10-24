@@ -3,6 +3,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
 import { getBillingAccess } from "@/lib/billing-plans";
 import { getFirebaseAdminDb, verifyFirebaseIdToken } from "@/lib/firebase-admin";
+import { isSocialIconId } from "@/lib/social-icons";
 
 const qrCollectionName = "qrCodes";
 const maxLogoBytes = 256 * 1024;
@@ -21,6 +22,9 @@ function parseQrCode(value: unknown) {
   const foregroundColor = value.foregroundColor;
   const backgroundColor = value.backgroundColor;
   const logoDataUrl = typeof value.logoDataUrl === "string" ? value.logoDataUrl : "";
+  const socialIcon = value.socialIcon === undefined || value.socialIcon === ""
+    ? ""
+    : isSocialIconId(value.socialIcon) ? value.socialIcon : null;
   if (
     name.length < 1
     || name.length > 80
@@ -32,6 +36,8 @@ function parseQrCode(value: unknown) {
     || typeof backgroundColor !== "string"
     || !/^#[\da-f]{6}$/i.test(backgroundColor)
     || logoDataUrl.length > Math.ceil(maxLogoBytes * 4 / 3) + 64
+    || socialIcon === null
+    || (socialIcon !== "" && !logoDataUrl)
   ) return null;
 
   if (contentType === "url") {
@@ -58,6 +64,7 @@ function parseQrCode(value: unknown) {
     foregroundColor,
     backgroundColor,
     logoDataUrl,
+    socialIcon,
   };
 }
 
@@ -106,6 +113,7 @@ export async function GET(request: Request) {
           foregroundColor: data.foregroundColor,
           backgroundColor: data.backgroundColor,
           logoDataUrl: data.logoDataUrl ?? "",
+          socialIcon: isSocialIconId(data.socialIcon) ? data.socialIcon : "",
           publicId: data.publicId,
           trackingEnabled: data.trackingEnabled === true && access.hasMetrics,
           scanCount: typeof data.scanCount === "number" ? data.scanCount : 0,
@@ -168,7 +176,7 @@ export async function POST(request: Request) {
       ]);
       const access = getBillingAccess(billingSnapshot.data());
       if (codesSnapshot.size >= access.qrLimit) return { limitReached: true };
-      if (input.logoDataUrl && !access.hasLogo) return { logoNotIncluded: true };
+      if ((input.logoDataUrl || input.socialIcon) && !access.hasLogo) return { logoNotIncluded: true };
 
       transaction.set(qrCodeRef, {
         ...input,
