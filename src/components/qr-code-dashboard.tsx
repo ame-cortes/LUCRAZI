@@ -288,7 +288,7 @@ export default function QrCodeDashboard() {
     setContentType(code.contentType);
     setForegroundColor(code.foregroundColor);
     setBackgroundColor(code.backgroundColor);
-    setLogoDataUrl(access.hasLogo ? code.logoDataUrl : "");
+    setLogoDataUrl(code.logoDataUrl || "");
     setError("");
     setNotice("");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -334,11 +334,6 @@ export default function QrCodeDashboard() {
     const file = input.files?.[0];
     if (!file) {
       setLogoDataUrl("");
-      return;
-    }
-    if (!access.hasLogo) {
-      setError("O envio de logo está disponível nos planos pagos.");
-      input.value = "";
       return;
     }
     if (file.size > 256 * 1024 || !["image/png", "image/jpeg"].includes(file.type)) {
@@ -410,7 +405,7 @@ export default function QrCodeDashboard() {
             contentType,
             foregroundColor,
             backgroundColor,
-            logoDataUrl,
+            logoDataUrl: access.hasLogo ? logoDataUrl : "",
           }),
         },
       );
@@ -610,8 +605,8 @@ export default function QrCodeDashboard() {
                   </h2>
                   <p>
                     {access.hasMetrics
-                      ? `Logo e métricas ativados${access.nextPaymentDate ? ` · Próxima cobrança: ${new Date(access.nextPaymentDate).toLocaleDateString("pt-BR")}` : ""}.`
-                      : "1 QR Code personalizado, sem logo nem métricas."}
+                      ? `Métricas de escaneamento ativadas${access.nextPaymentDate ? ` · Próxima cobrança: ${new Date(access.nextPaymentDate).toLocaleDateString("pt-BR")}` : ""}.`
+                      : "1 QR Code personalizado, sem métricas de escaneamento."}
                   </p>
                 </div>
                 {access.status === "authorized" ? (
@@ -779,15 +774,12 @@ export default function QrCodeDashboard() {
                     <input
                       id="qr-logo"
                       accept="image/png,image/jpeg"
-                      disabled={!access.hasLogo}
                       onChange={(event) => void handleLogoChange(event)}
                       type="file"
                     />
-                    {!access.hasLogo && (
-                      <span className="qr-field-hint qr-field-hint-upsell">
-                        Disponível nos planos pagos. Adicione logo e métricas para acompanhar escaneamentos.
-                      </span>
-                    )}
+                    <span className="qr-field-hint">
+                      O logo será aplicado na prévia e no download. No plano gratuito, o logo não será salvo no servidor.
+                    </span>
                   </div>
                   {access.hasMetrics && contentType === "url" && (
                     <p className="qr-plan-contact qr-plan-contact-info">
@@ -829,13 +821,13 @@ export default function QrCodeDashboard() {
                       </button>
                     </div>
                   )}
-                  {!access.hasLogo && (
+                  {!access.hasMetrics && contentType === "url" && (
                     <div className="qr-preview-upsell">
                       <p>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M12 2v20M2 12h20"></path>
                         </svg>
-                        Adicione logo e métricas com um plano pago
+                        Ative métricas de escaneamento com um plano pago
                       </p>
                     </div>
                   )}
