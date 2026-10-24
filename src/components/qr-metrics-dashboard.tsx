@@ -371,8 +371,11 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
                     <div key={hour} className="qr-chart-bar-wrapper">
                       <div
                         className="qr-chart-bar"
-                        style={{ width: `${(count / maxHourlyScans) * 100}%` }}
-                        title={`${count} escaneamentos às ${hour}h`}
+                        style={{
+                          width: `${Math.max((count / maxHourlyScans) * 100, count > 0 ? 10 : 0)}%`,
+                          opacity: count > 0 ? 1 : 0.3
+                        }}
+                        title={`${hour}h: ${count} escaneamentos`}
                       />
                       <span className="qr-chart-label">{hour % 2 === 0 ? HOURS[Math.floor(hour / 2)] : ""}</span>
                     </div>
@@ -386,8 +389,11 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
                     <div key={day} className="qr-chart-bar-wrapper">
                       <div
                         className="qr-chart-bar"
-                        style={{ height: `${(count / maxDailyScans) * 100}%` }}
-                        title={`${count} escaneamentos em ${DAYS[day]}`}
+                        style={{
+                          height: `${Math.max((count / maxDailyScans) * 100, count > 0 ? 30 : 0)}%`,
+                          opacity: count > 0 ? 1 : 0.3
+                        }}
+                        title={`${DAYS[day]}: ${count} escaneamentos`}
                       />
                       <span className="qr-chart-label">{DAYS[day]}</span>
                     </div>
