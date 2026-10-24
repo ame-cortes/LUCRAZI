@@ -878,8 +878,6 @@ export default function QrCodeDashboard() {
                   </div>
                 </form>
               </section>
-            </div>
-            <div className="qr-account-grid-right">
               <section className="qr-account-card qr-preview-section">
                 <div className="qr-preview-header">
                   <span className="qr-preview-label">PRÉVIA EM TEMPO REAL</span>
