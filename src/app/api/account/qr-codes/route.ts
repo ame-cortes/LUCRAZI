@@ -68,11 +68,29 @@ export async function GET(request: Request) {
   try {
     const db = getFirebaseAdminDb();
     const userRef = db.collection("users").doc(account.uid);
-    const [codesSnapshot, billingSnapshot] = await Promise.all([
+    const billingRef = userRef.collection("billing").doc("current");
+    
+    // Check if user needs trial activation
+    const billingSnapshot = await billingRef.get();
+    const existingBilling = billingSnapshot.data();
+    
+    if (!existingBilling || (!existingBilling.trialEndsAt && existingBilling.status !== "authorized")) {
+      // Create 7-day trial for new users
+      const trialEndsAt = new Date();
+      trialEndsAt.setDate(trialEndsAt.getDate() + 7);
+      await billingRef.set({
+        planId: "solo",
+        status: "trial",
+        trialEndsAt: trialEndsAt.toISOString(),
+        createdAt: FieldValue.serverTimestamp(),
+      }, { merge: true });
+    }
+
+    const [codesSnapshot, updatedBillingSnapshot] = await Promise.all([
       userRef.collection(qrCollectionName).orderBy("createdAt", "desc").get(),
-      userRef.collection("billing").doc("current").get(),
+      billingRef.get(),
     ]);
-    const access = getBillingAccess(billingSnapshot.data());
+    const access = getBillingAccess(updatedBillingSnapshot.data());
     return NextResponse.json({
       codes: codesSnapshot.docs.map((savedCode) => {
         const data = savedCode.data();
@@ -91,9 +109,9 @@ export async function GET(request: Request) {
         };
       }),
       access,
-      checkoutUrl: billingSnapshot.get("status") === "pending"
-        && typeof billingSnapshot.get("checkoutUrl") === "string"
-        ? billingSnapshot.get("checkoutUrl")
+      checkoutUrl: updatedBillingSnapshot.get("status") === "pending"
+        && typeof updatedBillingSnapshot.get("checkoutUrl") === "string"
+        ? updatedBillingSnapshot.get("checkoutUrl")
         : null,
     });
   } catch (error) {

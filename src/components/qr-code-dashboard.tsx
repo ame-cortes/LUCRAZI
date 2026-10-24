@@ -386,7 +386,7 @@ export default function QrCodeDashboard() {
     try {
       const auth = await getPersistentFirebaseAuth();
       if (registering) {
-        await createUserWithEmailAndPassword(auth, email.trim(), password);
+        const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
         setNotice("Conta criada. Seus QR Codes salvos ficarão disponíveis neste painel.");
       } else {
         await signInWithEmailAndPassword(auth, email.trim(), password);
@@ -678,16 +678,24 @@ export default function QrCodeDashboard() {
                 <div>
                   <span className="eyebrow">SEU PLANO</span>
                   <h2 id="qr-plan-heading">
-                    {access.planId === "free" ? "Grátis" : billingPlans[access.planId].name}
+                    {access.isTrial ? `Trial (${billingPlans[access.planId as PaidPlanId].name})` : access.planId === "free" ? "Grátis" : billingPlans[access.planId as PaidPlanId].name}
                     <span> · {codes.length}/{access.qrLimit} QR Codes</span>
                   </h2>
                   <p>
-                    {access.hasMetrics
+                    {access.isTrial && access.trialEndsAt
+                      ? `Seu trial termina em ${new Date(access.trialEndsAt).toLocaleDateString("pt-BR")}. Teste todos os recursos premium!`
+                      : access.hasMetrics
                       ? `Métricas de escaneamento ativadas${access.nextPaymentDate ? ` · Próxima cobrança: ${new Date(access.nextPaymentDate).toLocaleDateString("pt-BR")}` : ""}.`
                       : "1 QR Code personalizado, sem métricas de escaneamento."}
                   </p>
                 </div>
-                {access.status === "authorized" ? (
+                {access.isTrial ? (
+                  <div className="qr-billing-actions">
+                    <button className="qr-upgrade-button" disabled={billingBusy} onClick={() => setShowUpgradeModal(true)} type="button">
+                      {billingBusy ? "Aguarde…" : "Assinar após trial"}
+                    </button>
+                  </div>
+                ) : access.status === "authorized" ? (
                   <div className="qr-billing-actions">
                     <button className="qr-secondary-button" disabled={billingBusy} onClick={() => void cancelSubscription()} type="button">
                       {billingBusy ? "Aguarde…" : "Cancelar"}

@@ -32,6 +32,8 @@ export type BillingAccess = {
   hasLogo: boolean;
   subscriptionId?: string;
   nextPaymentDate?: string;
+  trialEndsAt?: string;
+  isTrial?: boolean;
 };
 
 export function getBillingAccess(
@@ -41,12 +43,18 @@ export function getBillingAccess(
     status?: unknown;
     subscriptionId?: unknown;
     nextPaymentDate?: unknown;
+    trialEndsAt?: unknown;
   } | undefined,
 ): BillingAccess {
   const requestedPlanId = isPaidPlanId(subscription?.planId) ? subscription.planId : null;
   const paid = subscription?.status === "authorized" && requestedPlanId !== null;
-  const planId: PlanId = paid && requestedPlanId ? requestedPlanId : "free";
-  const plan = paid && requestedPlanId ? billingPlans[requestedPlanId] : undefined;
+  
+  // Check if trial is active
+  const trialEndsAt = typeof subscription?.trialEndsAt === "string" ? subscription.trialEndsAt : null;
+  const isTrialActive = trialEndsAt && new Date(trialEndsAt) > new Date();
+  
+  const planId: PlanId = (paid && requestedPlanId) || isTrialActive ? (requestedPlanId || "solo") : "free";
+  const plan = (paid && requestedPlanId) || isTrialActive ? billingPlans[requestedPlanId || "solo"] : undefined;
   const billingInterval = subscription?.billingInterval === "monthly"
     || subscription?.billingInterval === "quarterly"
     ? subscription.billingInterval
@@ -65,6 +73,7 @@ export function getBillingAccess(
     ...(typeof subscription?.nextPaymentDate === "string"
       ? { nextPaymentDate: subscription.nextPaymentDate }
       : {}),
+    ...(trialEndsAt ? { trialEndsAt, isTrial: isTrialActive || undefined } : {}),
   };
 }
 
