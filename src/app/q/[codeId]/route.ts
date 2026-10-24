@@ -47,18 +47,27 @@ function parseUserAgent(userAgent: string) {
 }
 
 async function getGeoLocation(ip: string) {
+  if (ip === "unknown" || ip === "127.0.0.1" || ip === "::1") {
+    return null;
+  }
+
   try {
     const response = await fetch(`https://ipapi.co/${ip}/json/`, {
-      signal: AbortSignal.timeout(3000),
+      signal: AbortSignal.timeout(5000),
     });
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.error("Geolocation API failed:", response.status);
+      return null;
+    }
     const data = await response.json();
+    console.log("Geolocation data:", data);
     return {
-      city: data.city || undefined,
-      country: data.country_name || undefined,
-      region: data.region || undefined,
+      city: data.city || null,
+      country: data.country_name || data.country || null,
+      region: data.region || null,
     };
-  } catch {
+  } catch (error) {
+    console.error("Geolocation error:", error);
     return null;
   }
 }
@@ -120,9 +129,9 @@ export async function GET(
         const scanData: ScanData = {
           ip,
           userAgent,
-          city: geoData?.city,
-          country: geoData?.country,
-          region: geoData?.region,
+          city: geoData?.city || null,
+          country: geoData?.country || null,
+          region: geoData?.region || null,
           deviceType,
           os,
           browser,
