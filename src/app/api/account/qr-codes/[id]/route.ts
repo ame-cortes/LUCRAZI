@@ -49,6 +49,9 @@ export async function PATCH(
     : null;
   const foregroundColor = body.foregroundColor;
   const backgroundColor = body.backgroundColor;
+  const socialIconColor = body.socialIconColor === undefined || body.socialIconColor === ""
+    ? foregroundColor
+    : body.socialIconColor;
   const logoDataUrl = typeof body.logoDataUrl === "string" ? body.logoDataUrl : "";
   const socialIcon = body.socialIcon === undefined || body.socialIcon === ""
     ? ""
@@ -59,6 +62,7 @@ export async function PATCH(
     || !contentType
     || typeof foregroundColor !== "string" || !/^#[\da-f]{6}$/i.test(foregroundColor)
     || typeof backgroundColor !== "string" || !/^#[\da-f]{6}$/i.test(backgroundColor)
+    || typeof socialIconColor !== "string" || !/^#[\da-f]{6}$/i.test(socialIconColor)
     || logoDataUrl.length > 350_000
     || (logoDataUrl.length > 0 && !/^data:image\/(?:png|jpeg);base64,[A-Za-z\d+/]+=*$/.test(logoDataUrl))
     || socialIcon === null
@@ -99,6 +103,7 @@ export async function PATCH(
         contentType,
         foregroundColor,
         backgroundColor,
+        socialIconColor,
         logoDataUrl: access.hasLogo ? logoDataUrl : "",
         socialIcon: access.hasLogo ? socialIcon : "",
         trackingEnabled: access.hasMetrics && contentType === "url",

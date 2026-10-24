@@ -21,6 +21,9 @@ function parseQrCode(value: unknown) {
     : null;
   const foregroundColor = value.foregroundColor;
   const backgroundColor = value.backgroundColor;
+  const socialIconColor = value.socialIconColor === undefined || value.socialIconColor === ""
+    ? foregroundColor
+    : value.socialIconColor;
   const logoDataUrl = typeof value.logoDataUrl === "string" ? value.logoDataUrl : "";
   const socialIcon = value.socialIcon === undefined || value.socialIcon === ""
     ? ""
@@ -35,6 +38,8 @@ function parseQrCode(value: unknown) {
     || !/^#[\da-f]{6}$/i.test(foregroundColor)
     || typeof backgroundColor !== "string"
     || !/^#[\da-f]{6}$/i.test(backgroundColor)
+    || typeof socialIconColor !== "string"
+    || !/^#[\da-f]{6}$/i.test(socialIconColor)
     || logoDataUrl.length > Math.ceil(maxLogoBytes * 4 / 3) + 64
     || socialIcon === null
     || (socialIcon !== "" && !logoDataUrl)
@@ -63,6 +68,7 @@ function parseQrCode(value: unknown) {
     contentType,
     foregroundColor,
     backgroundColor,
+    socialIconColor,
     logoDataUrl,
     socialIcon,
   };
@@ -112,6 +118,9 @@ export async function GET(request: Request) {
           contentType: data.contentType,
           foregroundColor: data.foregroundColor,
           backgroundColor: data.backgroundColor,
+          socialIconColor: typeof data.socialIconColor === "string" && /^#[\da-f]{6}$/i.test(data.socialIconColor)
+            ? data.socialIconColor
+            : data.foregroundColor,
           logoDataUrl: data.logoDataUrl ?? "",
           socialIcon: isSocialIconId(data.socialIcon) ? data.socialIcon : "",
           publicId: data.publicId,

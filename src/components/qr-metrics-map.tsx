@@ -261,10 +261,21 @@ export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetrics
     return counts;
   }, [scansByRegion]);
 
-  const locationsForSelectedState = useMemo(
-    () => scanLocations.filter((location) => getRegionState(location.region)?.id === selectedStateId),
-    [scanLocations, selectedStateId],
-  );
+  const locationsForSelectedState = useMemo(() => {
+    const locationsByCity = new Map<string, ScanLocation>();
+    scanLocations.forEach((location) => {
+      if (getRegionState(location.region)?.id !== selectedStateId || !location.city) return;
+
+      const cityKey = normalizeName(location.city);
+      const existingLocation = locationsByCity.get(cityKey);
+      if (existingLocation) {
+        existingLocation.count += location.count;
+      } else {
+        locationsByCity.set(cityKey, { ...location, latitude: null, longitude: null });
+      }
+    });
+    return Array.from(locationsByCity.values());
+  }, [scanLocations, selectedStateId]);
   const locationsForBrazil = useMemo(
     () => scanLocations.filter((location) => location.latitude !== null && location.longitude !== null),
     [scanLocations],
@@ -333,10 +344,12 @@ export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetrics
   }
 
   function getMarkerPosition(location: ScanLocation): L.LatLng | null {
+    if (selectedState) {
+      return location.city ? municipalityCenters.get(normalizeName(location.city)) || null : null;
+    }
     if (location.latitude !== null && location.longitude !== null) {
       return L.latLng(location.latitude, location.longitude);
     }
-    if (location.city) return municipalityCenters.get(normalizeName(location.city)) || null;
     return null;
   }
 
@@ -345,7 +358,7 @@ export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetrics
       <div className="qr-brazil-map-heading">
         <div>
           <h4>Mapa de escaneamentos</h4>
-          <p>Selecione um estado para ver os municípios e a localização aproximada por IP.</p>
+          <p>O IP estima uma cidade ou região, não um endereço. No detalhe do estado, os marcadores ficam no centro do município identificado.</p>
         </div>
         <label className="qr-map-state-select">
           <span>Estado</span>
@@ -397,7 +410,7 @@ export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetrics
           {displayedLocations.map((location, index) => {
             const position = getMarkerPosition(location);
             if (!position) return null;
-            const radius = 5 + Math.sqrt(location.count / maxLocationCount) * 12;
+            const radius = 8 + Math.sqrt(location.count / maxLocationCount) * 14;
             const stateName = getRegionState(location.region)?.name || location.region || "Brasil";
             const label = location.city ? `${location.city}, ${stateName}` : stateName;
             return (
@@ -412,7 +425,11 @@ export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetrics
                   <br />
                   {location.count.toLocaleString("pt-BR")} scans
                   <br />
-                  <small>Localização aproximada pelo IP</small>
+                  <small>
+                    {selectedState
+                      ? "Município estimado pelo IP; marcador no centro do município, sem indicar endereço."
+                      : "Localização aproximada pelo IP; não representa um endereço."}
+                  </small>
                 </Popup>
               </CircleMarker>
             );
@@ -421,7 +438,7 @@ export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetrics
       )}
       <div className="qr-brazil-map-legend">
         <span><i className="qr-map-legend-state" />Área preenchida: volume por estado/município</span>
-        <span><i className="qr-map-legend-point" />Pontos: localização aproximada dos scans</span>
+        <span><i className="qr-map-legend-point" />Marcadores: local estimado; tamanho = volume, não precisão</span>
         <span>Fonte dos limites: IBGE</span>
       </div>
     </div>

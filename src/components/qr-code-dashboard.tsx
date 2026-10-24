@@ -43,6 +43,7 @@ type SavedQrCode = {
   backgroundColor: string;
   logoDataUrl: string;
   socialIcon: SocialIconId | "";
+  socialIconColor: string;
   trackingEnabled: boolean;
   scanCount: number;
   createdAt: string | null;
@@ -109,6 +110,9 @@ function readSavedCode(value: unknown): SavedQrCode | null {
     backgroundColor: value.backgroundColor,
     logoDataUrl: typeof value.logoDataUrl === "string" ? value.logoDataUrl : "",
     socialIcon: isSocialIconId(value.socialIcon) ? value.socialIcon : "",
+    socialIconColor: typeof value.socialIconColor === "string" && /^#[\da-f]{6}$/i.test(value.socialIconColor)
+      ? value.socialIconColor
+      : value.foregroundColor,
     trackingEnabled: value.trackingEnabled === true,
     scanCount: typeof value.scanCount === "number" ? value.scanCount : 0,
     createdAt: typeof value.createdAt === "string" ? value.createdAt : null,
@@ -300,6 +304,7 @@ export default function QrCodeDashboard() {
   const [backgroundColor, setBackgroundColor] = useState("#FFFFFF");
   const [logoDataUrl, setLogoDataUrl] = useState("");
   const [socialIcon, setSocialIcon] = useState<SocialIconId | "">("");
+  const [socialIconColor, setSocialIconColor] = useState("#243B2B");
   const [renderingSocialIcon, setRenderingSocialIcon] = useState(false);
   const [billingInterval, setBillingInterval] = useState<"monthly" | "quarterly">("monthly");
   const [busy, setBusy] = useState(false);
@@ -546,6 +551,7 @@ export default function QrCodeDashboard() {
     setBackgroundColor("#FFFFFF");
     setLogoDataUrl("");
     setSocialIcon("");
+    setSocialIconColor("#243B2B");
     setRenderingSocialIcon(false);
     if (logoInputRef.current) logoInputRef.current.value = "";
   }
@@ -578,6 +584,7 @@ export default function QrCodeDashboard() {
     setBackgroundColor(code.backgroundColor);
     setLogoDataUrl(code.logoDataUrl || "");
     setSocialIcon(code.socialIcon);
+    setSocialIconColor(code.socialIconColor);
     setError("");
     setNotice("");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -633,6 +640,7 @@ export default function QrCodeDashboard() {
     setRenderingSocialIcon(false);
     setSocialIcon("");
     setLogoDataUrl("");
+    setSocialIconColor(foregroundColor);
     try {
       if (file.size > 256 * 1024 || !["image/png", "image/jpeg"].includes(file.type)) {
         throw new Error("Escolha um logo PNG ou JPEG de até 256 KB.");
@@ -682,6 +690,7 @@ export default function QrCodeDashboard() {
       socialIconRequestRef.current++;
       setSocialIcon("");
       setLogoDataUrl("");
+      setSocialIconColor(foregroundColor);
       setRenderingSocialIcon(false);
       setError("");
       if (logoInputRef.current) logoInputRef.current.value = "";
@@ -690,6 +699,7 @@ export default function QrCodeDashboard() {
 
     setSocialIcon(iconId);
     setLogoDataUrl("");
+    setSocialIconColor(foregroundColor);
     setError("");
     if (logoInputRef.current) logoInputRef.current.value = "";
     const requestId = ++socialIconRequestRef.current;
@@ -704,11 +714,15 @@ export default function QrCodeDashboard() {
     }
   }
 
-  async function handleForegroundColorChange(event: ChangeEvent<HTMLInputElement>) {
+  function handleForegroundColorChange(event: ChangeEvent<HTMLInputElement>) {
     const color = event.currentTarget.value;
     setForegroundColor(color);
-    if (!socialIcon) return;
+  }
 
+  async function handleSocialIconColorChange(event: ChangeEvent<HTMLInputElement>) {
+    const color = event.currentTarget.value;
+    setSocialIconColor(color);
+    if (!socialIcon) return;
     const iconId = socialIcon;
     const requestId = ++socialIconRequestRef.current;
     setRenderingSocialIcon(true);
@@ -757,6 +771,7 @@ export default function QrCodeDashboard() {
             backgroundColor,
             logoDataUrl: access.hasLogo ? logoDataUrl : "",
             socialIcon: access.hasLogo ? socialIcon : "",
+            socialIconColor: access.hasLogo ? socialIconColor : "",
           }),
         },
       );
@@ -1131,7 +1146,7 @@ export default function QrCodeDashboard() {
                         id="qr-foreground"
                         type="color"
                         value={foregroundColor}
-                        onChange={(event) => void handleForegroundColorChange(event)}
+                        onChange={handleForegroundColorChange}
                       />
                       <output htmlFor="qr-foreground">{foregroundColor}</output>
                     </div>
@@ -1170,11 +1185,24 @@ export default function QrCodeDashboard() {
                           title={label}
                           type="button"
                         >
-                          <Icon aria-hidden="true" color={foregroundColor} size={20} />
+                          <Icon aria-hidden="true" color={socialIcon === id ? socialIconColor : foregroundColor} size={20} />
                           <span>{label}</span>
                         </button>
                       ))}
                     </div>
+                    {socialIcon && (
+                      <div className="qr-color-row qr-social-icon-color">
+                        <label htmlFor="qr-social-icon-color">Ícone</label>
+                        <input
+                          id="qr-social-icon-color"
+                          type="color"
+                          value={socialIconColor}
+                          disabled={renderingSocialIcon}
+                          onChange={(event) => void handleSocialIconColorChange(event)}
+                        />
+                        <output htmlFor="qr-social-icon-color">{socialIconColor}</output>
+                      </div>
+                    )}
                     <span className="qr-field-hint">Ou envie seu próprio logo PNG ou JPEG (até 256 KB):</span>
                     <input
                       id="qr-logo"
