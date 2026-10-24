@@ -187,8 +187,10 @@ async function renderSavedQrCode(code: SavedQrCode) {
 
 export default function QrCodeDashboard() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
   const firebaseConfigured = isFirebaseConfigured();
   const [user, setUser] = useState<User | null>(null);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(firebaseConfigured);
   const [registering, setRegistering] = useState(false);
   const [email, setEmail] = useState("");
@@ -217,6 +219,27 @@ export default function QrCodeDashboard() {
   const [showMetricsModal, setShowMetricsModal] = useState(false);
   const [metricsCodeId, setMetricsCodeId] = useState("");
   const [metricsCodeName, setMetricsCodeName] = useState("");
+
+  useEffect(() => {
+    if (!showProfileMenu) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (event.target instanceof Node && !profileMenuRef.current?.contains(event.target)) {
+        setShowProfileMenu(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setShowProfileMenu(false);
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showProfileMenu]);
 
   const refreshCodes = useCallback(async (currentUser: User) => {
     const body = await accountRequest(currentUser, "/api/account/qr-codes");
@@ -707,7 +730,43 @@ export default function QrCodeDashboard() {
     <main className="qr-account-page">
       <header className="qr-account-header">
         <Link className="wordmark" href="/">lucr<span>a</span>zi<span className="wordmark-dot">.</span></Link>
-        <Link className="qr-account-back" href="/ferramentas/gerador-qrcode-gratuito">Voltar ao gerador</Link>
+        <div className="qr-account-nav">
+          <Link className="qr-account-back" href="/ferramentas/gerador-qrcode-gratuito">Voltar ao gerador</Link>
+          {user && (
+            <div className="qr-profile-menu-wrap" ref={profileMenuRef}>
+              <button
+                aria-label="Abrir menu do perfil"
+                aria-expanded={showProfileMenu}
+                aria-haspopup="menu"
+                className="qr-profile-trigger"
+                onClick={() => setShowProfileMenu((open) => !open)}
+                type="button"
+              >
+                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <circle cx="12" cy="8" r="4"></circle>
+                  <path d="M5 21v-2a7 7 0 0 1 14 0v2"></path>
+                </svg>
+              </button>
+              {showProfileMenu && (
+                <div className="qr-profile-menu" role="menu">
+                  <span className="qr-profile-email">{user.email}</span>
+                  <button
+                    className="qr-profile-signout"
+                    disabled={busy || billingBusy}
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      void signOut(getFirebaseAuth());
+                    }}
+                    role="menuitem"
+                    type="button"
+                  >
+                    Sair da conta
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </header>
       <div className="qr-account-content">
         {!user ? (
@@ -755,10 +814,6 @@ export default function QrCodeDashboard() {
                 <span className="eyebrow">MEUS QR CODES</span>
                 <h1>Gerencie seus códigos</h1>
                 <p>Crie, edite e acompanhe o desempenho dos seus QR Codes</p>
-              </div>
-              <div className="qr-account-user">
-                <span>{user.email}</span>
-                <button className="qr-secondary-button" disabled={busy || billingBusy} onClick={() => void signOut(getFirebaseAuth())} type="button">Sair</button>
               </div>
             </header>
             <section className="qr-billing-card" aria-labelledby="qr-plan-heading">
