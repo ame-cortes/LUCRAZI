@@ -28,7 +28,7 @@ interface QrMetricsDashboardProps {
 }
 
 const HOURS = ["00h", "02h", "04h", "06h", "08h", "10h", "12h", "14h", "16h", "18h", "20h", "22h"];
-const DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "S├íb"];
+const DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: QrMetricsDashboardProps) {
   const [metrics, setMetrics] = useState<MetricsData | null>(null);
@@ -48,13 +48,13 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
 
       if (!response.ok) {
         const body = await response.json();
-        throw new Error(body.error || "N├úo foi poss├¡vel carregar as m├®tricas.");
+        throw new Error(body.error || "Não foi possível carregar as métricas.");
       }
 
       const data = await response.json();
       setMetrics(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ocorreu um erro ao carregar as m├®tricas.");
+      setError(err instanceof Error ? err.message : "Ocorreu um erro ao carregar as métricas.");
     } finally {
       setLoading(false);
     }
@@ -86,7 +86,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
       <div className="qr-modal-overlay" onClick={onClose}>
         <div className="qr-modal-content" onClick={(e) => e.stopPropagation()}>
           <div className="qr-modal-header">
-            <h2>M├®tricas do QR Code</h2>
+            <h2>Métricas do QR Code</h2>
             <button className="qr-modal-close" onClick={onClose} type="button">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -95,7 +95,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
             </button>
           </div>
           <div className="qr-modal-body">
-            <p role="status">Carregando m├®tricasÔÇª</p>
+            <p role="status">Carregando métricas…</p>
           </div>
         </div>
       </div>
@@ -107,7 +107,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
       <div className="qr-modal-overlay" onClick={onClose}>
         <div className="qr-modal-content" onClick={(e) => e.stopPropagation()}>
           <div className="qr-modal-header">
-            <h2>M├®tricas do QR Code</h2>
+            <h2>Métricas do QR Code</h2>
             <button className="qr-modal-close" onClick={onClose} type="button">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -116,7 +116,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
             </button>
           </div>
           <div className="qr-modal-body">
-            <p className="admin-message admin-error" role="alert">{error || "N├úo foi poss├¡vel carregar as m├®tricas."}</p>
+            <p className="admin-message admin-error" role="alert">{error || "Não foi possível carregar as métricas."}</p>
           </div>
         </div>
       </div>
@@ -132,7 +132,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
       <div className="qr-modal-content qr-metrics-modal" onClick={(e) => e.stopPropagation()}>
         <div className="qr-modal-header">
           <div>
-            <h2>M├®tricas: {codeName}</h2>
+            <h2>Métricas: {codeName}</h2>
             <p className="qr-metrics-updated">Atualizado em {new Date(metrics.lastUpdated).toLocaleString("pt-BR")}</p>
           </div>
           <div className="qr-metrics-actions">
@@ -159,7 +159,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                 <circle cx="12" cy="12" r="3"></circle>
               </svg>
-              M├®tricas de Volume
+              Métricas de Volume
             </h3>
             <div className="qr-metrics-cards">
               <article className="qr-metric-card">
@@ -167,12 +167,12 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
                 <strong>{metrics.totalScans.toLocaleString("pt-BR")}</strong>
               </article>
               <article className="qr-metric-card">
-                <span>Usu├írios ├Ünicos</span>
+                <span>Usuários Únicos</span>
                 <strong>{metrics.uniqueUsers.toLocaleString("pt-BR")}</strong>
               </article>
             </div>
             <div className="qr-metrics-chart">
-              <h4>Evolu├º├úo Diária</h4>
+              <h4>Evolução Diária</h4>
               <div className="qr-chart-container">
                 {metrics.scansByDate.length > 0 ? (
                   metrics.scansByDate.map((count, index) => (
@@ -200,7 +200,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
                 <line x1="2" y1="12" x2="22" y2="12"></line>
                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
               </svg>
-              M├®tricas Geogr├íficas
+              Métricas Geográficas
             </h3>
             <div className="qr-metrics-grid qr-metrics-grid-3">
               <div className="qr-metrics-list">
@@ -220,7 +220,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
                 )}
               </div>
               <div className="qr-metrics-list">
-                <h4>Top Estados/Regi├Áes</h4>
+                <h4>Top Estados/Regiões</h4>
                 {metrics.topRegions && metrics.topRegions.length > 0 ? (
                   <ul>
                     {metrics.topRegions.map((item, index) => (
@@ -232,11 +232,11 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
                     ))}
                   </ul>
                 ) : (
-                  <p className="qr-metrics-empty">Sem dados de estados/regi├Áes</p>
+                  <p className="qr-metrics-empty">Sem dados de estados/regiões</p>
                 )}
               </div>
               <div className="qr-metrics-list">
-                <h4>Top Pa├¡ses</h4>
+                <h4>Top Países</h4>
                 {metrics.topCountries.length > 0 ? (
                   <ul>
                     {metrics.topCountries.map((item, index) => (
@@ -248,7 +248,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
                     ))}
                   </ul>
                 ) : (
-                  <p className="qr-metrics-empty">Sem dados de pa├¡ses</p>
+                  <p className="qr-metrics-empty">Sem dados de países</p>
                 )}
               </div>
             </div>
@@ -261,7 +261,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
                 <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
                 <line x1="12" y1="18" x2="12.01" y2="18"></line>
               </svg>
-              M├®tricas de Dispositivo
+              Métricas de Dispositivo
             </h3>
             <div className="qr-metrics-grid">
               <div className="qr-metrics-list">
@@ -328,18 +328,18 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
                 <circle cx="12" cy="12" r="10"></circle>
                 <polyline points="12 6 12 12 16 14"></polyline>
               </svg>
-              M├®tricas de Tempo
+              Métricas de Tempo
             </h3>
             <div className="qr-metrics-grid">
               <div className="qr-metrics-chart">
-                <h4>Hor├írio de Pico (24h)</h4>
+                <h4>Horário de Pico (24h)</h4>
                 <div className="qr-chart-container qr-chart-horizontal">
                   {metrics.scansByHour.map((count, hour) => (
                     <div key={hour} className="qr-chart-bar-wrapper">
                       <div
                         className="qr-chart-bar"
                         style={{ width: `${(count / maxHourlyScans) * 100}%` }}
-                        title={`${count} escaneamentos ├ás ${hour}h`}
+                        title={`${count} escaneamentos às ${hour}h`}
                       />
                       <span className="qr-chart-label">{hour % 2 === 0 ? HOURS[Math.floor(hour / 2)] : ""}</span>
                     </div>
