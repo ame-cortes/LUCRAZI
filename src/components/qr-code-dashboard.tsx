@@ -96,6 +96,8 @@ function readAccess(value: unknown): BillingAccess | null {
     billingInterval: value.billingInterval === "monthly" || value.billingInterval === "quarterly"
       ? value.billingInterval
       : null,
+    ...(typeof value.trialEndsAt === "string" ? { trialEndsAt: value.trialEndsAt } : {}),
+    ...(value.isTrial === true ? { isTrial: true } : {}),
     ...(typeof value.subscriptionId === "string" ? { subscriptionId: value.subscriptionId } : {}),
     ...(typeof value.nextPaymentDate === "string" ? { nextPaymentDate: value.nextPaymentDate } : {}),
   };
