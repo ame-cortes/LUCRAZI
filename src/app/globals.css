@@ -4722,6 +4722,42 @@ button:focus-visible {
   box-shadow: 0 2px 8px rgb(0 0 0 / 4%);
 }
 
+.qr-preview-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.qr-upload-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 90%);
+  backdrop-filter: blur(4px);
+  color: #4e6c2d;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 160ms ease, transform 160ms ease;
+  border: 2px dashed #9eaf83;
+}
+
+.qr-upload-overlay:hover {
+  background: rgb(255 255 255 / 95%);
+  transform: translate(-50%, -50%) scale(1.05);
+  border-color: #8a9b68;
+}
+
+.qr-upload-overlay span {
+  display: block;
+  text-align: center;
+}
+
 .qr-preview-hint {
   margin: 0;
   color: var(--muted);

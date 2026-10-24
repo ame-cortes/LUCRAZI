@@ -797,14 +797,30 @@ export default function QrCodeDashboard() {
                 </form>
                 <div className="qr-account-preview">
                   <span className="qr-preview-label">PRÉVIA EM TEMPO REAL</span>
-                  <canvas
-                    aria-label="Prévia do QR Code"
-                    className="qr-preview-canvas"
-                    ref={canvasRef}
-                    role="img"
-                    width={360}
-                    height={360}
-                  />
+                  <div className="qr-preview-wrapper">
+                    <canvas
+                      aria-label="Prévia do QR Code"
+                      className="qr-preview-canvas"
+                      ref={canvasRef}
+                      role="img"
+                      width={360}
+                      height={360}
+                    />
+                    {!logoDataUrl && (
+                      <button
+                        className="qr-upload-overlay"
+                        onClick={() => document.getElementById('qr-logo')?.click()}
+                        type="button"
+                      >
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                          <polyline points="17 8 12 3 7 8"></polyline>
+                          <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <span>Adicionar logo</span>
+                      </button>
+                    )}
+                  </div>
                   <p className="qr-preview-hint">Escaneie o código com a câmera antes de imprimir ou compartilhar.</p>
                   <div className="qr-download-actions">
                     <button className="button button-dark" onClick={() => void downloadPng()} type="button">
