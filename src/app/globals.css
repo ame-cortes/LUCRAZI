@@ -5424,7 +5424,7 @@ button:focus-visible {
   .qr-code-preview {
     width: 120px;
     height: 120px;
-    justify-self: center;
+    justify-self: start;
   }
 
   .qr-saved-heading p {
@@ -5656,7 +5656,7 @@ button:focus-visible {
   .qr-code-preview {
     width: 120px;
     height: 120px;
-    justify-self: center;
+    justify-self: start;
   }
 
   .qr-saved-updated {
