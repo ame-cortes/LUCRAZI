@@ -1,3 +1,4 @@
+import { isIP } from "node:net";
 import { FieldValue } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
 import { getBillingAccess } from "@/lib/billing-plans";
@@ -6,13 +7,23 @@ import { getFirebaseAdminDb } from "@/lib/firebase-admin";
 interface ScanData {
   ip: string;
   userAgent: string;
-  city?: string;
-  country?: string;
-  region?: string;
+  city?: string | null;
+  country?: string | null;
+  region?: string | null;
   deviceType?: string;
   os?: string;
   browser?: string;
   timestamp: Date;
+}
+
+interface GeoLocation {
+  city: string | null;
+  country: string | null;
+  region: string | null;
+}
+
+function geoField(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
 function parseUserAgent(userAgent: string) {
@@ -47,29 +58,67 @@ function parseUserAgent(userAgent: string) {
 }
 
 async function getGeoLocation(ip: string) {
-  if (ip === "unknown" || ip === "127.0.0.1" || ip === "::1") {
+  if (isIP(ip) === 0 || ip === "127.0.0.1" || ip === "::1") {
     return null;
   }
 
-  try {
-    const response = await fetch(`https://ipapi.co/${ip}/json/`, {
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!response.ok) {
-      console.error("Geolocation API failed:", response.status);
-      return null;
+  const providers = [
+    {
+      name: "ipwho.is",
+      url: `https://ipwho.is/${encodeURIComponent(ip)}`,
+      parse(data: Record<string, unknown>): GeoLocation | null {
+        if (data.success !== true) return null;
+        return {
+          city: geoField(data.city),
+          country: geoField(data.country),
+          region: geoField(data.region),
+        };
+      },
+    },
+    {
+      name: "ipapi.co",
+      url: `https://ipapi.co/${encodeURIComponent(ip)}/json/`,
+      parse(data: Record<string, unknown>): GeoLocation | null {
+        if (data.error === true) return null;
+        return {
+          city: geoField(data.city),
+          country: geoField(data.country_name) || geoField(data.country),
+          region: geoField(data.region),
+        };
+      },
+    },
+  ];
+  const deadline = Date.now() + 5000;
+
+  for (const provider of providers) {
+    try {
+      const remainingTime = deadline - Date.now();
+      if (remainingTime <= 0) break;
+
+      const response = await fetch(provider.url, {
+        signal: AbortSignal.timeout(remainingTime),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data: unknown = await response.json();
+      if (!data || typeof data !== "object" || Array.isArray(data)) {
+        throw new Error("Invalid response body");
+      }
+
+      const geoLocation = provider.parse(data as Record<string, unknown>);
+      if (geoLocation && (geoLocation.city || geoLocation.country || geoLocation.region)) {
+        return geoLocation;
+      }
+      throw new Error("Provider returned no location data");
+    } catch (error) {
+      console.error(`Geolocation provider ${provider.name} failed:`, error);
     }
-    const data = await response.json();
-    console.log("Geolocation data:", data);
-    return {
-      city: data.city || null,
-      country: data.country_name || data.country || null,
-      region: data.region || null,
-    };
-  } catch (error) {
-    console.error("Geolocation error:", error);
-    return null;
   }
+
+  console.error("Geolocation unavailable for scan");
+  return null;
 }
 
 export async function GET(
