@@ -162,6 +162,7 @@ export default function QrCodeDashboard() {
   const [foregroundColor, setForegroundColor] = useState("#243B2B");
   const [backgroundColor, setBackgroundColor] = useState("#FFFFFF");
   const [logoDataUrl, setLogoDataUrl] = useState("");
+  const [defaultLogoLoaded, setDefaultLogoLoaded] = useState(false);
   const [billingInterval, setBillingInterval] = useState<"monthly" | "quarterly">("monthly");
   const [busy, setBusy] = useState(false);
   const [billingBusy, setBillingBusy] = useState(false);
@@ -274,6 +275,26 @@ export default function QrCodeDashboard() {
     };
   }, [backgroundColor, foregroundColor, logoDataUrl, qrCanvasContent]);
 
+  useEffect(() => {
+    if (defaultLogoLoaded || logoDataUrl) return;
+    const image = new Image();
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 100;
+      canvas.height = 100;
+      const context = canvas.getContext("2d");
+      if (context) {
+        context.drawImage(image, 0, 0, 100, 100);
+        setLogoDataUrl(canvas.toDataURL("image/png"));
+        setDefaultLogoLoaded(true);
+      }
+    };
+    image.onerror = () => {
+      console.warn("Não foi possível carregar a logo padrão.");
+    };
+    image.src = "/logo-qr.svg";
+  }, [defaultLogoLoaded, logoDataUrl, selectedId]);
+
   function resetEditor() {
     setSelectedId("");
     setPublicId("");
@@ -283,6 +304,7 @@ export default function QrCodeDashboard() {
     setForegroundColor("#243B2B");
     setBackgroundColor("#FFFFFF");
     setLogoDataUrl("");
+    setDefaultLogoLoaded(false);
   }
 
   async function refreshDashboard() {
@@ -309,6 +331,7 @@ export default function QrCodeDashboard() {
     setForegroundColor(code.foregroundColor);
     setBackgroundColor(code.backgroundColor);
     setLogoDataUrl(code.logoDataUrl || "");
+    setDefaultLogoLoaded(!!code.logoDataUrl);
     setError("");
     setNotice("");
     window.scrollTo({ top: 0, behavior: "smooth" });
