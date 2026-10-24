@@ -79,11 +79,18 @@ export async function GET(
       .limit(1)
       .get();
     const codeDoc = result.docs[0];
-    if (!codeDoc) return NextResponse.json({ error: "QR Code não encontrado." }, { status: 404 });
+    if (!codeDoc) {
+      console.error("QR Code não encontrado:", codeId);
+      return NextResponse.json({ error: "QR Code não encontrado." }, { status: 404 });
+    }
 
     const data = codeDoc.data();
     const destination = typeof data.content === "string" ? data.content : "";
+    
+    console.log("QR Code encontrado:", { codeId, contentType: data.contentType, destination, trackingEnabled: data.trackingEnabled });
+    
     if (data.contentType !== "url" || !/^https?:\/\//i.test(destination)) {
+      console.error("QR Code não possui destino válido:", { contentType: data.contentType, destination });
       return NextResponse.json({ error: "Este QR Code não possui um destino web válido." }, { status: 404 });
     }
 
@@ -111,33 +118,45 @@ export async function GET(
           timestamp: new Date(),
         };
 
-        await db.runTransaction(async (transaction) => {
-          const billingRef = db.collection("users").doc(userId).collection("billing").doc("current");
-          const [currentCode, billing] = await Promise.all([
-            transaction.get(codeDoc.ref),
-            transaction.get(billingRef),
-          ]);
-          if (!currentCode.exists || !getBillingAccess(billing.data()).hasMetrics) return;
-          
-          // Increment scan count
-          transaction.update(codeDoc.ref, {
-            scanCount: FieldValue.increment(1),
-            lastScannedAt: FieldValue.serverTimestamp(),
-          });
+        try {
+          await db.runTransaction(async (transaction) => {
+            const billingRef = db.collection("users").doc(userId).collection("billing").doc("current");
+            const [currentCode, billing] = await Promise.all([
+              transaction.get(codeDoc.ref),
+              transaction.get(billingRef),
+            ]);
+            
+            const billingAccess = getBillingAccess(billing.data());
+            console.log("Billing access:", { hasMetrics: billingAccess.hasMetrics, userId });
+            
+            if (!currentCode.exists || !billingAccess.hasMetrics) {
+              console.log("Skipping tracking - no metrics access");
+              return;
+            }
+            
+            // Increment scan count
+            transaction.update(codeDoc.ref, {
+              scanCount: FieldValue.increment(1),
+              lastScannedAt: FieldValue.serverTimestamp(),
+            });
 
-          // Add detailed scan data to scans subcollection
-          const scanRef = codeDoc.ref.collection("scans").doc();
-          transaction.set(scanRef, {
-            ...scanData,
-            createdAt: FieldValue.serverTimestamp(),
+            // Add detailed scan data to scans subcollection
+            const scanRef = codeDoc.ref.collection("scans").doc();
+            transaction.set(scanRef, {
+              ...scanData,
+              createdAt: FieldValue.serverTimestamp(),
+            });
           });
-        });
+        } catch (transactionError) {
+          console.error("Erro na transação de tracking:", transactionError);
+          // Não bloqueia o redirect se o tracking falhar
+        }
       }
     }
 
     return NextResponse.redirect(destination, { status: 302 });
   } catch (error) {
-    console.error("Não foi possível encaminhar o QR Code.", error);
+    console.error("Não foi possível encaminhar o QR Code:", error);
     return NextResponse.json({ error: "Este QR Code está temporariamente indisponível." }, { status: 503 });
   }
 }
