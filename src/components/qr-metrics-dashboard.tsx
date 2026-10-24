@@ -179,7 +179,10 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
                     <div key={index} className="qr-chart-bar-wrapper">
                       <div
                         className="qr-chart-bar"
-                        style={{ height: `${(count / maxDailyDateScans) * 100}%` }}
+                        style={{
+                          height: `${Math.max((count / maxDailyDateScans) * 100, count > 0 ? 10 : 0)}%`,
+                          opacity: count > 0 ? 1 : 0.3
+                        }}
                         title={`${count} escaneamentos`}
                       />
                       <span className="qr-chart-label">{metrics.dateLabels[index] || ""}</span>
