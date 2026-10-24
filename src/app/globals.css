@@ -5776,6 +5776,33 @@ button:focus-visible {
   background: #3f4834;
 }
 
+.qr-metrics-monthly-summary {
+  display: grid;
+  gap: 8px;
+}
+
+.qr-metrics-monthly-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.qr-metrics-monthly-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.qr-metrics-monthly-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: #4e6c2d;
+}
+
 .qr-metrics-section {
   display: grid;
   gap: 12px;

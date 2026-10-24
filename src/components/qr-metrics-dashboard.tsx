@@ -172,56 +172,48 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
               </article>
             </div>
             <div className="qr-metrics-chart">
-              <h4>{range === "all" ? "Evolução Mensal" : "Evolução Diária"}</h4>
-              <div className="qr-chart-container">
-                {metrics.scansByDate.length > 0 ? (
-                  (() => {
-                    // Agrupar dados por mês para "todo o período"
-                    if (range === "all") {
-                      const monthlyData: { [key: string]: number } = {};
-                      metrics.scansByDate.forEach((count, index) => {
-                        const date = new Date(metrics.dateLabels[index] || "");
-                        const monthKey = date.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" });
-                        monthlyData[monthKey] = (monthlyData[monthKey] || 0) + count;
-                      });
+              <h4>{range === "all" ? "Resumo Mensal" : "Evolução Diária"}</h4>
+              {range === "all" ? (
+                <div className="qr-metrics-monthly-summary">
+                  {(() => {
+                    const monthlyData: { [key: string]: number } = {};
+                    metrics.scansByDate.forEach((count, index) => {
+                      const date = new Date(metrics.dateLabels[index] || "");
+                      const monthKey = date.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+                      monthlyData[monthKey] = (monthlyData[monthKey] || 0) + count;
+                    });
 
-                      const months = Object.entries(monthlyData);
-                      const maxMonthly = Math.max(...months.map(([, count]) => count), 1);
+                    const months = Object.entries(monthlyData).sort((a, b) => b[0].localeCompare(a[0]));
 
-                      return months.map(([month, count]) => (
-                        <div key={month} className="qr-chart-bar-wrapper">
-                          <div
-                            className="qr-chart-bar"
-                            style={{
-                              height: `${Math.max((count / maxMonthly) * 100, count > 0 ? 30 : 0)}%`,
-                              opacity: count > 0 ? 1 : 0.3
-                            }}
-                            title={`${month}: ${count} escaneamentos`}
-                          />
-                          <span className="qr-chart-label">{month}</span>
-                        </div>
-                      ));
-                    }
-
-                    // Mostrar dados diários para 7d e 30d
-                    return metrics.scansByDate.map((count, index) => (
+                    return months.map(([month, count]) => (
+                      <div key={month} className="qr-metrics-monthly-item">
+                        <span className="qr-metrics-monthly-label">{month}</span>
+                        <span className="qr-metrics-monthly-count">{count} escaneamentos</span>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              ) : (
+                <div className="qr-chart-container">
+                  {metrics.scansByDate.length > 0 ? (
+                    metrics.scansByDate.map((count, index) => (
                       <div key={index} className="qr-chart-bar-wrapper">
                         <div
                           className="qr-chart-bar"
                           style={{
-                            height: `${Math.max((count / maxDailyDateScans) * 100, count > 0 ? 30 : 0)}%`,
-                            opacity: count > 0 ? 1 : 0.3
+                            height: count > 0 ? `${Math.max((count / maxDailyDateScans) * 100, 50)}%` : "4px",
+                            opacity: count > 0 ? 1 : 0.15
                           }}
                           title={`${metrics.dateLabels[index] || ""}: ${count} escaneamentos`}
                         />
                         <span className="qr-chart-label">{metrics.dateLabels[index] || ""}</span>
                       </div>
-                    ));
-                  })()
-                ) : (
-                  <p className="qr-chart-empty">Sem dados suficientes</p>
-                )}
-              </div>
+                    ))
+                  ) : (
+                    <p className="qr-chart-empty">Sem dados suficientes</p>
+                  )}
+                </div>
+              )}
             </div>
           </section>
 
