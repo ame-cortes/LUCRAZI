@@ -209,7 +209,7 @@ export default function QrCodeDashboard() {
     ? new URL(`/q/${publicId}`, siteUrl).toString()
     : content.trim();
   const qrCanvasContent = previewContent || siteUrl.toString();
-  const canDownloadPreview = Boolean(content.trim());
+  const canDownloadPreview = true;
   const totalScans = codes.reduce((total, code) => total + (code.trackingEnabled ? code.scanCount : 0), 0);
   const dynamicCodes = codes.filter((code) => code.trackingEnabled).length;
   const filteredCodes = codes.filter((code) =>
@@ -220,39 +220,65 @@ export default function QrCodeDashboard() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     let cancelled = false;
-    void QRCode.toCanvas(canvas, qrCanvasContent, {
-      errorCorrectionLevel: "H",
-      margin: 4,
-      width: 360,
-      color: { dark: foregroundColor, light: backgroundColor },
-    }).then(() => {
-      if (cancelled || !logoDataUrl) return;
-      const image = new Image();
-      image.onload = () => {
+
+    const generateQR = async () => {
+      try {
+        await QRCode.toCanvas(canvas, qrCanvasContent, {
+          errorCorrectionLevel: "H",
+          margin: 4,
+          width: 360,
+          color: { dark: foregroundColor, light: backgroundColor },
+        });
+
+        if (cancelled || !logoDataUrl) return;
+
+        const image = new Image();
+        image.onload = () => {
+          if (cancelled) return;
+          const context = canvas.getContext("2d");
+          if (!context) {
+            setError("Seu navegador não conseguiu preparar a prévia do logo.");
+            return;
+          }
+          const center = canvas.width / 2;
+          const logoSize = canvas.width * 0.2;
+          const backingSize = logoSize * 1.25;
+          context.fillStyle = backgroundColor;
+          context.fillRect(center - backingSize / 2, center - backingSize / 2, backingSize, backingSize);
+          context.drawImage(image, center - logoSize / 2, center - logoSize / 2, logoSize, logoSize);
+        };
+        image.onerror = () => setError("Não foi possível carregar o logo salvo.");
+        image.src = logoDataUrl;
+      } catch (previewError: unknown) {
         if (cancelled) return;
-        const context = canvas.getContext("2d");
-        if (!context) {
-          setError("Seu navegador não conseguiu preparar a prévia do logo.");
-          return;
-        }
-        const center = canvas.width / 2;
-        const logoSize = canvas.width * 0.2;
-        const backingSize = logoSize * 1.25;
-        context.fillStyle = backgroundColor;
-        context.fillRect(center - backingSize / 2, center - backingSize / 2, backingSize, backingSize);
-        context.drawImage(image, center - logoSize / 2, center - logoSize / 2, logoSize, logoSize);
-      };
-      image.onerror = () => setError("Não foi possível carregar o logo salvo.");
-      image.src = logoDataUrl;
-    }).catch((previewError: unknown) => {
-      if (cancelled) return;
-      console.error("Não foi possível gerar a prévia do QR Code salvo.", previewError);
-      setError(`Não foi possível gerar a prévia: ${errorMessage(previewError)}`);
-    });
+        console.error("Não foi possível gerar a prévia do QR Code salvo.", previewError);
+        setError(`Não foi possível gerar a prévia: ${errorMessage(previewError)}`);
+      }
+    };
+
+    void generateQR();
+
     return () => {
       cancelled = true;
     };
   }, [backgroundColor, foregroundColor, logoDataUrl, qrCanvasContent]);
+
+  // Garante que o QR Code seja gerado na montagem inicial
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const timeoutId = setTimeout(() => {
+      void QRCode.toCanvas(canvas, qrCanvasContent, {
+        errorCorrectionLevel: "H",
+        margin: 4,
+        width: 360,
+        color: { dark: foregroundColor, light: backgroundColor },
+      });
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, []);
 
   function resetEditor() {
     setSelectedId("");
@@ -779,17 +805,14 @@ export default function QrCodeDashboard() {
                   <span className="qr-preview-label">PRÉVIA EM TEMPO REAL</span>
                   <canvas aria-label="Prévia do QR Code" className="qr-preview-canvas" ref={canvasRef} role="img" />
                   <p className="qr-preview-hint">Escaneie o código com a câmera antes de imprimir ou compartilhar.</p>
-                  {!canDownloadPreview && <p className="qr-preview-notice">Digite um link ou texto para atualizar a prévia.</p>}
-                  {canDownloadPreview && (
-                    <div className="qr-download-actions">
-                      <button className="button button-dark" disabled={!canDownloadPreview} onClick={() => void downloadPng()} type="button">
-                        Baixar PNG <span aria-hidden="true">↓</span>
-                      </button>
-                      <button className="qr-secondary-button" disabled={!canDownloadPreview} onClick={() => void downloadSvg()} type="button">
-                        Baixar SVG
-                      </button>
-                    </div>
-                  )}
+                  <div className="qr-download-actions">
+                    <button className="button button-dark" onClick={() => void downloadPng()} type="button">
+                      Baixar PNG <span aria-hidden="true">↓</span>
+                    </button>
+                    <button className="qr-secondary-button" onClick={() => void downloadSvg()} type="button">
+                      Baixar SVG
+                    </button>
+                  </div>
                   {!access.hasMetrics && contentType === "url" && (
                     <div className="qr-preview-upsell">
                       <p>
