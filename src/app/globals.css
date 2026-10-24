@@ -5289,6 +5289,40 @@ button:focus-visible {
     flex-direction: column;
   }
 
+  .qr-account-user {
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 2px;
+  }
+
+  .qr-account-user span {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .qr-account-user .qr-secondary-button {
+    width: auto;
+    min-height: 32px;
+    flex: 0 0 auto;
+    border-color: transparent;
+    padding: 0 8px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .qr-account-user .qr-secondary-button:hover {
+    border-color: var(--line);
+    background: #fff;
+    color: var(--ink);
+  }
+
   .qr-page {
     padding-block: 48px 72px;
   }
@@ -5469,16 +5503,6 @@ button:focus-visible {
   }
 
   .qr-account-title p {
-    font-size: 13px;
-  }
-
-  .qr-account-user {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .qr-account-user span {
     font-size: 13px;
   }
 
