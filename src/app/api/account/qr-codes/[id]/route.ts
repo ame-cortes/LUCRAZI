@@ -42,7 +42,7 @@ export async function PATCH(
   if (!isRecord(body)) return jsonError("Os dados do QR Code são inválidos.", 400);
 
   const name = typeof body.name === "string" ? body.name.trim() : "";
-  const content = typeof body.content === "string" ? body.content.trim() : "";
+  let content = typeof body.content === "string" ? body.content.trim() : "";
   const contentType = body.contentType === "url" || body.contentType === "text"
     ? body.contentType
     : null;
@@ -60,6 +60,10 @@ export async function PATCH(
   ) return jsonError("Confira o nome, conteúdo, cores e arquivo do QR Code.", 400);
 
   if (contentType === "url") {
+    // Adiciona https:// automaticamente se o usuário não colocou protocolo
+    if (!/^https?:\/\//i.test(content)) {
+      content = `https://${content}`;
+    }
     try {
       const url = new URL(content);
       if (url.protocol !== "https:" && url.protocol !== "http:") throw new Error();

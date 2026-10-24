@@ -473,13 +473,17 @@ export default function QrCodeDashboard() {
   async function saveCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!user) return;
-    const normalizedContent = content.trim();
+    let normalizedContent = content.trim();
     if (contentType === "url") {
+      // Adiciona https:// automaticamente se o usuário não colocou protocolo
+      if (!/^https?:\/\//i.test(normalizedContent)) {
+        normalizedContent = `https://${normalizedContent}`;
+      }
       try {
         const url = new URL(normalizedContent);
         if (url.protocol !== "http:" && url.protocol !== "https:") throw new Error();
       } catch {
-        setError("Informe um endereço válido iniciado por http:// ou https://.");
+        setError("Informe um endereço web válido.");
         return;
       }
     }
@@ -813,9 +817,9 @@ export default function QrCodeDashboard() {
                       rows={4}
                       value={content}
                       onChange={(event) => setContent(event.target.value)}
-                      placeholder={contentType === "url" ? "https://exemplo.com" : "Digite o texto"}
+                      placeholder={contentType === "url" ? "exemplo.com ou https://exemplo.com" : "Digite o texto"}
                     />
-                    <span className="qr-field-hint">{content.length}/2048 caracteres</span>
+                    <span className="qr-field-hint">{content.length}/2048 caracteres. {contentType === "url" ? "O https:// será adicionado automaticamente se necessário." : ""}</span>
                   </div>
                   <fieldset className="qr-color-fields">
                     <legend>Cores do QR Code</legend>

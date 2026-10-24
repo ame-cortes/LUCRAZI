@@ -79,7 +79,7 @@ function parseQrRequest(value: unknown): QrRequest | null {
   ) return null;
 
   const email = value.email.trim().toLowerCase();
-  const content = value.content.trim();
+  let content = value.content.trim();
   if (
     email.length > 254
     || !/^[^ @]+@[^ @]+\.[^ @]+$/.test(email)
@@ -88,6 +88,10 @@ function parseQrRequest(value: unknown): QrRequest | null {
   ) return null;
 
   if (value.contentType === "url") {
+    // Adiciona https:// automaticamente se o usuário não colocou protocolo
+    if (!/^https?:\/\//i.test(content)) {
+      content = `https://${content}`;
+    }
     try {
       const url = new URL(content);
       if (url.protocol !== "http:" && url.protocol !== "https:") return null;

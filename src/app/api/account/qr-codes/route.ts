@@ -14,7 +14,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function parseQrCode(value: unknown) {
   if (!isRecord(value)) return null;
   const name = typeof value.name === "string" ? value.name.trim() : "";
-  const content = typeof value.content === "string" ? value.content.trim() : "";
+  let content = typeof value.content === "string" ? value.content.trim() : "";
   const contentType = value.contentType === "url" || value.contentType === "text"
     ? value.contentType
     : null;
@@ -35,6 +35,10 @@ function parseQrCode(value: unknown) {
   ) return null;
 
   if (contentType === "url") {
+    // Adiciona https:// automaticamente se o usuário não colocou protocolo
+    if (!/^https?:\/\//i.test(content)) {
+      content = `https://${content}`;
+    }
     try {
       const url = new URL(content);
       if (url.protocol !== "https:" && url.protocol !== "http:") return null;

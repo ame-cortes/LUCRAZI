@@ -255,12 +255,17 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
       setFormError("Autorize o uso do e-mail para receber o arquivo solicitado.");
       return;
     }
+    let trimmedContent = content.trim();
     if (contentType === "url") {
+      // Adiciona https:// automaticamente se o usuário não colocou protocolo
+      if (!/^https?:\/\//i.test(trimmedContent)) {
+        trimmedContent = `https://${trimmedContent}`;
+      }
       try {
-        const url = new URL(content.trim());
+        const url = new URL(trimmedContent);
         if (url.protocol !== "http:" && url.protocol !== "https:") throw new Error("invalid protocol");
       } catch {
-        setFormError("Informe um endereço web válido começando com http:// ou https://.");
+        setFormError("Informe um endereço web válido.");
         return;
       }
     }
@@ -278,7 +283,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
         },
         body: JSON.stringify({
           email,
-          content: content.trim(),
+          content: trimmedContent,
           contentType,
           foregroundColor,
           backgroundColor,
@@ -353,13 +358,13 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
             maxLength={2048}
             disabled={isSubmitting}
             onChange={(event) => setContent(event.target.value)}
-            placeholder={contentType === "url" ? "https://exemplo.com" : "Digite o texto"}
+            placeholder={contentType === "url" ? "exemplo.com ou https://exemplo.com" : "Digite o texto"}
             required
             rows={contentType === "url" ? 2 : 4}
             value={content}
           />
           <span className="qr-field-hint">
-            {content.length}/2048 caracteres. Usado para gerar e enviar seu QR Code; não é armazenado.
+            {content.length}/2048 caracteres. {contentType === "url" ? "O https:// será adicionado automaticamente se necessário." : "Usado para gerar e enviar seu QR Code; não é armazenado."}
           </span>
         </div>
 
