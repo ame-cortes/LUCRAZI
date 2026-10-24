@@ -4307,12 +4307,12 @@ button:focus-visible {
 }
 
 .qr-billing-card {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   border: 1px solid var(--line);
   border-radius: 14px;
-  padding: 24px;
+  padding: 18px 22px;
   background: #fff;
-  box-shadow: 0 12px 40px rgb(36 38 32 / 5%);
+  box-shadow: 0 3px 14px rgb(36 38 32 / 3%);
 }
 
 .qr-billing-current {
@@ -4323,8 +4323,8 @@ button:focus-visible {
 }
 
 .qr-billing-current h2 {
-  margin: 7px 0 4px;
-  font-size: 23px;
+  margin: 5px 0 3px;
+  font-size: 20px;
   font-weight: 550;
   letter-spacing: -0.6px;
 }
@@ -4340,6 +4340,16 @@ button:focus-visible {
 .qr-billing-current p {
   margin: 0;
   line-height: 1.6;
+}
+
+.qr-billing-current .qr-trial-summary {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.qr-trial-countdown {
+  color: #697354;
+  font-weight: 650;
 }
 
 .qr-billing-actions {
@@ -4364,6 +4374,21 @@ button:focus-visible {
 .qr-upgrade-button:hover {
   background: #e8f0dc;
   border-color: #8a9b68;
+}
+
+.qr-upgrade-button.qr-trial-action {
+  min-height: 38px;
+  border-color: #e3e8d9;
+  padding-inline: 14px;
+  background: #f8f9f5;
+  color: #626d50;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.qr-upgrade-button.qr-trial-action:hover {
+  border-color: #cbd5bc;
+  background: #f1f4eb;
 }
 
 .qr-plan-selector {

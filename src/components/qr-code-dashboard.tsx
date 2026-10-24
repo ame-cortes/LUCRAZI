@@ -105,6 +105,18 @@ function money(cents: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 }
 
+function getTrialTimeRemaining(trialEndsAt: string, now: Date): string | null {
+  const endTime = new Date(trialEndsAt).getTime();
+  if (!Number.isFinite(endTime)) return null;
+
+  const remainingMs = endTime - now.getTime();
+  if (remainingMs <= 0) return "Seu período de teste está terminando";
+
+  const remainingDays = Math.ceil(remainingMs / (1000 * 60 * 60 * 24));
+  if (remainingDays === 1) return "Resta 1 dia de teste";
+  return `Restam ${remainingDays} dias de teste`;
+}
+
 async function accountRequest(user: User, url: string, init: RequestInit = {}) {
   const idToken = await user.getIdToken();
   const response = await fetch(url, {
@@ -190,6 +202,7 @@ export default function QrCodeDashboard() {
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const firebaseConfigured = isFirebaseConfigured();
   const [user, setUser] = useState<User | null>(null);
+  const [today, setToday] = useState(() => new Date());
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(firebaseConfigured);
   const [registering, setRegistering] = useState(false);
@@ -219,6 +232,17 @@ export default function QrCodeDashboard() {
   const [showMetricsModal, setShowMetricsModal] = useState(false);
   const [metricsCodeId, setMetricsCodeId] = useState("");
   const [metricsCodeName, setMetricsCodeName] = useState("");
+
+  useEffect(() => {
+    const now = new Date();
+    const nextMidnight = new Date(now);
+    nextMidnight.setHours(24, 0, 0, 0);
+    const timeoutId = window.setTimeout(
+      () => setToday(new Date()),
+      nextMidnight.getTime() - now.getTime(),
+    );
+    return () => window.clearTimeout(timeoutId);
+  }, [today]);
 
   useEffect(() => {
     if (!showProfileMenu) return;
@@ -306,6 +330,9 @@ export default function QrCodeDashboard() {
   const qrCanvasContent = previewContent || "https://www.lucrazi.com.br";
   const totalScans = codes.reduce((total, code) => total + (code.trackingEnabled ? code.scanCount : 0), 0);
   const dynamicCodes = codes.filter((code) => code.trackingEnabled).length;
+  const trialTimeRemaining = access.isTrial && access.trialEndsAt
+    ? getTrialTimeRemaining(access.trialEndsAt, today)
+    : null;
   const filteredCodes = codes.filter((code) =>
     `${code.name} ${code.content}`.toLocaleLowerCase("pt-BR").includes(codeSearch.trim().toLocaleLowerCase("pt-BR")),
   );
@@ -824,17 +851,27 @@ export default function QrCodeDashboard() {
                     {access.isTrial ? `Trial (${billingPlans[access.planId as PaidPlanId].name})` : access.planId === "free" ? "Grátis" : billingPlans[access.planId as PaidPlanId].name}
                     <span> · {codes.length}/{access.qrLimit} QR Codes</span>
                   </h2>
-                  <p>
-                    {access.isTrial && access.trialEndsAt
-                      ? `Seu trial termina em ${new Date(access.trialEndsAt).toLocaleDateString("pt-BR")}. Teste todos os recursos premium!`
-                      : access.hasMetrics
+                  {access.isTrial && access.trialEndsAt ? (
+                    <p className="qr-trial-summary">
+                      {trialTimeRemaining && (
+                        <span className="qr-trial-countdown" title={`Trial termina em ${new Date(access.trialEndsAt).toLocaleDateString("pt-BR")}`}>
+                          {trialTimeRemaining}
+                        </span>
+                      )}
+                      {trialTimeRemaining && " · "}
+                      Trial válido até {new Date(access.trialEndsAt).toLocaleDateString("pt-BR")}
+                    </p>
+                  ) : (
+                    <p>
+                      {access.hasMetrics
                       ? `Métricas de escaneamento ativadas${access.nextPaymentDate ? ` · Próxima cobrança: ${new Date(access.nextPaymentDate).toLocaleDateString("pt-BR")}` : ""}.`
                       : "1 QR Code personalizado, sem métricas de escaneamento."}
-                  </p>
+                    </p>
+                  )}
                 </div>
                 {access.isTrial ? (
                   <div className="qr-billing-actions">
-                    <button className="qr-upgrade-button" disabled={billingBusy} onClick={() => setShowUpgradeModal(true)} type="button">
+                    <button className="qr-upgrade-button qr-trial-action" disabled={billingBusy} onClick={() => setShowUpgradeModal(true)} type="button">
                       {billingBusy ? "Aguarde…" : "Assinar após trial"}
                     </button>
                   </div>
