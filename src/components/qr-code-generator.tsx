@@ -9,7 +9,9 @@ import { getFirebaseAppCheck } from "@/lib/firebase";
 import QrCodeStylePicker from "@/components/qr-code-style-picker";
 import {
   createQrCodeSvg,
+  isQrCodeContentTooLongError,
   renderQrCodeCanvas,
+  validateQrCodeContent,
   type QrCodeEyeStyle,
   type QrCodeStyle,
 } from "@/lib/qr-code-styling";
@@ -108,6 +110,10 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
       logoDataUrl,
     }).catch((error: unknown) => {
       if (cancelled) return;
+      if (isQrCodeContentTooLongError(error)) {
+        setPreviewError(error instanceof Error ? error.message : "O conteúdo é longo demais para caber em um QR Code.");
+        return;
+      }
       console.error("Não foi possível gerar a prévia do QR Code.", error);
       setPreviewError("Não foi possível gerar a prévia. Confira o conteúdo informado.");
     });
@@ -304,6 +310,17 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
         setFormError("Informe um endereço web válido.");
         return;
       }
+    }
+    try {
+      validateQrCodeContent(trimmedContent || " ");
+    } catch (error) {
+      if (isQrCodeContentTooLongError(error)) {
+        setFormError(error instanceof Error ? error.message : "O conteúdo é longo demais para caber em um QR Code.");
+        return;
+      }
+      console.error("Não foi possível validar o conteúdo do QR Code.", error);
+      setFormError("Não foi possível validar o conteúdo. Confira o texto e tente novamente.");
+      return;
     }
 
     setIsSubmitting(true);

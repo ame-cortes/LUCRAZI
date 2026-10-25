@@ -20,7 +20,9 @@ import {
   createQrCodeSvg,
   isQrCodeEyeStyle,
   isQrCodeStyle,
+  isQrCodeContentTooLongError,
   renderQrCodeCanvas,
+  validateQrCodeContent,
   type QrCodeEyeStyle,
   type QrCodeStyle,
 } from "@/lib/qr-code-styling";
@@ -400,6 +402,10 @@ export default function QrCodeDashboard() {
       logoDataUrl,
     }).catch((error: unknown) => {
       if (cancelled) return;
+      if (isQrCodeContentTooLongError(error)) {
+        setError(error instanceof Error ? error.message : "O conteúdo é longo demais para caber em um QR Code.");
+        return;
+      }
       console.error("Não foi possível gerar a prévia do QR Code.", error);
       setError("Não foi possível gerar a prévia. Confira o conteúdo informado.");
     });
@@ -428,6 +434,10 @@ export default function QrCodeDashboard() {
         logoDataUrl,
       }).catch((error: unknown) => {
         if (cancelled) return;
+        if (isQrCodeContentTooLongError(error)) {
+          setError(error instanceof Error ? error.message : "O conteúdo é longo demais para caber em um QR Code.");
+          return;
+        }
         console.error("Não foi possível gerar a prévia do QR Code.", error);
         setError("Não foi possível gerar a prévia. Confira o conteúdo informado.");
       });
@@ -716,6 +726,19 @@ export default function QrCodeDashboard() {
         setError("Informe um endereço web válido.");
         return;
       }
+    }
+    try {
+      validateQrCodeContent(normalizedContent || " ");
+    } catch (validationError) {
+      if (isQrCodeContentTooLongError(validationError)) {
+        setError(validationError instanceof Error
+          ? validationError.message
+          : "O conteúdo é longo demais para caber em um QR Code.");
+        return;
+      }
+      console.error("Não foi possível validar o conteúdo do QR Code.", validationError);
+      setError("Não foi possível validar o conteúdo. Confira o texto e tente novamente.");
+      return;
     }
 
     setBusy(true);

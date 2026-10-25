@@ -87,6 +87,11 @@ export const qrCodeEyeStyleOptions: { id: QrCodeEyeStyle; label: string }[] = [
 ];
 
 const quietZone = 4;
+export const qrCodeContentTooLongMessage = "O conteúdo é longo demais para caber em um QR Code. Reduza o texto ou use um link mais curto.";
+
+export function isQrCodeContentTooLongError(error: unknown): boolean {
+  return error instanceof Error && error.message === qrCodeContentTooLongMessage;
+}
 
 export function isQrCodeStyle(value: unknown): value is QrCodeStyle {
   return typeof value === "string" && QR_CODE_STYLES.includes(value as QrCodeStyle);
@@ -444,7 +449,18 @@ function drawFinderPatterns(
 }
 
 function createQrCode(content: string) {
-  return QRCode.create(content, { errorCorrectionLevel: "H" });
+  try {
+    return QRCode.create(content, { errorCorrectionLevel: "H" });
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("amount of data is too big")) {
+      throw new Error(qrCodeContentTooLongMessage, { cause: error });
+    }
+    throw error;
+  }
+}
+
+export function validateQrCodeContent(content: string): void {
+  createQrCode(content);
 }
 
 function drawLogo(

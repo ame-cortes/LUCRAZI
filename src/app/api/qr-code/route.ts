@@ -21,6 +21,19 @@ const consentTextVersion = "2026-10-14";
 const requestCooldownMs = 60_000;
 const maximumLogoBytes = 256 * 1024;
 
+async function traceQrDeliveryStage<T>(stage: string, action: () => Promise<T>): Promise<T> {
+  const startedAt = Date.now();
+  console.info("QR Code delivery stage started.", { stage });
+  try {
+    const result = await action();
+    console.info("QR Code delivery stage completed.", { stage, durationMs: Date.now() - startedAt });
+    return result;
+  } catch (error) {
+    console.error("QR Code delivery stage failed.", { stage, durationMs: Date.now() - startedAt }, error);
+    throw error;
+  }
+}
+
 type QrRequest = {
   email: string;
   content: string;
@@ -202,11 +215,12 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { payload, protectedHeader } = await jwtVerify(appCheckToken, appCheckJwks, {
-      algorithms: ["RS256"],
-      audience: `projects/${projectNumber}`,
-      issuer: `https://firebaseappcheck.googleapis.com/${projectNumber}`,
-    });
+    const { payload, protectedHeader } = await traceQrDeliveryStage("app-check-verification", () =>
+      jwtVerify(appCheckToken, appCheckJwks, {
+        algorithms: ["RS256"],
+        audience: `projects/${projectNumber}`,
+        issuer: `https://firebaseappcheck.googleapis.com/${projectNumber}`,
+      }));
     if (protectedHeader.typ !== "JWT" || payload.sub !== expectedAppId) {
       return NextResponse.json({ error: "Token App Check de outro aplicativo." }, { status: 401 });
     }
@@ -243,11 +257,12 @@ export async function POST(request: Request) {
   let qrPng: Buffer;
   try {
     logo = parseLogo(input.logoDataUrl);
-    const qrSvg = await createQrSvg(input, logo);
-    qrPng = await sharp(Buffer.from(qrSvg))
-      .resize({ width: 1080, height: 1080 })
-      .png()
-      .toBuffer();
+    const qrSvg = await traceQrDeliveryStage("qr-svg-generation", () => createQrSvg(input, logo));
+    qrPng = await traceQrDeliveryStage("qr-png-rasterization", () =>
+      sharp(Buffer.from(qrSvg))
+        .resize({ width: 1080, height: 1080 })
+        .png()
+        .toBuffer());
   } catch (error) {
     const message = error instanceof Error ? error.message : "Não foi possível preparar o QR Code.";
     return NextResponse.json({ error: message }, { status: 400 });
@@ -264,28 +279,29 @@ export async function POST(request: Request) {
   const emailHash = createHash("sha256").update(input.email).digest("hex");
   const lead = db.collection("qrCodeLeads").doc(emailHash);
   try {
-    const accepted = await db.runTransaction(async (transaction) => {
-      const existing = await transaction.get(lead);
-      const lastRequestAt = existing.get("lastRequestAt");
-      if (
-        lastRequestAt instanceof Timestamp
-        && Date.now() - lastRequestAt.toMillis() < requestCooldownMs
-      ) return false;
+    const accepted = await traceQrDeliveryStage("firestore-lead-registration", () =>
+      db.runTransaction(async (transaction) => {
+        const existing = await transaction.get(lead);
+        const lastRequestAt = existing.get("lastRequestAt");
+        if (
+          lastRequestAt instanceof Timestamp
+          && Date.now() - lastRequestAt.toMillis() < requestCooldownMs
+        ) return false;
 
-      transaction.set(lead, {
-        email: input.email,
-        purpose: "qr_code_delivery",
-        source: "gerador-qr",
-        consent: true,
-        consentTextVersion,
-        consentAt: FieldValue.serverTimestamp(),
-        lastRequestAt: FieldValue.serverTimestamp(),
-        requestCount: FieldValue.increment(1),
-        deliveryStatus: "pending",
-        ...(existing.exists ? {} : { createdAt: FieldValue.serverTimestamp() }),
-      }, { merge: true });
-      return true;
-    }, { maxAttempts: 2 });
+        transaction.set(lead, {
+          email: input.email,
+          purpose: "qr_code_delivery",
+          source: "gerador-qr",
+          consent: true,
+          consentTextVersion,
+          consentAt: FieldValue.serverTimestamp(),
+          lastRequestAt: FieldValue.serverTimestamp(),
+          requestCount: FieldValue.increment(1),
+          deliveryStatus: "pending",
+          ...(existing.exists ? {} : { createdAt: FieldValue.serverTimestamp() }),
+        }, { merge: true });
+        return true;
+      }, { maxAttempts: 2 }));
     if (!accepted) {
       return NextResponse.json({
         error: "Aguarde um minuto antes de solicitar outro QR Code para este e-mail.",
@@ -297,14 +313,15 @@ export async function POST(request: Request) {
   }
 
   try {
-    await sendQrCodeEmail(input.email, qrPng);
+    await traceQrDeliveryStage("brevo-email-delivery", () => sendQrCodeEmail(input.email, qrPng));
   } catch (error) {
     console.error("O pedido de QR Code foi registrado, mas o arquivo não foi enviado pela Brevo.", error);
     try {
-      await lead.update({
-        deliveryStatus: "failed",
-        deliveryUpdatedAt: FieldValue.serverTimestamp(),
-      });
+      await traceQrDeliveryStage("firestore-failed-delivery-update", () =>
+        lead.update({
+          deliveryStatus: "failed",
+          deliveryUpdatedAt: FieldValue.serverTimestamp(),
+        }));
     } catch (updateError) {
       console.error("Não foi possível registrar a falha na entrega do QR Code.", updateError);
     }
@@ -314,10 +331,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    await lead.update({
-      deliveryStatus: "sent",
-      deliverySentAt: FieldValue.serverTimestamp(),
-    });
+    await traceQrDeliveryStage("firestore-sent-delivery-update", () =>
+      lead.update({
+        deliveryStatus: "sent",
+        deliverySentAt: FieldValue.serverTimestamp(),
+      }));
   } catch (error) {
     console.error("O QR Code foi enviado, mas não foi possível registrar o resultado no Firestore.", error);
   }
