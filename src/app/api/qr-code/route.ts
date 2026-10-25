@@ -280,17 +280,24 @@ export async function POST(request: Request) {
 
   const emailHash = createHash("sha256").update(input.email).digest("hex");
   const lead = db.collection("qrCodeLeads").doc(emailHash);
-  try {
-    const accepted = await traceQrDeliveryStage("firestore-lead-registration", () =>
-      db.runTransaction(async (transaction) => {
-        const existing = await transaction.get(lead);
-        const lastRequestAt = existing.get("lastRequestAt");
-        if (
-          lastRequestAt instanceof Timestamp
-          && Date.now() - lastRequestAt.toMillis() < requestCooldownMs
-        ) return false;
-
-        transaction.set(lead, {
+  
+  // Verifica cooldown de forma síncrona (rápido)
+  const existingDoc = await lead.get();
+  const lastRequestAt = existingDoc.get("lastRequestAt");
+  if (
+    lastRequestAt instanceof Timestamp
+    && Date.now() - lastRequestAt.toMillis() < requestCooldownMs
+  ) {
+    return NextResponse.json({
+      error: "Aguarde um minuto antes de solicitar outro QR Code para este e-mail.",
+    }, { status: 429 });
+  }
+  
+  // Registra o pedido de forma não-bloqueante
+  void (async () => {
+    try {
+      await traceQrDeliveryStage("firestore-lead-registration", async () => {
+        await lead.set({
           email: input.email,
           purpose: "qr_code_delivery",
           source: "gerador-qr",
@@ -300,19 +307,13 @@ export async function POST(request: Request) {
           lastRequestAt: FieldValue.serverTimestamp(),
           requestCount: FieldValue.increment(1),
           deliveryStatus: "pending",
-          ...(existing.exists ? {} : { createdAt: FieldValue.serverTimestamp() }),
+          ...(existingDoc.exists ? {} : { createdAt: FieldValue.serverTimestamp() }),
         }, { merge: true });
-        return true;
-      }, { maxAttempts: 2 }));
-    if (!accepted) {
-      return NextResponse.json({
-        error: "Aguarde um minuto antes de solicitar outro QR Code para este e-mail.",
-      }, { status: 429 });
+      });
+    } catch (error) {
+      console.error("Não foi possível registrar o pedido de QR Code no Firestore.", error);
     }
-  } catch (error) {
-    console.error("Não foi possível registrar o pedido de QR Code no Firestore.", error);
-    return NextResponse.json({ error: "Não foi possível registrar seu pedido. Tente novamente mais tarde." }, { status: 503 });
-  }
+  })();
 
   // Envia e-mail de forma assíncrona com timeout mais curto para não bloquear a resposta
   void (async () => {
