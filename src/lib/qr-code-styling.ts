@@ -11,6 +11,7 @@ export const QR_CODE_STYLES = [
   "leaf",
   "star",
   "pencil",
+  "heart",
 ] as const;
 export type QrCodeStyle = (typeof QR_CODE_STYLES)[number];
 export const QR_CODE_EYE_STYLES = ["square", "rounded", "circle", "diamond", "octagon", "leaf"] as const;
@@ -31,6 +32,7 @@ export const qrCodeStyleOptions: {
   { id: "leaf", label: "Folha", description: "Folhas mais cheias" },
   { id: "star", label: "Estrela", description: "Estrelas com braços mais largos" },
   { id: "pencil", label: "Lápis", description: "Lápis horizontais unidos" },
+  { id: "heart", label: "Coração", description: "Módulos em formato de coração" },
 ];
 
 export const qrCodeEyeStyleOptions: { id: QrCodeEyeStyle; label: string }[] = [
@@ -301,22 +303,22 @@ export async function renderQrCodeCanvas(
         if (options.style === "square" || isFunctionModule) {
           context.fillRect(x, y, moduleSize, moduleSize);
         } else if (options.style === "rounded") {
-          const inset = moduleSize * 0.025;
+          const inset = moduleSize * 0.01;
           const cellSize = moduleSize - inset * 2;
           context.beginPath();
-          context.roundRect(x + inset, y + inset, cellSize, cellSize, moduleSize * 0.2);
+          context.roundRect(x + inset, y + inset, cellSize, cellSize, moduleSize * 0.22);
           context.fill();
         } else if (options.style === "dots") {
           context.beginPath();
-          context.arc(x + moduleSize / 2, y + moduleSize / 2, moduleSize * 0.49, 0, Math.PI * 2);
+          context.arc(x + moduleSize / 2, y + moduleSize / 2, moduleSize * 0.5, 0, Math.PI * 2);
           context.fill();
         } else if (options.style === "vertical") {
           context.beginPath();
-          context.roundRect(x + moduleSize * 0.06, y + moduleSize * 0.02, moduleSize * 0.88, moduleSize * 0.96, moduleSize * 0.44);
+          context.roundRect(x + moduleSize * 0.02, y + moduleSize * 0.01, moduleSize * 0.96, moduleSize * 0.98, moduleSize * 0.48);
           context.fill();
         } else if (options.style === "horizontal") {
           context.beginPath();
-          context.roundRect(x + moduleSize * 0.02, y + moduleSize * 0.06, moduleSize * 0.96, moduleSize * 0.88, moduleSize * 0.44);
+          context.roundRect(x + moduleSize * 0.01, y + moduleSize * 0.02, moduleSize * 0.98, moduleSize * 0.96, moduleSize * 0.48);
           context.fill();
         } else if (options.style === "diamond") {
           context.beginPath();
@@ -328,35 +330,44 @@ export async function renderQrCodeCanvas(
           context.fill();
         } else if (options.style === "octagon") {
           context.beginPath();
-          context.moveTo(x + moduleSize * 0.2, y + moduleSize * 0.02);
-          context.lineTo(x + moduleSize * 0.8, y + moduleSize * 0.02);
-          context.lineTo(x + moduleSize * 0.98, y + moduleSize * 0.2);
-          context.lineTo(x + moduleSize * 0.98, y + moduleSize * 0.8);
-          context.lineTo(x + moduleSize * 0.8, y + moduleSize * 0.98);
-          context.lineTo(x + moduleSize * 0.2, y + moduleSize * 0.98);
-          context.lineTo(x + moduleSize * 0.02, y + moduleSize * 0.8);
-          context.lineTo(x + moduleSize * 0.02, y + moduleSize * 0.2);
+          context.moveTo(x + moduleSize * 0.16, y + moduleSize * 0.01);
+          context.lineTo(x + moduleSize * 0.84, y + moduleSize * 0.01);
+          context.lineTo(x + moduleSize * 0.99, y + moduleSize * 0.16);
+          context.lineTo(x + moduleSize * 0.99, y + moduleSize * 0.84);
+          context.lineTo(x + moduleSize * 0.84, y + moduleSize * 0.99);
+          context.lineTo(x + moduleSize * 0.16, y + moduleSize * 0.99);
+          context.lineTo(x + moduleSize * 0.01, y + moduleSize * 0.84);
+          context.lineTo(x + moduleSize * 0.01, y + moduleSize * 0.16);
           context.closePath();
           context.fill();
         } else if (options.style === "leaf") {
           context.beginPath();
           context.moveTo(x + moduleSize / 2, y + moduleSize * 0.02);
-          context.quadraticCurveTo(x + moduleSize * 0.98, y + moduleSize * 0.28, x + moduleSize * 0.96, y + moduleSize * 0.64);
-          context.quadraticCurveTo(x + moduleSize * 0.92, y + moduleSize * 0.98, x + moduleSize / 2, y + moduleSize * 0.98);
-          context.quadraticCurveTo(x + moduleSize * 0.08, y + moduleSize * 0.98, x + moduleSize * 0.04, y + moduleSize * 0.64);
-          context.quadraticCurveTo(x + moduleSize * 0.02, y + moduleSize * 0.28, x + moduleSize / 2, y + moduleSize * 0.02);
+          context.quadraticCurveTo(x + moduleSize, y + moduleSize * 0.26, x + moduleSize * 0.98, y + moduleSize * 0.66);
+          context.quadraticCurveTo(x + moduleSize * 0.94, y + moduleSize, x + moduleSize / 2, y + moduleSize);
+          context.quadraticCurveTo(x + moduleSize * 0.06, y + moduleSize, x + moduleSize * 0.02, y + moduleSize * 0.66);
+          context.quadraticCurveTo(x, y + moduleSize * 0.26, x + moduleSize / 2, y + moduleSize * 0.02);
           context.closePath();
           context.fill();
         } else if (options.style === "star") {
           context.beginPath();
           context.moveTo(x + moduleSize / 2, y + moduleSize * 0.03);
-          context.lineTo(x + moduleSize * 0.7, y + moduleSize * 0.3);
+          context.lineTo(x + moduleSize * 0.74, y + moduleSize * 0.26);
           context.lineTo(x + moduleSize * 0.97, y + moduleSize / 2);
-          context.lineTo(x + moduleSize * 0.7, y + moduleSize * 0.7);
+          context.lineTo(x + moduleSize * 0.74, y + moduleSize * 0.74);
           context.lineTo(x + moduleSize / 2, y + moduleSize * 0.97);
-          context.lineTo(x + moduleSize * 0.3, y + moduleSize * 0.7);
+          context.lineTo(x + moduleSize * 0.26, y + moduleSize * 0.74);
           context.lineTo(x + moduleSize * 0.03, y + moduleSize / 2);
-          context.lineTo(x + moduleSize * 0.3, y + moduleSize * 0.3);
+          context.lineTo(x + moduleSize * 0.26, y + moduleSize * 0.26);
+          context.closePath();
+          context.fill();
+        } else if (options.style === "heart") {
+          context.beginPath();
+          context.moveTo(x + moduleSize / 2, y + moduleSize * 0.96);
+          context.bezierCurveTo(x + moduleSize * 0.4, y + moduleSize * 0.84, x + moduleSize * 0.02, y + moduleSize * 0.6, x + moduleSize * 0.02, y + moduleSize * 0.32);
+          context.bezierCurveTo(x + moduleSize * 0.02, y + moduleSize * 0.02, x + moduleSize * 0.38, y - moduleSize * 0.04, x + moduleSize / 2, y + moduleSize * 0.25);
+          context.bezierCurveTo(x + moduleSize * 0.62, y - moduleSize * 0.04, x + moduleSize * 0.98, y + moduleSize * 0.02, x + moduleSize * 0.98, y + moduleSize * 0.32);
+          context.bezierCurveTo(x + moduleSize * 0.98, y + moduleSize * 0.6, x + moduleSize * 0.6, y + moduleSize * 0.84, x + moduleSize / 2, y + moduleSize * 0.96);
           context.closePath();
           context.fill();
         }
@@ -471,21 +482,23 @@ export function createQrCodeSvg(
         if (options.style === "square" || isFunctionModule) {
           squarePaths.push(`M${x} ${y}h1v1h-1z`);
         } else if (options.style === "rounded") {
-          styledModules.push(`<rect x="${x + 0.025}" y="${y + 0.025}" width="0.95" height="0.95" rx="0.2"/>`);
+          styledModules.push(`<rect x="${x + 0.01}" y="${y + 0.01}" width="0.98" height="0.98" rx="0.22"/>`);
         } else if (options.style === "dots") {
-          styledModules.push(`<circle cx="${x + 0.5}" cy="${y + 0.5}" r="0.49"/>`);
+          styledModules.push(`<circle cx="${x + 0.5}" cy="${y + 0.5}" r="0.5"/>`);
         } else if (options.style === "vertical") {
-          styledModules.push(`<rect x="${x + 0.06}" y="${y + 0.02}" width="0.88" height="0.96" rx="0.44"/>`);
+          styledModules.push(`<rect x="${x + 0.02}" y="${y + 0.01}" width="0.96" height="0.98" rx="0.48"/>`);
         } else if (options.style === "horizontal") {
-          styledModules.push(`<rect x="${x + 0.02}" y="${y + 0.06}" width="0.96" height="0.88" rx="0.44"/>`);
+          styledModules.push(`<rect x="${x + 0.01}" y="${y + 0.02}" width="0.98" height="0.96" rx="0.48"/>`);
         } else if (options.style === "diamond") {
-          styledModules.push(`<path d="M${x + 0.5} ${y + 0.02}L${x + 0.98} ${y + 0.5}L${x + 0.5} ${y + 0.98}L${x + 0.02} ${y + 0.5}Z"/>`);
+          styledModules.push(`<path d="M${x + 0.5} ${y + 0.005}L${x + 0.995} ${y + 0.5}L${x + 0.5} ${y + 0.995}L${x + 0.005} ${y + 0.5}Z"/>`);
         } else if (options.style === "octagon") {
-          styledModules.push(`<path d="M${x + 0.2} ${y + 0.02}H${x + 0.8}L${x + 0.98} ${y + 0.2}V${y + 0.8}L${x + 0.8} ${y + 0.98}H${x + 0.2}L${x + 0.02} ${y + 0.8}V${y + 0.2}Z"/>`);
+          styledModules.push(`<path d="M${x + 0.16} ${y + 0.005}H${x + 0.84}L${x + 0.995} ${y + 0.16}V${y + 0.84}L${x + 0.84} ${y + 0.995}H${x + 0.16}L${x + 0.005} ${y + 0.84}V${y + 0.16}Z"/>`);
         } else if (options.style === "leaf") {
-          styledModules.push(`<path d="M${x + 0.5} ${y + 0.02}Q${x + 0.98} ${y + 0.28} ${x + 0.96} ${y + 0.64}Q${x + 0.92} ${y + 0.98} ${x + 0.5} ${y + 0.98}Q${x + 0.08} ${y + 0.98} ${x + 0.04} ${y + 0.64}Q${x + 0.02} ${y + 0.28} ${x + 0.5} ${y + 0.02}Z"/>`);
+          styledModules.push(`<path d="M${x + 0.5} ${y + 0.005}Q${x + 1} ${y + 0.26} ${x + 0.98} ${y + 0.66}Q${x + 0.94} ${y + 1} ${x + 0.5} ${y + 1}Q${x + 0.06} ${y + 1} ${x + 0.02} ${y + 0.66}Q${x} ${y + 0.26} ${x + 0.5} ${y + 0.005}Z"/>`);
         } else if (options.style === "star") {
-          styledModules.push(`<path d="M${x + 0.5} ${y + 0.03}L${x + 0.7} ${y + 0.3}L${x + 0.97} ${y + 0.5}L${x + 0.7} ${y + 0.7}L${x + 0.5} ${y + 0.97}L${x + 0.3} ${y + 0.7}L${x + 0.03} ${y + 0.5}L${x + 0.3} ${y + 0.3}Z"/>`);
+          styledModules.push(`<path d="M${x + 0.5} ${y + 0.03}L${x + 0.74} ${y + 0.26}L${x + 0.97} ${y + 0.5}L${x + 0.74} ${y + 0.74}L${x + 0.5} ${y + 0.97}L${x + 0.26} ${y + 0.74}L${x + 0.03} ${y + 0.5}L${x + 0.26} ${y + 0.26}Z"/>`);
+        } else if (options.style === "heart") {
+          styledModules.push(`<path d="M${x + 0.5} ${y + 0.96}C${x + 0.4} ${y + 0.84} ${x + 0.02} ${y + 0.6} ${x + 0.02} ${y + 0.32}C${x + 0.02} ${y + 0.02} ${x + 0.38} ${y - 0.04} ${x + 0.5} ${y + 0.25}C${x + 0.62} ${y - 0.04} ${x + 0.98} ${y + 0.02} ${x + 0.98} ${y + 0.32}C${x + 0.98} ${y + 0.6} ${x + 0.6} ${y + 0.84} ${x + 0.5} ${y + 0.96}Z"/>`);
         }
       }
     }

@@ -45,25 +45,28 @@ function renderPreviewModule(style: QrCodeStyle, row: number, column: number): R
   const x = column * 6;
   const y = row * 6;
   if (style === "dots") {
-    return <circle key={`${row}-${column}`} cx={x + 3} cy={y + 3} r="2.94" />;
+    return <circle key={`${row}-${column}`} cx={x + 3} cy={y + 3} r="2.98" />;
   }
   if (style === "vertical") {
-    return <rect key={`${row}-${column}`} x={x + 0.36} y={y + 0.12} width="5.28" height="5.76" rx="2.64" />;
+    return <rect key={`${row}-${column}`} x={x + 0.12} y={y + 0.06} width="5.76" height="5.88" rx="2.88" />;
   }
   if (style === "horizontal") {
-    return <rect key={`${row}-${column}`} x={x + 0.12} y={y + 0.36} width="5.76" height="5.28" rx="2.64" />;
+    return <rect key={`${row}-${column}`} x={x + 0.06} y={y + 0.12} width="5.88" height="5.76" rx="2.88" />;
   }
   if (style === "diamond") {
-    return <polygon key={`${row}-${column}`} points={`${x + 3},${y + 0.12} ${x + 5.88},${y + 3} ${x + 3},${y + 5.88} ${x + 0.12},${y + 3}`} />;
+    return <polygon key={`${row}-${column}`} points={`${x + 3},${y + 0.03} ${x + 5.97},${y + 3} ${x + 3},${y + 5.97} ${x + 0.03},${y + 3}`} />;
   }
   if (style === "octagon") {
-    return <polygon key={`${row}-${column}`} points={`${x + 0.84},${y + 0.12} ${x + 5.16},${y + 0.12} ${x + 5.88},${y + 0.84} ${x + 5.88},${y + 5.16} ${x + 5.16},${y + 5.88} ${x + 0.84},${y + 5.88} ${x + 0.12},${y + 5.16} ${x + 0.12},${y + 0.84}`} />;
+    return <polygon key={`${row}-${column}`} points={`${x + 0.48},${y + 0.03} ${x + 5.52},${y + 0.03} ${x + 5.97},${y + 0.48} ${x + 5.97},${y + 5.52} ${x + 5.52},${y + 5.97} ${x + 0.48},${y + 5.97} ${x + 0.03},${y + 5.52} ${x + 0.03},${y + 0.48}`} />;
   }
   if (style === "leaf") {
     return <path key={`${row}-${column}`} d={`M${x + 3} ${y + 0.2}Q${x + 5.8} ${y + 1.6} ${x + 5.4} ${y + 3.8}Q${x + 5} ${y + 5.8} ${x + 3} ${y + 5.9}Q${x + 1} ${y + 5.8} ${x + 0.6} ${y + 3.8}Q${x + 0.2} ${y + 1.6} ${x + 3} ${y + 0.2}Z`} />;
   }
   if (style === "star") {
-    return <polygon key={`${row}-${column}`} points={`${x + 3},${y + 0.12} ${x + 4.2},${y + 1.8} ${x + 5.88},${y + 3} ${x + 4.2},${y + 4.2} ${x + 3},${y + 5.88} ${x + 1.8},${y + 4.2} ${x + 0.12},${y + 3} ${x + 1.8},${y + 1.8}`} />;
+    return <polygon key={`${row}-${column}`} points={`${x + 3},${y + 0.09} ${x + 4.44},${y + 1.56} ${x + 5.91},${y + 3} ${x + 4.44},${y + 4.44} ${x + 3},${y + 5.91} ${x + 1.56},${y + 4.44} ${x + 0.09},${y + 3} ${x + 1.56},${y + 1.56}`} />;
+  }
+  if (style === "heart") {
+    return <path key={`${row}-${column}`} d={`M${x + 3} ${y + 5.88}C${x + 2.4} ${y + 5.16} ${x + 0.12} ${y + 3.72} ${x + 0.12} ${y + 2.04}C${x + 0.12} ${y + 0.24} ${x + 2.28} ${y - 0.12} ${x + 3} ${y + 1.5}C${x + 3.72} ${y - 0.12} ${x + 5.88} ${y + 0.24} ${x + 5.88} ${y + 2.04}C${x + 5.88} ${y + 3.72} ${x + 3.6} ${y + 5.16} ${x + 3} ${y + 5.88}Z`} />;
   }
   return (
     <rect
