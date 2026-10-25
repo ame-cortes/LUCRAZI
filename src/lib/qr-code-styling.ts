@@ -15,6 +15,7 @@ export const QR_CODE_STYLES = [
   "tribal",
   "heart",
   "pencil-vertical",
+  "relief",
 ] as const;
 export type QrCodeStyle = (typeof QR_CODE_STYLES)[number];
 export const QR_CODE_EYE_STYLES = ["square", "rounded", "circle", "diamond", "octagon", "leaf", "heart"] as const;
@@ -39,6 +40,7 @@ export const qrCodeStyleOptions: {
   { id: "tribal", label: "Tribal", description: "Traços grossos conectados em caminhos contínuos" },
   { id: "heart", label: "Coração", description: "Módulos em formato de coração" },
   { id: "pencil-vertical", label: "Lápis vertical", description: "Traços verticais agrupados" },
+  { id: "relief", label: "Relevo", description: "Módulos geométricos com recortes suaves e identidade própria" },
 ];
 
 export const qrCodeEyeStyleOptions: { id: QrCodeEyeStyle; label: string }[] = [
@@ -100,6 +102,37 @@ function verticalPencilSvgPath(x: number, y: number, width: number, height: numb
   const inset = width * 0.025;
   const centerX = x + width / 2;
   return `M${centerX} ${y}L${x + width - inset} ${y + tip}V${y + height - cap}Q${x + width - inset} ${y + height} ${centerX} ${y + height}Q${x + inset} ${y + height} ${x + inset} ${y + height - cap}V${y + tip}Z`;
+}
+
+function drawReliefModule(context: CanvasRenderingContext2D, x: number, y: number, size: number) {
+  const inset = size * 0.13;
+  const notch = size * 0.12;
+  context.beginPath();
+  context.moveTo(x + inset, y);
+  context.lineTo(x + size / 2 - notch, y);
+  context.quadraticCurveTo(x + size / 2, y + size * 0.12, x + size / 2 + notch, y);
+  context.lineTo(x + size - inset, y);
+  context.quadraticCurveTo(x + size, y, x + size, y + inset);
+  context.lineTo(x + size, y + size / 2 - notch);
+  context.quadraticCurveTo(x + size - size * 0.12, y + size / 2, x + size, y + size / 2 + notch);
+  context.lineTo(x + size, y + size - inset);
+  context.quadraticCurveTo(x + size, y + size, x + size - inset, y + size);
+  context.lineTo(x + size / 2 + notch, y + size);
+  context.quadraticCurveTo(x + size / 2, y + size - size * 0.12, x + size / 2 - notch, y + size);
+  context.lineTo(x + inset, y + size);
+  context.quadraticCurveTo(x, y + size, x, y + size - inset);
+  context.lineTo(x, y + size / 2 + notch);
+  context.quadraticCurveTo(x + size * 0.12, y + size / 2, x, y + size / 2 - notch);
+  context.lineTo(x, y + inset);
+  context.quadraticCurveTo(x, y, x + inset, y);
+  context.closePath();
+  context.fill();
+}
+
+function reliefSvgPath(x: number, y: number, size: number) {
+  const inset = size * 0.13;
+  const notch = size * 0.12;
+  return `M${x + inset} ${y}H${x + size / 2 - notch}Q${x + size / 2} ${y + size * 0.12} ${x + size / 2 + notch} ${y}H${x + size - inset}Q${x + size} ${y} ${x + size} ${y + inset}V${y + size / 2 - notch}Q${x + size - size * 0.12} ${y + size / 2} ${x + size} ${y + size / 2 + notch}V${y + size - inset}Q${x + size} ${y + size} ${x + size - inset} ${y + size}H${x + size / 2 + notch}Q${x + size / 2} ${y + size - size * 0.12} ${x + size / 2 - notch} ${y + size}H${x + inset}Q${x} ${y + size} ${x} ${y + size - inset}V${y + size / 2 + notch}Q${x + size * 0.12} ${y + size / 2} ${x} ${y + size / 2 - notch}V${y + inset}Q${x} ${y} ${x + inset} ${y}Z`;
 }
 
 function drawPencilRun(
@@ -506,6 +539,8 @@ export async function renderQrCodeCanvas(
         const isFunctionModule = qrCode.modules.isReserved(row, column) === 1;
         if (options.style === "square" || isFunctionModule) {
           context.fillRect(x, y, moduleSize, moduleSize);
+        } else if (options.style === "relief") {
+          drawReliefModule(context, x, y, moduleSize);
         } else if (options.style === "rounded") {
           const inset = moduleSize * 0.01;
           const cellSize = moduleSize - inset * 2;
@@ -783,6 +818,8 @@ export function createQrCodeSvg(
         const isFunctionModule = qrCode.modules.isReserved(row, column) === 1;
         if (options.style === "square" || isFunctionModule) {
           squarePaths.push(`M${x} ${y}h1v1h-1z`);
+        } else if (options.style === "relief") {
+          styledModules.push(`<path d="${reliefSvgPath(x, y, 1)}"/>`);
         } else if (options.style === "rounded") {
           styledModules.push(`<rect x="${x + 0.01}" y="${y + 0.01}" width="0.98" height="0.98" rx="0.22"/>`);
         } else if (options.style === "dots") {
