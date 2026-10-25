@@ -8,6 +8,7 @@ import QrCodeStylePicker from "@/components/qr-code-style-picker";
 import {
   createQrCodeSvg,
   renderQrCodeCanvas,
+  type QrCodeEyeStyle,
   type QrCodeStyle,
 } from "@/lib/qr-code-styling";
 
@@ -33,6 +34,8 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
   const [foregroundColor, setForegroundColor] = useState("#243B2B");
   const [backgroundColor, setBackgroundColor] = useState("#FFFFFF");
   const [qrStyle, setQrStyle] = useState<QrCodeStyle>("square");
+  const [eyeFrameStyle, setEyeFrameStyle] = useState<QrCodeEyeStyle>("square");
+  const [eyeBallStyle, setEyeBallStyle] = useState<QrCodeEyeStyle>("square");
   const [logoDataUrl, setLogoDataUrl] = useState("");
   const [email, setEmail] = useState("");
   const [consented, setConsented] = useState(false);
@@ -48,6 +51,8 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
     foregroundColor,
     backgroundColor,
     qrStyle,
+    eyeFrameStyle,
+    eyeBallStyle,
     logoDataUrl,
   ]);
   const downloadsUnlocked = deliveredRequestKey !== "" && deliveredRequestKey === requestKey;
@@ -76,6 +81,8 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
       foregroundColor,
       backgroundColor,
       style: qrStyle,
+      eyeFrameStyle,
+      eyeBallStyle,
       logoDataUrl,
     }).catch((error: unknown) => {
       if (cancelled) return;
@@ -86,7 +93,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
     return () => {
       cancelled = true;
     };
-  }, [backgroundColor, content, foregroundColor, logoDataUrl, qrStyle]);
+  }, [backgroundColor, content, eyeBallStyle, eyeFrameStyle, foregroundColor, logoDataUrl, qrStyle]);
 
   async function handleLogoChange(event: ChangeEvent<HTMLInputElement>) {
     setPreviewError("");
@@ -170,6 +177,8 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
         foregroundColor,
         backgroundColor,
         style: qrStyle,
+        eyeFrameStyle,
+        eyeBallStyle,
         logoDataUrl,
       });
       downloadFile("qr-code-lucrazi.svg", svg, "image/svg+xml;charset=utf-8");
@@ -219,6 +228,8 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
           foregroundColor,
           backgroundColor,
           qrStyle,
+          eyeFrameStyle,
+          eyeBallStyle,
           ...(logoDataUrl ? { logoDataUrl } : {}),
           consent: consented,
         }),
@@ -326,7 +337,15 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
           </div>
         </fieldset>
 
-        <QrCodeStylePicker value={qrStyle} onChange={setQrStyle} disabled={isSubmitting} />
+        <QrCodeStylePicker
+          value={qrStyle}
+          eyeFrameStyle={eyeFrameStyle}
+          eyeBallStyle={eyeBallStyle}
+          onChange={setQrStyle}
+          onEyeFrameStyleChange={setEyeFrameStyle}
+          onEyeBallStyleChange={setEyeBallStyle}
+          disabled={isSubmitting}
+        />
 
         <div className="qr-field">
           <label htmlFor="qr-logo">Logo (opcional)</label>
@@ -353,7 +372,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
           role="img"
           width={360}
         />
-        <p className="qr-preview-hint">Os três marcadores de leitura e a margem branca são preservados. Faça um teste de leitura antes de imprimir.</p>
+        <p className="qr-preview-hint">A estrutura dos marcadores de leitura e a margem branca são preservadas. Teste a leitura antes de imprimir.</p>
         {downloadsUnlocked ? (
           <>
             <p aria-live="polite" className="qr-success" role="status">

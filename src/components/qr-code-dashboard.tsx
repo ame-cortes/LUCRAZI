@@ -32,8 +32,10 @@ import { isSocialIconId, type SocialIconId } from "@/lib/social-icons";
 import QrCodeStylePicker from "@/components/qr-code-style-picker";
 import {
   createQrCodeSvg,
+  isQrCodeEyeStyle,
   isQrCodeStyle,
   renderQrCodeCanvas,
+  type QrCodeEyeStyle,
   type QrCodeStyle,
 } from "@/lib/qr-code-styling";
 import { siteUrl } from "@/lib/site-config";
@@ -48,6 +50,8 @@ type SavedQrCode = {
   foregroundColor: string;
   backgroundColor: string;
   qrStyle: QrCodeStyle;
+  eyeFrameStyle: QrCodeEyeStyle;
+  eyeBallStyle: QrCodeEyeStyle;
   logoDataUrl: string;
   socialIcon: SocialIconId | "";
   socialIconColor: string;
@@ -116,6 +120,8 @@ function readSavedCode(value: unknown): SavedQrCode | null {
     foregroundColor: value.foregroundColor,
     backgroundColor: value.backgroundColor,
     qrStyle: isQrCodeStyle(value.qrStyle) ? value.qrStyle : "square",
+    eyeFrameStyle: isQrCodeEyeStyle(value.eyeFrameStyle) ? value.eyeFrameStyle : "square",
+    eyeBallStyle: isQrCodeEyeStyle(value.eyeBallStyle) ? value.eyeBallStyle : "square",
     logoDataUrl: typeof value.logoDataUrl === "string" ? value.logoDataUrl : "",
     socialIcon: isSocialIconId(value.socialIcon) ? value.socialIcon : "",
     socialIconColor: typeof value.socialIconColor === "string" && /^#[\da-f]{6}$/i.test(value.socialIconColor)
@@ -227,6 +233,8 @@ async function renderSavedQrCode(code: SavedQrCode) {
     foregroundColor: code.foregroundColor,
     backgroundColor: code.backgroundColor,
     style: code.qrStyle,
+    eyeFrameStyle: code.eyeFrameStyle,
+    eyeBallStyle: code.eyeBallStyle,
     logoDataUrl: code.logoDataUrl,
   });
   return canvas;
@@ -288,6 +296,8 @@ export default function QrCodeDashboard() {
   const [foregroundColor, setForegroundColor] = useState("#243B2B");
   const [backgroundColor, setBackgroundColor] = useState("#FFFFFF");
   const [qrStyle, setQrStyle] = useState<QrCodeStyle>("square");
+  const [eyeFrameStyle, setEyeFrameStyle] = useState<QrCodeEyeStyle>("square");
+  const [eyeBallStyle, setEyeBallStyle] = useState<QrCodeEyeStyle>("square");
   const [logoDataUrl, setLogoDataUrl] = useState("");
   const [socialIcon, setSocialIcon] = useState<SocialIconId | "">("");
   const [socialIconColor, setSocialIconColor] = useState("#243B2B");
@@ -352,6 +362,8 @@ export default function QrCodeDashboard() {
             foregroundColor: savedCode.foregroundColor,
             backgroundColor: savedCode.backgroundColor,
             style: savedCode.qrStyle,
+            eyeFrameStyle: savedCode.eyeFrameStyle,
+            eyeBallStyle: savedCode.eyeBallStyle,
           });
           return { ...savedCode, qrImage: canvas.toDataURL("image/png") };
         } catch {
@@ -414,6 +426,8 @@ export default function QrCodeDashboard() {
       foregroundColor,
       backgroundColor,
       style: qrStyle,
+      eyeFrameStyle,
+      eyeBallStyle,
       logoDataUrl,
     }).catch((error: unknown) => {
       if (cancelled) return;
@@ -424,7 +438,7 @@ export default function QrCodeDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [backgroundColor, foregroundColor, logoDataUrl, qrCanvasContent, qrStyle]);
+  }, [backgroundColor, eyeBallStyle, eyeFrameStyle, foregroundColor, logoDataUrl, qrCanvasContent, qrStyle]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -437,6 +451,8 @@ export default function QrCodeDashboard() {
         foregroundColor,
         backgroundColor,
         style: qrStyle,
+        eyeFrameStyle,
+        eyeBallStyle,
         logoDataUrl,
       }).catch((error: unknown) => {
         if (cancelled) return;
@@ -450,7 +466,7 @@ export default function QrCodeDashboard() {
     }, 100);
 
     return () => clearTimeout(timeoutId);
-  }, [user, backgroundColor, foregroundColor, logoDataUrl, qrCanvasContent, qrStyle]);
+  }, [user, backgroundColor, eyeBallStyle, eyeFrameStyle, foregroundColor, logoDataUrl, qrCanvasContent, qrStyle]);
 
   function resetEditor() {
     socialIconRequestRef.current++;
@@ -462,6 +478,8 @@ export default function QrCodeDashboard() {
     setForegroundColor("#243B2B");
     setBackgroundColor("#FFFFFF");
     setQrStyle("square");
+    setEyeFrameStyle("square");
+    setEyeBallStyle("square");
     setLogoDataUrl("");
     setSocialIcon("");
     setSocialIconColor("#243B2B");
@@ -496,6 +514,8 @@ export default function QrCodeDashboard() {
     setForegroundColor(code.foregroundColor);
     setBackgroundColor(code.backgroundColor);
     setQrStyle(code.qrStyle);
+    setEyeFrameStyle(code.eyeFrameStyle);
+    setEyeBallStyle(code.eyeBallStyle);
     setLogoDataUrl(code.logoDataUrl || "");
     setSocialIcon(code.socialIcon);
     setSocialIconColor(code.socialIconColor);
@@ -734,6 +754,8 @@ export default function QrCodeDashboard() {
             foregroundColor,
             backgroundColor,
             qrStyle,
+            eyeFrameStyle,
+            eyeBallStyle,
             logoDataUrl: access.hasLogo ? logoDataUrl : "",
             socialIcon: access.hasLogo ? socialIcon : "",
             socialIconColor: access.hasLogo ? socialIconColor : "",
@@ -843,6 +865,8 @@ export default function QrCodeDashboard() {
         foregroundColor: code.foregroundColor,
         backgroundColor: code.backgroundColor,
         style: code.qrStyle,
+        eyeFrameStyle: code.eyeFrameStyle,
+        eyeBallStyle: code.eyeBallStyle,
         logoDataUrl: code.logoDataUrl,
       });
       const filename = code.name.trim().replace(/[^\p{L}\p{N}-]+/gu, "-") || code.id;
@@ -1143,7 +1167,15 @@ export default function QrCodeDashboard() {
                       <output htmlFor="qr-background">{backgroundColor}</output>
                     </div>
                   </fieldset>
-                  <QrCodeStylePicker value={qrStyle} onChange={setQrStyle} disabled={busy} />
+                  <QrCodeStylePicker
+                    value={qrStyle}
+                    eyeFrameStyle={eyeFrameStyle}
+                    eyeBallStyle={eyeBallStyle}
+                    onChange={setQrStyle}
+                    onEyeFrameStyleChange={setEyeFrameStyle}
+                    onEyeBallStyleChange={setEyeBallStyle}
+                    disabled={busy}
+                  />
                   <div className="qr-field">
                     <span className="qr-field-label">Ícone no centro do QR Code</span>
                     <div className="qr-social-icons" role="group" aria-label="Escolher ícone de rede social">
@@ -1237,7 +1269,7 @@ export default function QrCodeDashboard() {
                   width={360}
                   height={360}
                 />
-                <p className="qr-preview-hint">Os três marcadores de leitura e a margem branca são preservados. Faça um teste de leitura antes de imprimir.</p>
+                <p className="qr-preview-hint">A estrutura dos marcadores de leitura e a margem branca são preservadas. Teste a leitura antes de imprimir.</p>
                 {!access.hasMetrics && contentType === "url" && (
                   <div className="qr-preview-upsell">
                     <p>

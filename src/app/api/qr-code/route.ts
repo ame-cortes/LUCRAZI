@@ -7,7 +7,9 @@ import { getFirebaseAdminDb } from "@/lib/firebase-admin";
 import { isBrevoEmailConfigured, sendQrCodeEmail } from "@/lib/newsletter-email";
 import {
   createQrCodeSvg,
+  isQrCodeEyeStyle,
   isQrCodeStyle,
+  type QrCodeEyeStyle,
   type QrCodeStyle,
 } from "@/lib/qr-code-styling";
 
@@ -25,6 +27,8 @@ type QrRequest = {
   foregroundColor: string;
   backgroundColor: string;
   qrStyle: QrCodeStyle;
+  eyeFrameStyle: QrCodeEyeStyle;
+  eyeBallStyle: QrCodeEyeStyle;
   logoDataUrl?: string;
 };
 
@@ -80,6 +84,8 @@ function parseQrRequest(value: unknown): QrRequest | null {
     || !validHexColor(value.foregroundColor)
     || !validHexColor(value.backgroundColor)
     || (value.qrStyle !== undefined && !isQrCodeStyle(value.qrStyle))
+    || (value.eyeFrameStyle !== undefined && !isQrCodeEyeStyle(value.eyeFrameStyle))
+    || (value.eyeBallStyle !== undefined && !isQrCodeEyeStyle(value.eyeBallStyle))
     || value.consent !== true
     || (value.logoDataUrl !== undefined && typeof value.logoDataUrl !== "string")
   ) return null;
@@ -113,6 +119,8 @@ function parseQrRequest(value: unknown): QrRequest | null {
     foregroundColor: value.foregroundColor,
     backgroundColor: value.backgroundColor,
     qrStyle: isQrCodeStyle(value.qrStyle) ? value.qrStyle : "square",
+    eyeFrameStyle: isQrCodeEyeStyle(value.eyeFrameStyle) ? value.eyeFrameStyle : "square",
+    eyeBallStyle: isQrCodeEyeStyle(value.eyeBallStyle) ? value.eyeBallStyle : "square",
     ...(typeof value.logoDataUrl === "string" ? { logoDataUrl: value.logoDataUrl } : {}),
   };
 }
@@ -143,6 +151,8 @@ async function createQrSvg(input: QrRequest, logo: ReturnType<typeof parseLogo>)
     foregroundColor: input.foregroundColor,
     backgroundColor: input.backgroundColor,
     style: input.qrStyle,
+    eyeFrameStyle: input.eyeFrameStyle,
+    eyeBallStyle: input.eyeBallStyle,
     logoDataUrl: logo ? `data:image/${logo.format};base64,${logo.base64}` : "",
   });
 }

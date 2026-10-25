@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
-import { createQrCodeSvg, isQrCodeStyle } from "@/lib/qr-code-styling";
+import { createQrCodeSvg, isQrCodeEyeStyle, isQrCodeStyle } from "@/lib/qr-code-styling";
 
 function normalizeApiKey(value: string) {
   return createHash("sha256").update(value.trim()).digest("hex");
@@ -26,6 +26,8 @@ function parseJsonBody(body: unknown) {
   const foreground = typeof record.foregroundColor === "string" ? record.foregroundColor : "#243B2B";
   const background = typeof record.backgroundColor === "string" ? record.backgroundColor : "#FFFFFF";
   const qrStyle = record.qrStyle === undefined ? "square" : record.qrStyle;
+  const eyeFrameStyle = record.eyeFrameStyle === undefined ? "square" : record.eyeFrameStyle;
+  const eyeBallStyle = record.eyeBallStyle === undefined ? "square" : record.eyeBallStyle;
   const logoDataUrl = typeof record.logoDataUrl === "string" ? record.logoDataUrl : undefined;
 
   if (!destination && !content) {
@@ -35,7 +37,11 @@ function parseJsonBody(body: unknown) {
   if (destination && !/^https?:\/\//i.test(destination)) {
     return null;
   }
-  if (!isQrCodeStyle(qrStyle)) return null;
+  if (
+    !isQrCodeStyle(qrStyle)
+    || !isQrCodeEyeStyle(eyeFrameStyle)
+    || !isQrCodeEyeStyle(eyeBallStyle)
+  ) return null;
 
   return {
     content: content || destination,
@@ -43,6 +49,8 @@ function parseJsonBody(body: unknown) {
     foregroundColor: /^#[0-9a-fA-F]{6}$/.test(foreground) ? foreground : "#243B2B",
     backgroundColor: /^#[0-9a-fA-F]{6}$/.test(background) ? background : "#FFFFFF",
     qrStyle,
+    eyeFrameStyle,
+    eyeBallStyle,
     logoDataUrl,
   };
 }
@@ -102,6 +110,8 @@ export async function POST(request: Request) {
     foregroundColor: parsed.foregroundColor,
     backgroundColor: parsed.backgroundColor,
     style: parsed.qrStyle,
+    eyeFrameStyle: parsed.eyeFrameStyle,
+    eyeBallStyle: parsed.eyeBallStyle,
   });
 
   return NextResponse.json({
@@ -113,6 +123,8 @@ export async function POST(request: Request) {
       foregroundColor: parsed.foregroundColor,
       backgroundColor: parsed.backgroundColor,
       qrStyle: parsed.qrStyle,
+      eyeFrameStyle: parsed.eyeFrameStyle,
+      eyeBallStyle: parsed.eyeBallStyle,
       logoIncluded: Boolean(parsed.logoDataUrl),
     },
     qrCode: {

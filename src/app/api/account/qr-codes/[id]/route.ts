@@ -2,7 +2,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
 import { getBillingAccess } from "@/lib/billing-plans";
 import { getFirebaseAdminDb, verifyFirebaseIdToken } from "@/lib/firebase-admin";
-import { isQrCodeStyle } from "@/lib/qr-code-styling";
+import { isQrCodeEyeStyle, isQrCodeStyle } from "@/lib/qr-code-styling";
 import { isSocialIconId } from "@/lib/social-icons";
 
 function jsonError(message: string, status: number) {
@@ -51,6 +51,8 @@ export async function PATCH(
   const foregroundColor = body.foregroundColor;
   const backgroundColor = body.backgroundColor;
   const qrStyle = body.qrStyle === undefined ? "square" : body.qrStyle;
+  const eyeFrameStyle = body.eyeFrameStyle === undefined ? "square" : body.eyeFrameStyle;
+  const eyeBallStyle = body.eyeBallStyle === undefined ? "square" : body.eyeBallStyle;
   const socialIconColor = body.socialIconColor === undefined || body.socialIconColor === ""
     ? foregroundColor
     : body.socialIconColor;
@@ -65,6 +67,8 @@ export async function PATCH(
     || typeof foregroundColor !== "string" || !/^#[\da-f]{6}$/i.test(foregroundColor)
     || typeof backgroundColor !== "string" || !/^#[\da-f]{6}$/i.test(backgroundColor)
     || !isQrCodeStyle(qrStyle)
+    || !isQrCodeEyeStyle(eyeFrameStyle)
+    || !isQrCodeEyeStyle(eyeBallStyle)
     || typeof socialIconColor !== "string" || !/^#[\da-f]{6}$/i.test(socialIconColor)
     || logoDataUrl.length > 350_000
     || (logoDataUrl.length > 0 && !/^data:image\/(?:png|jpeg);base64,[A-Za-z\d+/]+=*$/.test(logoDataUrl))
@@ -107,6 +111,8 @@ export async function PATCH(
         foregroundColor,
         backgroundColor,
         qrStyle,
+        eyeFrameStyle,
+        eyeBallStyle,
         socialIconColor,
         logoDataUrl: access.hasLogo ? logoDataUrl : "",
         socialIcon: access.hasLogo ? socialIcon : "",

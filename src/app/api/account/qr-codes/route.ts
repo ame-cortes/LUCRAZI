@@ -3,7 +3,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
 import { getBillingAccess } from "@/lib/billing-plans";
 import { getFirebaseAdminDb, verifyFirebaseIdToken } from "@/lib/firebase-admin";
-import { isQrCodeStyle } from "@/lib/qr-code-styling";
+import { isQrCodeEyeStyle, isQrCodeStyle } from "@/lib/qr-code-styling";
 import { isSocialIconId } from "@/lib/social-icons";
 
 const qrCollectionName = "qrCodes";
@@ -23,6 +23,8 @@ function parseQrCode(value: unknown) {
   const foregroundColor = value.foregroundColor;
   const backgroundColor = value.backgroundColor;
   const qrStyle = value.qrStyle === undefined ? "square" : value.qrStyle;
+  const eyeFrameStyle = value.eyeFrameStyle === undefined ? "square" : value.eyeFrameStyle;
+  const eyeBallStyle = value.eyeBallStyle === undefined ? "square" : value.eyeBallStyle;
   const socialIconColor = value.socialIconColor === undefined || value.socialIconColor === ""
     ? foregroundColor
     : value.socialIconColor;
@@ -41,6 +43,8 @@ function parseQrCode(value: unknown) {
     || typeof backgroundColor !== "string"
     || !/^#[\da-f]{6}$/i.test(backgroundColor)
     || !isQrCodeStyle(qrStyle)
+    || !isQrCodeEyeStyle(eyeFrameStyle)
+    || !isQrCodeEyeStyle(eyeBallStyle)
     || typeof socialIconColor !== "string"
     || !/^#[\da-f]{6}$/i.test(socialIconColor)
     || logoDataUrl.length > Math.ceil(maxLogoBytes * 4 / 3) + 64
@@ -72,6 +76,8 @@ function parseQrCode(value: unknown) {
     foregroundColor,
     backgroundColor,
     qrStyle,
+    eyeFrameStyle,
+    eyeBallStyle,
     socialIconColor,
     logoDataUrl,
     socialIcon,
@@ -123,6 +129,8 @@ export async function GET(request: Request) {
           foregroundColor: data.foregroundColor,
           backgroundColor: data.backgroundColor,
           qrStyle: isQrCodeStyle(data.qrStyle) ? data.qrStyle : "square",
+          eyeFrameStyle: isQrCodeEyeStyle(data.eyeFrameStyle) ? data.eyeFrameStyle : "square",
+          eyeBallStyle: isQrCodeEyeStyle(data.eyeBallStyle) ? data.eyeBallStyle : "square",
           socialIconColor: typeof data.socialIconColor === "string" && /^#[\da-f]{6}$/i.test(data.socialIconColor)
             ? data.socialIconColor
             : data.foregroundColor,
