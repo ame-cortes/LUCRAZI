@@ -294,23 +294,55 @@ export async function POST(request: Request) {
   }
 
   let logo: ReturnType<typeof parseLogo>;
-  let qrPng: Buffer;
+  let qrSvg: string;
   try {
     logo = parseLogo(input.logoDataUrl);
-    const qrSvg = await traceQrDeliveryStage("qr-svg-generation", () => createQrSvg(input, logo));
-    // Ajusta resolução baseado no tipo de QR e presença de logo
-    const isStylingShape = isQrCodeStylingShape(input.qrStyle);
-    let pngSize = 512;
-    if (isStylingShape && logo) {
-      pngSize = 128; // Mais complexo: styling + logo
-    } else if (isStylingShape || logo) {
-      pngSize = logo ? 256 : 384;
-    }
-    qrPng = await traceQrDeliveryStage("qr-png-rasterization", () =>
-      sharp(Buffer.from(qrSvg))
-        .resize({ width: pngSize, height: pngSize })
-        .png()
-        .toBuffer());
+    qrSvg = await traceQrDeliveryStage("qr-svg-generation", () => createQrSvg(input, logo));
+    // Gera PNG em background, não bloqueia resposta
+    void (async () => {
+      try {
+        const isStylingShape = isQrCodeStylingShape(input.qrStyle);
+        let pngSize = 512;
+        if (isStylingShape && logo) {
+          pngSize = 128;
+        } else if (isStylingShape || logo) {
+          pngSize = logo ? 256 : 384;
+        }
+        const qrPng = await traceQrDeliveryStage("qr-png-rasterization-bg", () =>
+          sharp(Buffer.from(qrSvg))
+            .resize({ width: pngSize, height: pngSize })
+            .png()
+            .toBuffer());
+        
+        // Salva PNG no Firestore para envio por e-mail
+        await traceQrDeliveryStage("firestore-save-png", async () => {
+          await lead.set({
+            qrSvg,
+            qrPng: qrPng.toString('base64'),
+            pngSize,
+          }, { merge: true });
+        });
+        
+        // Envia e-mail com PNG em background
+        const emailPromise = traceQrDeliveryStage("brevo-email-delivery", () => sendQrCodeEmail(input.email, qrPng));
+        const timeoutPromise = new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error("Timeout no envio de e-mail")), 5000)
+        );
+        await Promise.race([emailPromise, timeoutPromise]);
+        
+        await traceQrDeliveryStage("firestore-sent-delivery-update", () =>
+          lead.update({
+            deliveryStatus: "sent",
+            deliverySentAt: FieldValue.serverTimestamp(),
+          }));
+      } catch (error) {
+        console.error("Erro no processamento em background do QR Code", error);
+      }
+    })();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Não foi possível preparar o QR Code.";
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
   } catch (error) {
     const message = error instanceof Error ? error.message : "Não foi possível preparar o QR Code.";
     return NextResponse.json({ error: message }, { status: 400 });
@@ -339,7 +371,7 @@ export async function POST(request: Request) {
     }, { status: 429 });
   }
   
-  // Registra o pedido de forma não-bloqueante
+  // Registra o pedido de forma não-bloqueante (apenas SVG)
   void (async () => {
     try {
       await traceQrDeliveryStage("firestore-lead-registration", async () => {
@@ -353,6 +385,7 @@ export async function POST(request: Request) {
           lastRequestAt: FieldValue.serverTimestamp(),
           requestCount: FieldValue.increment(1),
           deliveryStatus: "pending",
+          qrSvg: qrSvg,
           ...(existingDoc.exists ? {} : { createdAt: FieldValue.serverTimestamp() }),
         }, { merge: true });
       });

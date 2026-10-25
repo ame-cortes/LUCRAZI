@@ -1,4 +1,4 @@
-import QRCode from "qrcode";
+fimport QRCode from "qrcode";
 import { isQrCodeStylingShape } from "@/lib/qr-code-styling-adapter";
 
 export const QR_CODE_STYLES = [
