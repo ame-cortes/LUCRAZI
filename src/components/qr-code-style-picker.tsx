@@ -236,7 +236,7 @@ export default function QrCodeStylePicker({
         </label>
       </div>
       <p className="qr-style-hint">
-        A estrutura dos três marcadores e a margem branca são preservadas. Teste a leitura antes de imprimir.
+        Marcadores com coração usam cantos arredondados para preservar a leitura. O centro branco dos marcadores e a margem de segurança são mantidos.
       </p>
     </fieldset>
   );

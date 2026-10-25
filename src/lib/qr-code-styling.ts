@@ -372,9 +372,11 @@ function drawFinderPatterns(
   origins.forEach(([row, column]) => {
     const x = offsetX + (column + quietZone) * moduleSize;
     const y = offsetY + (row + quietZone) * moduleSize;
-    drawEyeShape(context, x, y, moduleSize * 7, frameStyle, frameColor);
-    drawEyeShape(context, x + moduleSize, y + moduleSize, moduleSize * 5, frameStyle, backgroundColor);
-    drawEyeShape(context, x + moduleSize * 2, y + moduleSize * 2, moduleSize * 3, ballStyle, ballColor);
+    const scanSafeFrameStyle = frameStyle === "heart" ? "rounded" : frameStyle;
+    const scanSafeBallStyle = ballStyle === "heart" ? "rounded" : ballStyle;
+    drawEyeShape(context, x, y, moduleSize * 7, scanSafeFrameStyle, frameColor);
+    drawEyeShape(context, x + moduleSize, y + moduleSize, moduleSize * 5, "square", backgroundColor);
+    drawEyeShape(context, x + moduleSize * 2, y + moduleSize * 2, moduleSize * 3, scanSafeBallStyle, ballColor);
   });
 }
 
@@ -393,8 +395,8 @@ function drawLogo(
   return new Promise<void>((resolve, reject) => {
     const image = new Image();
     image.onload = () => {
-      const logoSize = canvas.width * 0.2;
-      const backingSize = logoSize * 1.25;
+      const logoSize = canvas.width * 0.14;
+      const backingSize = logoSize * 1.14;
       const center = canvas.width / 2;
       context.fillStyle = backgroundColor;
       context.beginPath();
@@ -817,16 +819,16 @@ export function createQrCodeSvg(
         const x = column + quietZone;
         const y = row + quietZone;
         return [
-          renderSvgEyeShape(x, y, 7, eyeFrameStyle, eyeFrameColor),
-          renderSvgEyeShape(x + 1, y + 1, 5, eyeFrameStyle, background),
-          renderSvgEyeShape(x + 2, y + 2, 3, eyeBallStyle, eyeBallColor),
+          renderSvgEyeShape(x, y, 7, eyeFrameStyle === "heart" ? "rounded" : eyeFrameStyle, eyeFrameColor),
+          renderSvgEyeShape(x + 1, y + 1, 5, "square", background),
+          renderSvgEyeShape(x + 2, y + 2, 3, eyeBallStyle === "heart" ? "rounded" : eyeBallStyle, eyeBallColor),
         ].join("");
       })
       .join("");
   let logo = "";
   if (options.logoDataUrl) {
-    const logoSize = totalModules * 0.2;
-    const backingSize = logoSize * 1.25;
+    const logoSize = totalModules * 0.14;
+    const backingSize = logoSize * 1.14;
     const backingOffset = (totalModules - backingSize) / 2;
     const logoOffset = (totalModules - logoSize) / 2;
     logo = `<rect x="${backingOffset}" y="${backingOffset}" width="${backingSize}" height="${backingSize}" rx="${backingSize * 0.12}" fill="${background}"/><image href="${escapeXml(options.logoDataUrl)}" x="${logoOffset}" y="${logoOffset}" width="${logoSize}" height="${logoSize}" preserveAspectRatio="xMidYMid meet"/>`;
