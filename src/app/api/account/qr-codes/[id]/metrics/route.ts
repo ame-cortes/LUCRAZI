@@ -166,19 +166,19 @@ export async function GET(
         scansByRegion.set(scan.region, (scansByRegion.get(scan.region) || 0) + 1);
       }
       if (scan.city || scan.region || (typeof scan.latitude === "number" && typeof scan.longitude === "number")) {
-        const latitude = typeof scan.latitude === "number" &&
+        const locationSource = scan.locationSource === "browser" ? "browser" : "ip";
+        const latitude = locationSource === "browser" && typeof scan.latitude === "number" &&
           Number.isFinite(scan.latitude) &&
           scan.latitude >= -90 &&
           scan.latitude <= 90
-          ? Math.round(scan.latitude * 100) / 100
+          ? Math.round(scan.latitude * 10_000) / 10_000
           : null;
-        const longitude = typeof scan.longitude === "number" &&
+        const longitude = locationSource === "browser" && typeof scan.longitude === "number" &&
           Number.isFinite(scan.longitude) &&
           scan.longitude >= -180 &&
           scan.longitude <= 180
-          ? Math.round(scan.longitude * 100) / 100
+          ? Math.round(scan.longitude * 10_000) / 10_000
           : null;
-        const locationSource = scan.locationSource === "browser" ? "browser" : "ip";
         const locationKey = latitude !== null && longitude !== null
           ? `${latitude},${longitude},${scan.city || ""},${scan.region || ""},${locationSource}`
           : `${scan.city || ""},${scan.region || ""},${locationSource}`;

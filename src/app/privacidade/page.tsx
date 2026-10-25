@@ -18,7 +18,7 @@ export default function PrivacyPage() {
         <article className="info-page-content">
           <span className="eyebrow">TRANSPARÊNCIA</span>
           <h1>Política de privacidade.</h1>
-          <p className="info-lead">Última atualização: 23 de outubro de 2026.</p>
+          <p className="info-lead">Última atualização: 24 de outubro de 2026.</p>
           <p>
             Esta página explica, em linguagem simples, como o site Lucrazi pode tratar
             informações quando você navega por seus artigos. A configuração efetiva pode
@@ -148,13 +148,35 @@ export default function PrivacyPage() {
             o nome, o conteúdo codificado, o tipo e as cores desse QR Code serão armazenados
             no Firebase/Cloud Firestore associados ao identificador da sua conta, para que
             você possa editar, baixar novamente ou excluir o código. Esses dados não são
-            usados para campanhas nem ficam visíveis a outras contas. Você pode excluir cada
-            QR Code pelo painel; para solicitar a exclusão da conta ou exercer outros direitos,
-            use o <Link href="/contato">canal de contato</Link>. O QR Code criado apenas no
-            gerador público não é salvo na conta automaticamente. Nos planos pagos, os QR Codes
-            de links usam um endereço de redirecionamento do Lucrazi para contar escaneamentos;
-            armazenamos o total e o horário do último escaneamento, sem registrar o endereço IP
-            de quem acessou.
+            usados para campanhas nem ficam visíveis a outras contas. No cadastro, registramos
+            a versão dos Termos de Uso aceita e a data do aceite. Você pode excluir cada QR Code
+            pelo painel; para solicitar a exclusão da conta ou exercer outros direitos, use o{" "}
+            <Link href="/contato">canal de contato</Link>. O QR Code criado apenas no gerador
+            público não é salvo na conta automaticamente.
+          </p>
+          <h2 id="qr-metrics">Métricas e localização dos QR Codes</h2>
+          <p>
+            Quando as métricas estão habilitadas, ao escanear um QR Code dinâmico o serviço
+            registra o horário, o endereço IP, informações técnicas do navegador/dispositivo e,
+            quando disponíveis, cidade, estado e país estimados. O IP pode apontar para a sede da
+            operadora ou para o centro de uma cidade; por isso, ele não identifica de forma
+            confiável o bairro ou o endereço e não é usado para desenhar um ponto no mapa.
+          </p>
+          <p>
+            Para uma área mais próxima, o navegador pode solicitar permissão para compartilhar a
+            localização do aparelho. Essa escolha é feita por quem escaneia, no próprio navegador,
+            e pode ser negada sem impedir o redirecionamento. Se permitida e se a precisão reportada
+            for de até 500 metros, as coordenadas são arredondadas para uma grade aproximada de
+            250 metros e exibidas no mapa como uma área ampliada, não como um ponto de residência.
+            Sem essa permissão, o mapa mostra apenas o volume agregado por cidade/município ou
+            região com base na estimativa por IP. O aceite do criador da conta não substitui a
+            permissão da pessoa que escaneia.
+          </p>
+          <p>
+            Os dados de métricas são armazenados no Firebase/Cloud Firestore associados ao QR
+            Code e podem ser consultados pelo titular da conta. Para solicitar acesso, correção
+            ou exclusão dos dados relacionados a um scan, use o{" "}
+            <Link href="/contato">canal de contato</Link>.
           </p>
           <h2>Links de terceiros</h2>
           <p>
@@ -177,9 +199,10 @@ export default function PrivacyPage() {
             {contactEmail ? <> ou escreva para <a href={`mailto:${contactEmail}`}>{contactEmail}</a>.</> : "."}
           </p>
           <p>
-            Este site não mantém conta de usuário nem formulário de contato próprio. O cadastro
-            opcional de novidades, os pedidos de e-book e a entrega por e-mail de QR Codes estão
-            descritos acima. O uso da Brevo para envio de e-mails também é descrito nesta política.
+            O painel mantém contas de usuário e QR Codes salvos, conforme descrito nesta política.
+            O cadastro opcional de novidades, os pedidos de e-book e a entrega por e-mail de QR
+            Codes também estão descritos acima. O uso da Brevo para envio de e-mails é descrito
+            nesta política.
           </p>
         </article>
       </main>

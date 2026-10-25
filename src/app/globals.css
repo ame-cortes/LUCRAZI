@@ -4852,6 +4852,30 @@ button:focus-visible {
   font-weight: 650;
 }
 
+.qr-account-privacy-accept {
+  display: grid !important;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px !important;
+  color: var(--muted) !important;
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  line-height: 1.5;
+}
+
+.qr-account-privacy-accept input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 1px 0 0;
+  accent-color: var(--green);
+}
+
+.qr-account-privacy-accept a {
+  color: #4e6c2d;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .qr-account-form input:not([type="color"]),
 .qr-account-form textarea,
 .qr-account-form select {

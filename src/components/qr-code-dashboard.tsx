@@ -286,6 +286,8 @@ export default function QrCodeDashboard() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(firebaseConfigured);
   const [registering, setRegistering] = useState(false);
+  const [privacyAcknowledged, setPrivacyAcknowledged] = useState(false);
+  const [privacyAcknowledgementPending, setPrivacyAcknowledgementPending] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [codes, setCodes] = useState<SavedQrCode[]>([]);
@@ -604,8 +606,22 @@ export default function QrCodeDashboard() {
     try {
       const auth = await getPersistentFirebaseAuth();
       if (registering) {
-        await createUserWithEmailAndPassword(auth, email.trim(), password);
-        setNotice("Conta criada. Seus QR Codes salvos ficarão disponíveis neste painel.");
+        if (!privacyAcknowledged) {
+          setError("Leia e aceite os Termos de Uso para criar sua conta.");
+          return;
+        }
+        const credential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+        try {
+          await accountRequest(credential.user, "/api/account/privacy-acknowledgement", {
+            method: "POST",
+            body: JSON.stringify({ accepted: true }),
+          });
+          setNotice("Conta criada. Seus QR Codes salvos ficarão disponíveis neste painel.");
+        } catch (acknowledgementError) {
+          console.error("Não foi possível registrar o aceite da política da conta.", acknowledgementError);
+          setPrivacyAcknowledgementPending(true);
+          setError("A conta foi criada, mas não foi possível registrar o aceite. Tente novamente pelo aviso no painel.");
+        }
       } else {
         await signInWithEmailAndPassword(auth, email.trim(), password);
       }
@@ -616,13 +632,49 @@ export default function QrCodeDashboard() {
     }
   }
 
+  async function retryPrivacyAcknowledgement() {
+    if (!user || !privacyAcknowledgementPending || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      await accountRequest(user, "/api/account/privacy-acknowledgement", {
+        method: "POST",
+        body: JSON.stringify({ accepted: true }),
+      });
+      setPrivacyAcknowledgementPending(false);
+      setNotice("Aceite registrado com sucesso.");
+    } catch (acknowledgementError) {
+      console.error("Não foi possível registrar o aceite da política da conta.", acknowledgementError);
+      setError(`Não foi possível registrar o aceite: ${errorMessage(acknowledgementError)}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleGoogleAuth() {
+    if (registering && !privacyAcknowledged) {
+      setError("Leia e aceite os Termos de Uso para criar sua conta.");
+      return;
+    }
     setBusy(true);
     setError("");
     setNotice("");
     try {
       const auth = await getPersistentFirebaseAuth();
-      await signInWithPopup(auth, new GoogleAuthProvider());
+      const credential = await signInWithPopup(auth, new GoogleAuthProvider());
+      if (registering) {
+        try {
+          await accountRequest(credential.user, "/api/account/privacy-acknowledgement", {
+            method: "POST",
+            body: JSON.stringify({ accepted: true }),
+          });
+          setNotice("Conta criada. Seus QR Codes salvos ficarão disponíveis neste painel.");
+        } catch (acknowledgementError) {
+          console.error("Não foi possível registrar o aceite da política da conta.", acknowledgementError);
+          setPrivacyAcknowledgementPending(true);
+          setError("A conta foi criada, mas não foi possível registrar o aceite. Tente novamente pelo aviso no painel.");
+        }
+      }
     } catch (authError) {
       setError(errorMessage(authError));
     } finally {
@@ -961,6 +1013,23 @@ export default function QrCodeDashboard() {
                 Senha
                 <input autoComplete={registering ? "new-password" : "current-password"} type="password" minLength={6} required value={password} onChange={(event) => setPassword(event.target.value)} />
               </label>
+              {registering && (
+                <label className="qr-account-privacy-accept">
+                  <input
+                    type="checkbox"
+                    checked={privacyAcknowledged}
+                    onChange={(event) => setPrivacyAcknowledged(event.target.checked)}
+                    required
+                  />
+                  <span>
+                    Li e aceito os{" "}
+                    <Link href="/termos-de-uso" target="_blank" rel="noreferrer">Termos de Uso</Link>
+                    {" "}e estou ciente da{" "}
+                    <Link href="/privacidade#qr-metrics" target="_blank" rel="noreferrer">Política de Privacidade</Link>.
+                    As métricas podem estimar a região pelo IP; a localização do aparelho só é usada se a pessoa que escaneia permitir no próprio navegador.
+                  </span>
+                </label>
+              )}
               <button className="button button-dark" disabled={busy} type="submit">
                 {busy ? "Aguarde…" : registering ? "Criar conta" : "Entrar"}
               </button>
@@ -980,7 +1049,15 @@ export default function QrCodeDashboard() {
               </svg>
               {busy ? "Aguarde…" : "Continuar com Google"}
             </button>
-            <button className="qr-account-switch" disabled={busy} onClick={() => setRegistering((value) => !value)} type="button">
+            <button
+              className="qr-account-switch"
+              disabled={busy}
+              onClick={() => {
+                setPrivacyAcknowledged(false);
+                setRegistering((value) => !value);
+              }}
+              type="button"
+            >
               {registering ? "Já tem conta? Entrar" : "Ainda não tem conta? Criar conta"}
             </button>
             {error && <p className="admin-message admin-error" role="alert">{error}</p>}
@@ -1049,6 +1126,11 @@ export default function QrCodeDashboard() {
             </section>
             {notice && <p className="admin-message" role="status">{notice}</p>}
             {error && <p className="admin-message admin-error" role="alert">{error}</p>}
+            {privacyAcknowledgementPending && (
+              <button className="qr-secondary-button" disabled={busy} onClick={() => void retryPrivacyAcknowledgement()} type="button">
+                {busy ? "Registrando aceite…" : "Tentar registrar o aceite"}
+              </button>
+            )}
             <section className="qr-account-stats" aria-label="Resumo da conta">
               <article className="qr-stat-card">
                 <div className="qr-stat-icon">

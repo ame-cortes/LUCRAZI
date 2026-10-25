@@ -94,6 +94,57 @@ function getRegionState(region: string | null): BrazilState | undefined {
   return STATE_BY_NAME.get(normalizedRegion);
 }
 
+function isPointInRing(longitude: number, latitude: number, ring: number[][]): boolean {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const current = ring[i];
+    const previous = ring[j];
+    if (!current || !previous) continue;
+    const [currentLongitude, currentLatitude] = current;
+    const [previousLongitude, previousLatitude] = previous;
+    if (
+      currentLongitude === undefined
+      || currentLatitude === undefined
+      || previousLongitude === undefined
+      || previousLatitude === undefined
+    ) continue;
+
+    const crossesLatitude = (currentLatitude > latitude) !== (previousLatitude > latitude);
+    const crossingLongitude = ((previousLongitude - currentLongitude) * (latitude - currentLatitude))
+      / (previousLatitude - currentLatitude)
+      + currentLongitude;
+    if (crossesLatitude && longitude < crossingLongitude) inside = !inside;
+  }
+  return inside;
+}
+
+function isPointInPolygon(longitude: number, latitude: number, rings: number[][][]): boolean {
+  const [outerRing, ...holes] = rings;
+  return Boolean(
+    outerRing
+    && isPointInRing(longitude, latitude, outerRing)
+    && !holes.some((hole) => isPointInRing(longitude, latitude, hole)),
+  );
+}
+
+function isPointInGeometry(longitude: number, latitude: number, geometry: Geometry): boolean {
+  if (geometry.type === "Polygon") {
+    return isPointInPolygon(longitude, latitude, geometry.coordinates);
+  }
+  if (geometry.type === "MultiPolygon") {
+    return geometry.coordinates.some((polygon) => isPointInPolygon(longitude, latitude, polygon));
+  }
+  return false;
+}
+
+function isPointInFeatureCollection(
+  longitude: number,
+  latitude: number,
+  collection: MapFeatureCollection,
+): boolean {
+  return collection.features.some((feature) => isPointInGeometry(longitude, latitude, feature.geometry));
+}
+
 async function fetchFeatureCollection(url: string): Promise<MapFeatureCollection> {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Falha ao carregar limites do mapa (HTTP ${response.status}).`);
@@ -199,23 +250,42 @@ function MapBounds({ geometry }: { geometry: MapFeatureCollection | null }) {
 export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetricsMapProps) {
   const [selectedStateId, setSelectedStateId] = useState("23");
   const [statesGeometry, setStatesGeometry] = useState<MapFeatureCollection | null>(null);
-  const [municipalityGeometry, setMunicipalityGeometry] = useState<MapFeatureCollection | null>(null);
+  const [municipalityGeometry, setMunicipalityGeometry] = useState<{
+    stateId: string;
+    geometry: MapFeatureCollection;
+  } | null>(null);
+  const [municipalityLoadedStateId, setMunicipalityLoadedStateId] = useState<string | null>(null);
   const [loadingStates, setLoadingStates] = useState(true);
-  const [loadingMunicipalities, setLoadingMunicipalities] = useState(false);
-  const [error, setError] = useState("");
+  const [statesError, setStatesError] = useState("");
+  const [municipalityError, setMunicipalityError] = useState<{ stateId: string; message: string } | null>(null);
 
   const selectedState = STATE_BY_CODE.get(selectedStateId) || null;
+  const selectedMunicipalityGeometry = selectedState && municipalityGeometry?.stateId === selectedState.id
+    ? municipalityGeometry.geometry
+    : null;
+  const loadingMunicipalities = Boolean(
+    selectedState
+    && municipalityLoadedStateId !== selectedState.id
+    && municipalityError?.stateId !== selectedState.id
+  );
+  const error = statesError || (
+    selectedState && municipalityError?.stateId === selectedState.id
+      ? municipalityError.message
+      : ""
+  );
 
   useEffect(() => {
     let cancelled = false;
-    setLoadingStates(true);
     loadAllStateGeometries()
       .then((geometry) => {
-        if (!cancelled) setStatesGeometry(geometry);
+        if (!cancelled) {
+          setStatesGeometry(geometry);
+          setStatesError("");
+        }
       })
       .catch((loadError: unknown) => {
         if (!cancelled) {
-          setError(loadError instanceof Error ? loadError.message : "Não foi possível carregar o mapa do Brasil.");
+          setStatesError(loadError instanceof Error ? loadError.message : "Não foi possível carregar o mapa do Brasil.");
         }
       })
       .finally(() => {
@@ -228,26 +298,24 @@ export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetrics
 
   useEffect(() => {
     let cancelled = false;
-    setMunicipalityGeometry(null);
-    setError("");
-    if (!selectedState) {
-      setLoadingMunicipalities(false);
-      return;
-    }
+    if (!selectedState) return;
 
-    setLoadingMunicipalities(true);
     loadMunicipalities(selectedState)
       .then((geometry) => {
-        if (!cancelled) setMunicipalityGeometry(geometry);
+        if (!cancelled) {
+          setMunicipalityGeometry({ stateId: selectedState.id, geometry });
+          setMunicipalityLoadedStateId(selectedState.id);
+          setMunicipalityError((current) => current?.stateId === selectedState.id ? null : current);
+        }
       })
       .catch((loadError: unknown) => {
         if (!cancelled) {
-          setError(loadError instanceof Error ? loadError.message : "Não foi possível carregar as divisões municipais.");
+          setMunicipalityError({
+            stateId: selectedState.id,
+            message: loadError instanceof Error ? loadError.message : "Não foi possível carregar as divisões municipais.",
+          });
         }
       })
-      .finally(() => {
-        if (!cancelled) setLoadingMunicipalities(false);
-      });
     return () => {
       cancelled = true;
     };
@@ -265,7 +333,11 @@ export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetrics
   const locationsForSelectedState = useMemo(() => {
     const locationsByCity = new Map<string, ScanLocation>();
     scanLocations.forEach((location) => {
-      if (getRegionState(location.region)?.id !== selectedStateId || !location.city) return;
+      if (
+        location.locationSource === "browser"
+        || getRegionState(location.region)?.id !== selectedStateId
+        || !location.city
+      ) return;
 
       const cityKey = normalizeName(location.city);
       const existingLocation = locationsByCity.get(cityKey);
@@ -281,12 +353,20 @@ export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetrics
     const areas = new Map<string, ScanLocation>();
     scanLocations.forEach((location) => {
       if (
+        location.locationSource !== "browser"
+        ||
         location.latitude === null
         || location.longitude === null
-        || (selectedState && getRegionState(location.region)?.id !== selectedStateId)
       ) return;
+      if (selectedState) {
+        if (selectedMunicipalityGeometry) {
+          if (!isPointInFeatureCollection(location.longitude, location.latitude, selectedMunicipalityGeometry)) return;
+        } else if (getRegionState(location.region)?.id !== selectedStateId) {
+          return;
+        }
+      }
 
-      const areaSize = location.locationSource === "browser" ? 0.02 : 0.1;
+      const areaSize = 0.0025;
       const gridLat = Math.floor(location.latitude / areaSize);
       const gridLng = Math.floor(location.longitude / areaSize);
       const key = `${areaSize}:${gridLat}:${gridLng}`;
@@ -305,9 +385,9 @@ export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetrics
       }
     });
     return Array.from(areas.values());
-  }, [scanLocations, selectedState, selectedStateId]);
+  }, [scanLocations, selectedState, selectedStateId, selectedMunicipalityGeometry]);
 
-  const mapGeometry = selectedState ? municipalityGeometry : statesGeometry;
+  const mapGeometry = selectedState ? selectedMunicipalityGeometry : statesGeometry;
   const maxStateCount = Math.max(...scansByState.values(), 1);
   const maxLocationCount = Math.max(...heatAreas.map((area) => area.count), 1);
 
@@ -366,7 +446,7 @@ export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetrics
       <div className="qr-brazil-map-heading">
         <div>
           <h4>Mapa de escaneamentos</h4>
-          <p>Com permissão, a localização do aparelho é agrupada em áreas de cerca de 2 km. Sem ela, o IP pode estimar apenas a cidade. Nenhuma área indica uma casa ou endereço.</p>
+          <p>Áreas pequenas aparecem somente quando a pessoa permite a localização do aparelho. O IP mostra apenas cidade/região e nunca é usado para marcar um ponto.</p>
         </div>
         <label className="qr-map-state-select">
           <span>Estado</span>
@@ -399,11 +479,11 @@ export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetrics
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <MapBounds geometry={selectedState ? municipalityGeometry : statesGeometry} />
-          {selectedState && municipalityGeometry ? (
+          <MapBounds geometry={selectedState ? selectedMunicipalityGeometry : statesGeometry} />
+          {selectedState && selectedMunicipalityGeometry ? (
             <GeoJSON
               key={`municipalities-${selectedState.id}`}
-              data={municipalityGeometry}
+              data={selectedMunicipalityGeometry}
               style={getMunicipalityStyle}
               onEachFeature={configureMunicipalityFeature}
             />
@@ -419,9 +499,7 @@ export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetrics
             if (location.latitude === null || location.longitude === null) return null;
             const intensity = Math.log1p(location.count) / Math.log1p(Math.max(maxLocationCount, 10));
             const fillColor = intensity > 0.72 ? "#b42318" : intensity > 0.4 ? "#e4572e" : "#f4a340";
-            const radius = location.locationSource === "browser"
-              ? 1500 + intensity * 1500
-              : 12000 + intensity * 8000;
+            const radius = 650 + intensity * 250;
             const stateName = getRegionState(location.region)?.name || location.region || "Brasil";
             const label = location.city ? `${location.city}, ${stateName}` : stateName;
             return (
@@ -437,11 +515,7 @@ export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetrics
                   {location.count.toLocaleString("pt-BR")} scans
                   <br />
                   <small>
-                    {location.locationSource === "browser"
-                      ? "Localização do aparelho compartilhada com permissão e precisão reportada de até 3 km; área agrupada em uma zona aproximada de 2 km."
-                      : location.locationSource === "mixed"
-                        ? "Combina localização do aparelho com permissão e estimativa por IP; área agrupada em zonas aproximadas."
-                        : "Área aproximada pelo IP, agrupada em uma zona ampla de cerca de 10 km."}
+                    Localização do aparelho compartilhada com permissão. O ponto é arredondado para uma grade de cerca de 250 m e exibido como uma área ampliada; não representa uma casa.
                   </small>
                 </Popup>
               </Circle>
@@ -451,7 +525,7 @@ export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetrics
       )}
       <div className="qr-brazil-map-legend">
         <span><i className="qr-map-legend-state" />Área preenchida: volume por estado/município</span>
-        <span><i className="qr-map-legend-point" />Áreas: cores mais fortes indicam mais scans; cada zona é aproximada</span>
+        <span><i className="qr-map-legend-point" />Áreas aproximadas do aparelho; cor mais forte indica mais scans</span>
         <span>Fonte dos limites: IBGE</span>
       </div>
     </div>

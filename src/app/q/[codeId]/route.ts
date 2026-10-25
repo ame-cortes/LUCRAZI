@@ -57,7 +57,7 @@ function escapeHtml(value: string): string {
   });
 }
 
-function createLocationConsentPage(codeId: string, destination: string): Response {
+function createGeolocationBridgePage(codeId: string, destination: string): Response {
   const safeDestination = escapeHtml(destination);
   const html = `<!doctype html>
 <html lang="pt-BR">
@@ -65,39 +65,27 @@ function createLocationConsentPage(codeId: string, destination: string): Respons
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="no-referrer">
-  <title>Abrindo o link…</title>
+  <title>Redirecionando…</title>
   <style>
     *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;background:#f5f6f0;color:#243127;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
-    main{width:min(100%,440px);padding:28px;border:1px solid #e0e3d8;border-radius:18px;background:#fff;box-shadow:0 16px 48px #24312712}
-    h1{margin:0 0 10px;font-size:22px}p{color:#667064;font-size:14px;line-height:1.55}
-    .actions{display:grid;gap:10px;margin-top:22px}button,a{min-height:46px;display:flex;align-items:center;justify-content:center;border:1px solid #d9ddd2;border-radius:9px;padding:10px 14px;background:#fff;color:#243127;font:inherit;font-weight:650;text-align:center;text-decoration:none;cursor:pointer}
-    button:disabled{opacity:.6;cursor:wait}
-    #status{min-height:22px;margin:14px 0 0;font-size:13px}#fallback[hidden]{display:none}
+    main{width:min(100%,360px);padding:24px;border:1px solid #e0e3d8;border-radius:16px;background:#fff;text-align:center}
+    p{margin:0;color:#667064;font-size:14px;line-height:1.5}a{display:inline-block;margin-top:14px;color:#4e6c2d;font-size:13px}
+    #fallback[hidden]{display:none}
   </style>
 </head>
 <body>
   <main>
-    <h1>Abrir destino</h1>
-    <p>Seu navegador perguntará se você permite usar a localização do aparelho para melhorar a região mostrada nas métricas. Salvamos apenas uma área aproximada, em células de cerca de 2 km, nunca a coordenada exata. Se a precisão do aparelho for baixa ou você não permitir, usamos a estimativa por IP, que pode mostrar apenas a cidade. Você pode continuar sem compartilhar.</p>
-    <div class="actions">
-      <button id="continue" type="button">Continuar sem compartilhar</button>
-      <a id="fallback" href="${safeDestination}" rel="noreferrer">Abrir destino</a>
-    </div>
-    <p id="status" role="status" aria-live="polite"></p>
+    <p role="status" aria-live="polite">Se o navegador perguntar, permita a localização para mostrar uma área aproximada nas métricas. Se não permitir, o QR Code continua abrindo; nesse caso, usamos somente cidade/região estimada pelo IP.</p>
+    <a id="fallback" href="${safeDestination}" rel="noreferrer" hidden>Abrir destino</a>
   </main>
   <script>
     (() => {
-      const continueButton = document.getElementById("continue");
       const fallback = document.getElementById("fallback");
-      const status = document.getElementById("status");
-      let submitted = false;
-      let requestingLocation = false;
+      let completed = false;
 
       async function finishScan(position) {
-        if (submitted) return;
-        submitted = true;
-        continueButton.disabled = true;
-        status.textContent = "Registrando e abrindo o destino…";
+        if (completed) return;
+        completed = true;
         const body = position ? {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
@@ -117,38 +105,21 @@ function createLocationConsentPage(codeId: string, destination: string): Respons
           }
           window.location.replace(result.redirectUrl);
         } catch {
-          status.textContent = "Não foi possível registrar o scan. Você ainda pode abrir o destino diretamente.";
           fallback.hidden = false;
-          continueButton.disabled = false;
-          submitted = false;
+          window.location.replace(fallback.href);
         }
       }
 
-      function requestLocation() {
-        if (submitted || requestingLocation) return;
-        status.textContent = "Aguardando a permissão do navegador…";
-        if (!navigator.geolocation) {
-          status.textContent = "Este navegador não oferece localização. Continuando com a estimativa por IP…";
-          finishScan(null);
-          return;
-        }
-        requestingLocation = true;
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            requestingLocation = false;
-            finishScan(position);
-          },
-          () => {
-            requestingLocation = false;
-            status.textContent = "Localização não compartilhada. Continuando com a estimativa por IP…";
-            finishScan(null);
-          },
-          { enableHighAccuracy: true, maximumAge: 300000, timeout: 10000 }
-        );
+      if (!navigator.geolocation) {
+        finishScan(null);
+        return;
       }
-
-      continueButton.addEventListener("click", () => finishScan(null));
-      requestLocation();
+      window.setTimeout(() => finishScan(null), 7000);
+      navigator.geolocation.getCurrentPosition(
+        (position) => finishScan(position),
+        () => finishScan(null),
+        { enableHighAccuracy: true, maximumAge: 300000, timeout: 6000 }
+      );
     })();
   </script>
 </body>
@@ -297,7 +268,7 @@ export async function GET(
       const billingRef = db.collection("users").doc(userId).collection("billing").doc("current");
       const billing = await billingRef.get();
       if (getBillingAccess(billing.data()).hasMetrics) {
-        return createLocationConsentPage(codeId, destination);
+        return createGeolocationBridgePage(codeId, destination);
       }
     }
 
@@ -340,7 +311,7 @@ export async function POST(
   const hasLongitude = body.longitude !== undefined;
   const latitude = hasLatitude ? geoCoordinate(body.latitude, -90, 90) : null;
   const longitude = hasLongitude ? geoCoordinate(body.longitude, -180, 180) : null;
-  const accuracy = geoCoordinate(body.accuracy, 0, 3000);
+  const accuracy = geoCoordinate(body.accuracy, 0, 500);
   if (hasLatitude !== hasLongitude || (hasLatitude && (latitude === null || longitude === null))) {
     return NextResponse.json({ error: "Coordenadas de localização inválidas." }, { status: 400 });
   }
@@ -381,12 +352,12 @@ export async function POST(
       country: geoData?.country ?? null,
       region: geoData?.region ?? null,
       latitude: browserLocationProvided
-        ? blurCoordinate(latitude, 0.02)
+        ? blurCoordinate(latitude, 0.0025)
         : geoData?.latitude !== null && geoData?.latitude !== undefined
           ? blurCoordinate(geoData.latitude, 0.1)
           : null,
       longitude: browserLocationProvided
-        ? blurCoordinate(longitude, 0.02)
+        ? blurCoordinate(longitude, 0.0025)
         : geoData?.longitude !== null && geoData?.longitude !== undefined
           ? blurCoordinate(geoData.longitude, 0.1)
           : null,
