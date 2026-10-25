@@ -43,6 +43,24 @@ export const qrCodeStyleOptions: {
   { id: "relief", label: "Relevo", description: "Módulos geométricos com recortes suaves e identidade própria" },
 ];
 
+const groupedStyleConnectorWidths: Record<QrCodeStyle, number> = {
+  square: 0,
+  rounded: 0.46,
+  dots: 0.62,
+  vertical: 0.72,
+  horizontal: 0.72,
+  diamond: 0.28,
+  octagon: 0.32,
+  leaf: 0.38,
+  star: 0.28,
+  pencil: 0.42,
+  mosaic: 0.16,
+  tribal: 0.54,
+  heart: 0.42,
+  "pencil-vertical": 0.42,
+  relief: 0.48,
+};
+
 export const qrCodeEyeStyleOptions: { id: QrCodeEyeStyle; label: string }[] = [
   { id: "square", label: "Quadrado" },
   { id: "rounded", label: "Arredondado" },
@@ -159,6 +177,36 @@ function drawReliefModule(context: CanvasRenderingContext2D, x: number, y: numbe
   context.quadraticCurveTo(x, y, x + inset, y);
   context.closePath();
   context.fill();
+}
+
+function drawTribalModules(
+  context: CanvasRenderingContext2D,
+  qrCode: ReturnType<typeof createQrCode>,
+  moduleSize: number,
+  offsetX: number,
+  offsetY: number,
+  frameStyle: QrCodeEyeStyle,
+  ballStyle: QrCodeEyeStyle,
+) {
+  const inset = moduleSize * 0.1;
+  for (let row = 0; row < qrCode.modules.size; row++) {
+    for (let column = 0; column < qrCode.modules.size; column++) {
+      if (
+        !qrCode.modules.get(row, column)
+        || isExcludedFinderModule(row, column, qrCode.modules.size, frameStyle, ballStyle)
+      ) continue;
+
+      const x = offsetX + (column + quietZone) * moduleSize;
+      const y = offsetY + (row + quietZone) * moduleSize;
+      if (qrCode.modules.isReserved(row, column) === 1) {
+        context.fillRect(x, y, moduleSize, moduleSize);
+      } else {
+        context.beginPath();
+        context.roundRect(x + inset, y + inset, moduleSize - inset * 2, moduleSize - inset * 2, moduleSize * 0.16);
+        context.fill();
+      }
+    }
+  }
 }
 
 function reliefSvgPath(x: number, y: number, size: number) {
@@ -479,10 +527,11 @@ export async function renderQrCodeCanvas(
   const eyeFrameColor = options.eyeFrameColor || options.foregroundColor;
   const eyeBallColor = options.eyeBallColor || options.foregroundColor;
 
-  if (options.style !== "square") {
+  const connectorWidth = groupedStyleConnectorWidths[options.style];
+  if (connectorWidth > 0) {
     context.save();
     context.strokeStyle = options.foregroundColor;
-    context.lineWidth = moduleSize * 0.28;
+    context.lineWidth = moduleSize * connectorWidth;
     context.lineCap = "round";
     visitGroupedStyleConnectors(qrCode, eyeFrameStyle, eyeBallStyle, (startColumn, startRow, endColumn, endRow) => {
       context.beginPath();
@@ -515,7 +564,7 @@ export async function renderQrCodeCanvas(
       eyeBallStyle,
     );
   } else if (options.style === "tribal") {
-    drawMosaicModules(
+    drawTribalModules(
       context,
       qrCode,
       moduleSize,
@@ -523,7 +572,6 @@ export async function renderQrCodeCanvas(
       offsetY,
       eyeFrameStyle,
       eyeBallStyle,
-      0,
     );
   } else {
     for (let row = 0; row < qrCode.modules.size; row++) {
@@ -687,18 +735,37 @@ export function createQrCodeSvg(
   const squarePaths: string[] = [];
   const styledModules: string[] = [];
 
-  if (options.style !== "square") {
+  const connectorWidth = groupedStyleConnectorWidths[options.style];
+  if (connectorWidth > 0) {
     const connectors: string[] = [];
     visitGroupedStyleConnectors(qrCode, eyeFrameStyle, eyeBallStyle, (startColumn, startRow, endColumn, endRow) => {
       connectors.push(`M${startColumn} ${startRow}L${endColumn} ${endRow}`);
     });
     if (connectors.length) {
-      styledModules.push(`<path d="${connectors.join("")}" fill="none" stroke="${escapeXml(options.foregroundColor)}" stroke-width="0.28" stroke-linecap="round"/>`);
+      styledModules.push(`<path d="${connectors.join("")}" fill="none" stroke="${escapeXml(options.foregroundColor)}" stroke-width="${connectorWidth}" stroke-linecap="round"/>`);
     }
   }
 
-  if (options.style === "tribal" || options.style === "mosaic") {
-    const cornerRadius = options.style === "tribal" ? 0 : 0.08;
+  if (options.style === "tribal") {
+    const inset = 0.1;
+    for (let row = 0; row < qrCode.modules.size; row++) {
+      for (let column = 0; column < qrCode.modules.size; column++) {
+        if (
+          !qrCode.modules.get(row, column)
+          || isExcludedFinderModule(row, column, qrCode.modules.size, eyeFrameStyle, eyeBallStyle)
+        ) continue;
+
+        const x = column + quietZone;
+        const y = row + quietZone;
+        if (qrCode.modules.isReserved(row, column) === 1) {
+          squarePaths.push(`M${x} ${y}h1v1h-1z`);
+        } else {
+          styledModules.push(`<rect x="${x + inset}" y="${y + inset}" width="${1 - inset * 2}" height="${1 - inset * 2}" rx="0.16"/>`);
+        }
+      }
+    }
+  } else if (options.style === "mosaic") {
+    const cornerRadius = 0.08;
     const size = qrCode.modules.size;
     const activeRuns = new Map<string, { startRow: number; endRow: number; startColumn: number; endColumn: number }>();
     const paintRun = (run: { startRow: number; endRow: number; startColumn: number; endColumn: number }) => {

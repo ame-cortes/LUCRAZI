@@ -14,6 +14,24 @@ const previewModules = [
   [1, 1, 1, 0, 1],
 ];
 
+const previewConnectorWidths: Record<QrCodeStyle, number> = {
+  square: 0,
+  rounded: 2.76,
+  dots: 3.72,
+  vertical: 4.32,
+  horizontal: 4.32,
+  diamond: 1.68,
+  octagon: 1.92,
+  leaf: 2.28,
+  star: 1.68,
+  pencil: 2.52,
+  mosaic: 0.96,
+  tribal: 3.24,
+  heart: 2.52,
+  "pencil-vertical": 2.52,
+  relief: 2.88,
+};
+
 function renderPencilPreviewModules(vertical: boolean): React.JSX.Element[] {
   const pencils: React.JSX.Element[] = [];
   const lines = vertical ? previewModules[0].length : previewModules.length;
@@ -64,33 +82,26 @@ function renderPencilPreviewModules(vertical: boolean): React.JSX.Element[] {
 }
 
 function renderTribalPreview(): React.JSX.Element {
-  const blocks: React.JSX.Element[] = [];
+  const modules: React.JSX.Element[] = [];
   for (let row = 0; row < previewModules.length; row++) {
-    let column = 0;
-    while (column < previewModules[row].length) {
-      if (!previewModules[row][column]) {
-        column++;
-        continue;
-      }
-      const start = column++;
-      while (column < previewModules[row].length && previewModules[row][column]) column++;
-      blocks.push(
+    for (let column = 0; column < previewModules[row].length; column++) {
+      if (!previewModules[row][column]) continue;
+      modules.push(
         <rect
-          key={`tribal-${row}-${start}`}
-          x={start * 6}
-          y={row * 6}
-          width={(column - start) * 6}
-          height="6"
+          key={`tribal-${row}-${column}`}
+          x={column * 6 + 0.6}
+          y={row * 6 + 0.6}
+          width="4.8"
+          height="4.8"
+          rx="0.96"
         />,
       );
     }
   }
-  return (
-    <g>{blocks}</g>
-  );
+  return <g>{modules}</g>;
 }
 
-function renderGroupedPreviewConnectors(): React.JSX.Element {
+function renderGroupedPreviewConnectors(style: QrCodeStyle): React.JSX.Element {
   const segments: string[] = [];
   for (let row = 0; row < previewModules.length; row++) {
     for (let column = 0; column < previewModules[row].length; column++) {
@@ -107,7 +118,7 @@ function renderGroupedPreviewConnectors(): React.JSX.Element {
       fill="none"
       stroke="currentColor"
       strokeLinecap="round"
-      strokeWidth="1.68"
+      strokeWidth={previewConnectorWidths[style]}
     />
   );
 }
@@ -196,7 +207,7 @@ export default function QrCodeStylePicker({
               className={`qr-style-sample qr-style-sample-${option.id}`}
               viewBox="0 0 30 30"
             >
-              {option.id !== "square" && renderGroupedPreviewConnectors()}
+              {option.id !== "square" && renderGroupedPreviewConnectors(option.id)}
               {option.id === "tribal"
                 ? renderTribalPreview()
                 : option.id === "pencil"
