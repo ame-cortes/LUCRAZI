@@ -64,17 +64,41 @@ function renderPencilPreviewModules(vertical: boolean): React.JSX.Element[] {
 }
 
 function renderTribalPreview(): React.JSX.Element {
+  const blocks: React.JSX.Element[] = [];
+  for (let row = 0; row < previewModules.length; row++) {
+    let column = 0;
+    while (column < previewModules[row].length) {
+      if (!previewModules[row][column]) {
+        column++;
+        continue;
+      }
+      const start = column++;
+      while (column < previewModules[row].length && previewModules[row][column]) column++;
+      blocks.push(
+        <rect
+          key={`tribal-${row}-${start}`}
+          x={start * 6}
+          y={row * 6}
+          width={(column - start) * 6}
+          height="6"
+        />,
+      );
+    }
+  }
+  return (
+    <g>{blocks}</g>
+  );
+}
+
+function renderGroupedPreviewConnectors(): React.JSX.Element {
   const segments: string[] = [];
   for (let row = 0; row < previewModules.length; row++) {
     for (let column = 0; column < previewModules[row].length; column++) {
       if (!previewModules[row][column]) continue;
       const centerX = column * 6 + 3;
       const centerY = row * 6 + 3;
-      const hasRightNeighbor = previewModules[row][column + 1] === 1;
-      const hasBottomNeighbor = previewModules[row + 1]?.[column] === 1;
-      if (hasRightNeighbor) segments.push(`M${centerX} ${centerY}L${centerX + 6} ${centerY}`);
-      if (hasBottomNeighbor) segments.push(`M${centerX} ${centerY}L${centerX} ${centerY + 6}`);
-      if (!hasRightNeighbor && !hasBottomNeighbor) segments.push(`M${centerX} ${centerY}L${centerX} ${centerY}`);
+      if (previewModules[row][column + 1]) segments.push(`M${centerX} ${centerY}L${centerX + 6} ${centerY}`);
+      if (previewModules[row + 1]?.[column]) segments.push(`M${centerX} ${centerY}L${centerX} ${centerY + 6}`);
     }
   }
   return (
@@ -83,8 +107,7 @@ function renderTribalPreview(): React.JSX.Element {
       fill="none"
       stroke="currentColor"
       strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="5.4"
+      strokeWidth="1.68"
     />
   );
 }
@@ -173,6 +196,7 @@ export default function QrCodeStylePicker({
               className={`qr-style-sample qr-style-sample-${option.id}`}
               viewBox="0 0 30 30"
             >
+              {option.id !== "square" && renderGroupedPreviewConnectors()}
               {option.id === "tribal"
                 ? renderTribalPreview()
                 : option.id === "pencil"
@@ -239,7 +263,7 @@ export default function QrCodeStylePicker({
         </label>
       </div>
       <p className="qr-style-hint">
-        A moldura em coração é mantida. O centro branco quadrado e a margem de segurança ajudam a preservar a leitura.
+        Módulos vizinhos se conectam em traços agrupados, mantendo a forma de cada estilo. A moldura em coração e o centro branco dos marcadores são preservados.
       </p>
     </fieldset>
   );
