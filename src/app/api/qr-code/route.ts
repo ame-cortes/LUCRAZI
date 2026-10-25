@@ -94,6 +94,38 @@ function hasReasonableImageDimensions(format: string, bytes: Buffer) {
     && width * height <= 4_194_304;
 }
 
+function getImageDimensions(format: string, bytes: Buffer) {
+  let width = 0;
+  let height = 0;
+
+  if (format === "png" && bytes.length >= 24) {
+    width = bytes.readUInt32BE(16);
+    height = bytes.readUInt32BE(20);
+    return { width, height };
+  } else if (format === "jpeg") {
+    let offset = 2;
+    const startOfFrame = new Set([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf]);
+    while (offset + 4 < bytes.length) {
+      if (bytes[offset] !== 0xff) return null;
+      while (bytes[offset] === 0xff) offset += 1;
+      const marker = bytes[offset];
+      offset += 1;
+      if (marker === undefined || marker === 0xda || marker === 0xd9) break;
+      const segmentLength = bytes.readUInt16BE(offset);
+      if (segmentLength < 2 || offset + segmentLength > bytes.length) return null;
+      if (startOfFrame.has(marker)) {
+        if (segmentLength < 7) return null;
+        height = bytes.readUInt16BE(offset + 3);
+        width = bytes.readUInt16BE(offset + 5);
+        return { width, height };
+      }
+      offset += segmentLength;
+    }
+  }
+
+  return null;
+}
+
 function parseQrRequest(value: unknown): QrRequest | null {
   if (
     !isRecord(value)
@@ -160,12 +192,17 @@ function parseLogo(value: string | undefined) {
   const bytes = Buffer.from(base64, "base64");
   if (
     bytes.byteLength > maximumLogoBytes
-    || bytes.toString("base64") !== base64
     || (format === "png" && !bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])))
     || (format === "jpeg" && !(bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff))
   ) throw new Error("O logo precisa ser um PNG ou JPEG válido com até 256 KB.");
-  if (!hasReasonableImageDimensions(format, bytes)) {
+  
+  const dimensions = getImageDimensions(format, bytes);
+  if (!dimensions || !hasReasonableImageDimensions(format, bytes)) {
     throw new Error("O logo precisa ter dimensões válidas de até 2048 x 2048 pixels.");
+  }
+  // Rejeita logos muito grandes para evitar timeout
+  if (dimensions.width > 512 || dimensions.height > 512) {
+    throw new Error("O logo está muito grande. Use uma imagem de até 512 x 512 pixels.");
   }
 
   return { format, base64 };
@@ -260,9 +297,11 @@ export async function POST(request: Request) {
   try {
     logo = parseLogo(input.logoDataUrl);
     const qrSvg = await traceQrDeliveryStage("qr-svg-generation", () => createQrSvg(input, logo));
+    // Reduz resolução quando tem logo para evitar timeout
+    const pngSize = logo ? 256 : 512;
     qrPng = await traceQrDeliveryStage("qr-png-rasterization", () =>
       sharp(Buffer.from(qrSvg))
-        .resize({ width: 512, height: 512 })
+        .resize({ width: pngSize, height: pngSize })
         .png()
         .toBuffer());
   } catch (error) {
