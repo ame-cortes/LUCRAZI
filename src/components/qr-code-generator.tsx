@@ -381,10 +381,10 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
         <canvas
           aria-label="Prévia do QR Code"
           className="qr-preview-canvas"
-          height={360}
+          height={720}
           ref={canvasRef}
           role="img"
-          width={360}
+          width={720}
         />
         <p className="qr-preview-hint">A estrutura dos marcadores de leitura e a margem branca são preservadas. Teste a leitura antes de imprimir.</p>
         {downloadsUnlocked ? (

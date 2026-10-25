@@ -368,8 +368,8 @@ export default function QrCodeDashboard() {
         // Gerar imagem do QR Code para preview
         try {
           const canvas = document.createElement("canvas");
-          canvas.width = 240;
-          canvas.height = 240;
+          canvas.width = 480;
+          canvas.height = 480;
           await renderQrCodeCanvas(canvas, getSavedQrContent(savedCode), {
             foregroundColor: savedCode.foregroundColor,
             backgroundColor: savedCode.backgroundColor,
@@ -1296,8 +1296,8 @@ export default function QrCodeDashboard() {
                   className="qr-preview-canvas"
                   ref={canvasRef}
                   role="img"
-                  width={360}
-                  height={360}
+                  width={720}
+                  height={720}
                 />
                 <p className="qr-preview-hint">A estrutura dos marcadores de leitura e a margem branca são preservadas. Teste a leitura antes de imprimir.</p>
                 {!access.hasMetrics && contentType === "url" && (

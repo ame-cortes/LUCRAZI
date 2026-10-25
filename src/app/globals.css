@@ -3936,7 +3936,6 @@ button:focus-visible {
   border: 1px solid var(--line);
   border-radius: 10px;
   background: #fff;
-  image-rendering: pixelated;
 }
 
 .qr-preview-hint {

@@ -11,6 +11,7 @@ export const QR_CODE_STYLES = [
   "leaf",
   "star",
   "pencil",
+  "mosaic",
   "heart",
   "pencil-vertical",
 ] as const;
@@ -32,7 +33,8 @@ export const qrCodeStyleOptions: {
   { id: "octagon", label: "Geométrico", description: "Módulos geométricos encorpados" },
   { id: "leaf", label: "Folha", description: "Folhas mais cheias" },
   { id: "star", label: "Estrela", description: "Estrelas com braços mais largos" },
-  { id: "pencil", label: "Lápis", description: "Lápis horizontais unidos" },
+  { id: "pencil", label: "Lápis", description: "Traços horizontais mais encorpados" },
+  { id: "mosaic", label: "Mosaico", description: "Blocos conectados em formas geométricas" },
   { id: "heart", label: "Coração", description: "Módulos em formato de coração" },
   { id: "pencil-vertical", label: "Lápis vertical", description: "Traços verticais agrupados" },
 ];
@@ -194,6 +196,71 @@ function drawPencilModules(
   }
 }
 
+function drawMosaicModules(
+  context: CanvasRenderingContext2D,
+  qrCode: ReturnType<typeof createQrCode>,
+  moduleSize: number,
+  offsetX: number,
+  offsetY: number,
+  frameStyle: QrCodeEyeStyle,
+  ballStyle: QrCodeEyeStyle,
+) {
+  const size = qrCode.modules.size;
+  const activeRuns = new Map<string, { startRow: number; endRow: number; startColumn: number; endColumn: number }>();
+
+  function paintRun(run: { startRow: number; endRow: number; startColumn: number; endColumn: number }) {
+    const x = offsetX + (run.startColumn + quietZone) * moduleSize;
+    const y = offsetY + (run.startRow + quietZone) * moduleSize;
+    const width = (run.endColumn - run.startColumn) * moduleSize;
+    const height = (run.endRow - run.startRow) * moduleSize;
+    const radius = Math.min(moduleSize * 0.08, width / 2, height / 2);
+    context.beginPath();
+    context.roundRect(x, y, width, height, radius);
+    context.fill();
+  }
+
+  for (let row = 0; row < size; row++) {
+    const rowRuns = new Map<string, { startRow: number; endRow: number; startColumn: number; endColumn: number }>();
+    let column = 0;
+    while (column < size) {
+      if (
+        !qrCode.modules.get(row, column)
+        || isExcludedFinderModule(row, column, size, frameStyle, ballStyle)
+      ) {
+        column++;
+        continue;
+      }
+      if (qrCode.modules.isReserved(row, column) === 1) {
+        const x = offsetX + (column + quietZone) * moduleSize;
+        const y = offsetY + (row + quietZone) * moduleSize;
+        context.fillRect(x, y, moduleSize, moduleSize);
+        column++;
+        continue;
+      }
+      const startColumn = column++;
+      while (
+        column < size
+        && qrCode.modules.get(row, column)
+        && !isExcludedFinderModule(row, column, size, frameStyle, ballStyle)
+        && qrCode.modules.isReserved(row, column) !== 1
+      ) column++;
+      const key = `${startColumn}:${column}`;
+      const previous = activeRuns.get(key);
+      rowRuns.set(key, previous
+        ? { ...previous, endRow: row + 1 }
+        : { startRow: row, endRow: row + 1, startColumn, endColumn: column });
+    }
+
+    for (const [key, run] of activeRuns) {
+      if (!rowRuns.has(key)) paintRun(run);
+    }
+    activeRuns.clear();
+    for (const [key, run] of rowRuns) activeRuns.set(key, run);
+  }
+
+  for (const run of activeRuns.values()) paintRun(run);
+}
+
 function drawEyeShape(
   context: CanvasRenderingContext2D,
   x: number,
@@ -329,10 +396,10 @@ export async function renderQrCodeCanvas(
   if (!context) throw new Error("O navegador não conseguiu preparar a imagem do QR Code.");
 
   const totalModules = qrCode.modules.size + quietZone * 2;
-  const moduleSize = Math.floor(Math.min(canvas.width, canvas.height) / totalModules);
+  const moduleSize = Math.min(canvas.width, canvas.height) / totalModules;
   if (moduleSize < 1) throw new Error("A imagem é pequena demais para este conteúdo.");
-  const offsetX = Math.floor((canvas.width - totalModules * moduleSize) / 2);
-  const offsetY = Math.floor((canvas.height - totalModules * moduleSize) / 2);
+  const offsetX = (canvas.width - totalModules * moduleSize) / 2;
+  const offsetY = (canvas.height - totalModules * moduleSize) / 2;
 
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.fillStyle = options.backgroundColor;
@@ -353,6 +420,16 @@ export async function renderQrCodeCanvas(
       eyeFrameStyle,
       eyeBallStyle,
       options.style === "pencil-vertical",
+    );
+  } else if (options.style === "mosaic") {
+    drawMosaicModules(
+      context,
+      qrCode,
+      moduleSize,
+      offsetX,
+      offsetY,
+      eyeFrameStyle,
+      eyeBallStyle,
     );
   } else {
     for (let row = 0; row < qrCode.modules.size; row++) {
@@ -514,7 +591,62 @@ export function createQrCodeSvg(
   const squarePaths: string[] = [];
   const styledModules: string[] = [];
 
-  if (options.style === "pencil" || options.style === "pencil-vertical") {
+  if (options.style === "mosaic") {
+    const size = qrCode.modules.size;
+    const activeRuns = new Map<string, { startRow: number; endRow: number; startColumn: number; endColumn: number }>();
+    const paintRun = (run: { startRow: number; endRow: number; startColumn: number; endColumn: number }) => {
+      const x = run.startColumn + quietZone;
+      const y = run.startRow + quietZone;
+      const width = run.endColumn - run.startColumn;
+      const height = run.endRow - run.startRow;
+      const radius = Math.min(0.08, width / 2, height / 2);
+      styledModules.push(`<rect x="${x}" y="${y}" width="${width}" height="${height}" rx="${radius}"/>`);
+    };
+
+    for (let row = 0; row < size; row++) {
+      const rowRuns = new Map<string, { startRow: number; endRow: number; startColumn: number; endColumn: number }>();
+      let column = 0;
+      while (column < size) {
+        if (
+          !qrCode.modules.get(row, column)
+          || isExcludedFinderModule(row, column, size, eyeFrameStyle, eyeBallStyle)
+          || qrCode.modules.isReserved(row, column) === 1
+        ) {
+          column++;
+          continue;
+        }
+        const startColumn = column++;
+        while (
+          column < size
+          && qrCode.modules.get(row, column)
+          && !isExcludedFinderModule(row, column, size, eyeFrameStyle, eyeBallStyle)
+          && qrCode.modules.isReserved(row, column) !== 1
+        ) column++;
+        const key = `${startColumn}:${column}`;
+        const previous = activeRuns.get(key);
+        rowRuns.set(key, previous
+          ? { ...previous, endRow: row + 1 }
+          : { startRow: row, endRow: row + 1, startColumn, endColumn: column });
+      }
+
+      for (const [key, run] of activeRuns) {
+        if (!rowRuns.has(key)) paintRun(run);
+      }
+      activeRuns.clear();
+      for (const [key, run] of rowRuns) activeRuns.set(key, run);
+    }
+
+    for (const run of activeRuns.values()) paintRun(run);
+    for (let row = 0; row < size; row++) {
+      for (let column = 0; column < size; column++) {
+        if (
+          qrCode.modules.get(row, column)
+          && !isExcludedFinderModule(row, column, size, eyeFrameStyle, eyeBallStyle)
+          && qrCode.modules.isReserved(row, column) === 1
+        ) squarePaths.push(`M${column + quietZone} ${row + quietZone}h1v1h-1z`);
+      }
+    }
+  } else if (options.style === "pencil" || options.style === "pencil-vertical") {
     const vertical = options.style === "pencil-vertical";
     for (let line = 0; line < qrCode.modules.size; line++) {
       let position = 0;

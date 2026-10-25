@@ -97,7 +97,7 @@ function renderPreviewModule(style: QrCodeStyle, row: number, column: number): R
       y={y + 0.12}
       width="5.76"
       height="5.76"
-      rx={style === "rounded" ? "1.2" : "0"}
+      rx={style === "mosaic" ? "0.36" : style === "rounded" ? "1.2" : "0"}
     />
   );
 }
