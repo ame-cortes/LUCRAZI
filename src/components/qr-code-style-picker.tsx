@@ -33,17 +33,16 @@ function renderPreviewModule(style: QrCodeStyle, row: number, column: number): R
     return <polygon key={`${row}-${column}`} points={`${x + 1.4},${y + 0.2} ${x + 3.6},${y + 0.2} ${x + 4.8},${y + 1.4} ${x + 4.8},${y + 3.6} ${x + 3.6},${y + 4.8} ${x + 1.4},${y + 4.8} ${x + 0.2},${y + 3.6} ${x + 0.2},${y + 1.4}`} />;
   }
   if (style === "leaf") {
-    return <rect key={`${row}-${column}`} x={x + 0.84} y={y + 0.3} width="4.32" height="4.4" rx="2.16" transform={`rotate(45 ${x + 3} ${y + 3})`} />;
+    return <path key={`${row}-${column}`} d={`M${x + 3} ${y + 0.2}Q${x + 5.8} ${y + 1.6} ${x + 5.4} ${y + 3.8}Q${x + 5} ${y + 5.8} ${x + 3} ${y + 5.9}Q${x + 1} ${y + 5.8} ${x + 0.6} ${y + 3.8}Q${x + 0.2} ${y + 1.6} ${x + 3} ${y + 0.2}Z`} />;
   }
   if (style === "star") {
-    return <polygon key={`${row}-${column}`} points={`${x + 3},${y + 0.3} ${x + 3.72},${y + 2.28} ${x + 5.7},${y + 3} ${x + 3.72},${y + 3.72} ${x + 3},${y + 5.7} ${x + 2.28},${y + 3.72} ${x + 0.3},${y + 3} ${x + 2.28},${y + 2.28}`} />;
+    return <polygon key={`${row}-${column}`} points={`${x + 3},${y + 0.3} ${x + 3.96},${y + 2.04} ${x + 5.7},${y + 3} ${x + 3.96},${y + 3.96} ${x + 3},${y + 5.7} ${x + 2.04},${y + 3.96} ${x + 0.3},${y + 3} ${x + 2.04},${y + 2.04}`} />;
   }
   if (style === "pencil") {
     return (
       <g key={`${row}-${column}`}>
-        <path d={`M${x + 0.48} ${y + 4.32}L${x + 4.08} ${y + 0.6}L${x + 5.4} ${y + 1.8}L${x + 1.68} ${y + 5.52}Z`} />
-        <path d={`M${x + 0.48} ${y + 4.32}L${x + 1.68} ${y + 5.52}L${x + 0.48} ${y + 5.52}Z`} />
-        <path d={`M${x + 4.08} ${y + 0.6}L${x + 4.68} ${y + 0.12}L${x + 5.88} ${y + 1.32}L${x + 5.4} ${y + 1.8}Z`} />
+        <path d={`M${x + 1.68} ${y + 1.44}H${x + 4.32}V${y + 4.32}L${x + 3} ${y + 5.88}L${x + 1.68} ${y + 4.32}Z`} />
+        <path d={`M${x + 1.68} ${y + 1.44}V${y + 0.72}Q${x + 3} ${y + 0.24} ${x + 4.32} ${y + 0.72}V${y + 1.44}Z`} />
       </g>
     );
   }

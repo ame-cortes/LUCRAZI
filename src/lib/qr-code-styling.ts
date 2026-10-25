@@ -247,44 +247,40 @@ export async function renderQrCodeCanvas(
         context.closePath();
         context.fill();
       } else if (options.style === "leaf") {
-        context.save();
-        context.translate(x + moduleSize / 2, y + moduleSize / 2);
-        context.rotate(Math.PI / 4);
         context.beginPath();
-        context.roundRect(-moduleSize * 0.36, -moduleSize * 0.45, moduleSize * 0.72, moduleSize * 0.9, moduleSize * 0.36);
+        context.moveTo(x + moduleSize / 2, y + moduleSize * 0.04);
+        context.quadraticCurveTo(x + moduleSize * 0.98, y + moduleSize * 0.3, x + moduleSize * 0.9, y + moduleSize * 0.64);
+        context.quadraticCurveTo(x + moduleSize * 0.82, y + moduleSize * 0.96, x + moduleSize / 2, y + moduleSize * 0.98);
+        context.quadraticCurveTo(x + moduleSize * 0.18, y + moduleSize * 0.96, x + moduleSize * 0.1, y + moduleSize * 0.64);
+        context.quadraticCurveTo(x + moduleSize * 0.02, y + moduleSize * 0.3, x + moduleSize / 2, y + moduleSize * 0.04);
+        context.closePath();
         context.fill();
-        context.restore();
       } else if (options.style === "star") {
         context.beginPath();
         context.moveTo(x + moduleSize / 2, y + moduleSize * 0.05);
-        context.lineTo(x + moduleSize * 0.62, y + moduleSize * 0.38);
+        context.lineTo(x + moduleSize * 0.66, y + moduleSize * 0.34);
         context.lineTo(x + moduleSize * 0.95, y + moduleSize / 2);
-        context.lineTo(x + moduleSize * 0.62, y + moduleSize * 0.62);
+        context.lineTo(x + moduleSize * 0.66, y + moduleSize * 0.66);
         context.lineTo(x + moduleSize / 2, y + moduleSize * 0.95);
-        context.lineTo(x + moduleSize * 0.38, y + moduleSize * 0.62);
+        context.lineTo(x + moduleSize * 0.34, y + moduleSize * 0.66);
         context.lineTo(x + moduleSize * 0.05, y + moduleSize / 2);
-        context.lineTo(x + moduleSize * 0.38, y + moduleSize * 0.38);
+        context.lineTo(x + moduleSize * 0.34, y + moduleSize * 0.34);
         context.closePath();
         context.fill();
       } else {
         context.beginPath();
-        context.moveTo(x + moduleSize * 0.08, y + moduleSize * 0.72);
-        context.lineTo(x + moduleSize * 0.68, y + moduleSize * 0.1);
-        context.lineTo(x + moduleSize * 0.9, y + moduleSize * 0.3);
-        context.lineTo(x + moduleSize * 0.28, y + moduleSize * 0.92);
+        context.moveTo(x + moduleSize * 0.22, y + moduleSize * 0.24);
+        context.lineTo(x + moduleSize * 0.78, y + moduleSize * 0.24);
+        context.lineTo(x + moduleSize * 0.78, y + moduleSize * 0.72);
+        context.lineTo(x + moduleSize / 2, y + moduleSize * 0.98);
+        context.lineTo(x + moduleSize * 0.22, y + moduleSize * 0.72);
         context.closePath();
         context.fill();
         context.beginPath();
-        context.moveTo(x + moduleSize * 0.08, y + moduleSize * 0.72);
-        context.lineTo(x + moduleSize * 0.28, y + moduleSize * 0.92);
-        context.lineTo(x + moduleSize * 0.08, y + moduleSize * 0.92);
-        context.closePath();
-        context.fill();
-        context.beginPath();
-        context.moveTo(x + moduleSize * 0.68, y + moduleSize * 0.1);
-        context.lineTo(x + moduleSize * 0.78, y + moduleSize * 0.02);
-        context.lineTo(x + moduleSize * 0.98, y + moduleSize * 0.22);
-        context.lineTo(x + moduleSize * 0.9, y + moduleSize * 0.3);
+        context.moveTo(x + moduleSize * 0.22, y + moduleSize * 0.24);
+        context.lineTo(x + moduleSize * 0.22, y + moduleSize * 0.12);
+        context.quadraticCurveTo(x + moduleSize * 0.5, y + moduleSize * 0.04, x + moduleSize * 0.78, y + moduleSize * 0.12);
+        context.lineTo(x + moduleSize * 0.78, y + moduleSize * 0.24);
         context.closePath();
         context.fill();
       }
@@ -379,11 +375,11 @@ export function createQrCodeSvg(
       } else if (options.style === "octagon") {
         styledModules.push(`<path d="M${x + 0.28} ${y + 0.04}H${x + 0.72}L${x + 0.96} ${y + 0.28}V${y + 0.72}L${x + 0.72} ${y + 0.96}H${x + 0.28}L${x + 0.04} ${y + 0.72}V${y + 0.28}Z"/>`);
       } else if (options.style === "leaf") {
-        styledModules.push(`<rect x="${x + 0.14}" y="${y + 0.05}" width="0.72" height="0.9" rx="0.36" transform="rotate(45 ${x + 0.5} ${y + 0.5})"/>`);
+        styledModules.push(`<path d="M${x + 0.5} ${y + 0.04}Q${x + 0.98} ${y + 0.3} ${x + 0.9} ${y + 0.64}Q${x + 0.82} ${y + 0.96} ${x + 0.5} ${y + 0.98}Q${x + 0.18} ${y + 0.96} ${x + 0.1} ${y + 0.64}Q${x + 0.02} ${y + 0.3} ${x + 0.5} ${y + 0.04}Z"/>`);
       } else if (options.style === "star") {
-        styledModules.push(`<path d="M${x + 0.5} ${y + 0.05}L${x + 0.62} ${y + 0.38}L${x + 0.95} ${y + 0.5}L${x + 0.62} ${y + 0.62}L${x + 0.5} ${y + 0.95}L${x + 0.38} ${y + 0.62}L${x + 0.05} ${y + 0.5}L${x + 0.38} ${y + 0.38}Z"/>`);
+        styledModules.push(`<path d="M${x + 0.5} ${y + 0.05}L${x + 0.66} ${y + 0.34}L${x + 0.95} ${y + 0.5}L${x + 0.66} ${y + 0.66}L${x + 0.5} ${y + 0.95}L${x + 0.34} ${y + 0.66}L${x + 0.05} ${y + 0.5}L${x + 0.34} ${y + 0.34}Z"/>`);
       } else {
-        styledModules.push(`<path d="M${x + 0.08} ${y + 0.72}L${x + 0.68} ${y + 0.1}L${x + 0.9} ${y + 0.3}L${x + 0.28} ${y + 0.92}Z M${x + 0.08} ${y + 0.72}L${x + 0.28} ${y + 0.92}L${x + 0.08} ${y + 0.92}Z M${x + 0.68} ${y + 0.1}L${x + 0.78} ${y + 0.02}L${x + 0.98} ${y + 0.22}L${x + 0.9} ${y + 0.3}Z"/>`);
+        styledModules.push(`<path d="M${x + 0.22} ${y + 0.24}H${x + 0.78}V${y + 0.72}L${x + 0.5} ${y + 0.98}L${x + 0.22} ${y + 0.72}Z M${x + 0.22} ${y + 0.24}V${y + 0.12}Q${x + 0.5} ${y + 0.04} ${x + 0.78} ${y + 0.12}V${y + 0.24}Z"/>`);
       }
     }
   }
