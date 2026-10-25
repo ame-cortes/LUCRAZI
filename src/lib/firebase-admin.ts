@@ -2,7 +2,7 @@ import "server-only";
 
 import { decodeProtectedHeader, importX509, jwtVerify, type CryptoKey } from "jose";
 import { cert, getApps, initializeApp, type ServiceAccount } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, type Firestore } from "firebase-admin/firestore";
 
 const firebaseAuthCertUrl = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com";
 
@@ -10,6 +10,25 @@ type SecureTokenCertificates = Record<string, string>;
 
 let certificateCache: { certificates: SecureTokenCertificates; expiresAt: number } | undefined;
 const publicKeyCache = new Map<string, Promise<CryptoKey>>();
+const firestoreClients = new WeakSet<Firestore>();
+const firestoreClientConfig = {
+  interfaces: {
+    "google.firestore.v1.Firestore": {
+      retry_params: {
+        default: {
+          initial_retry_delay_millis: 100,
+          retry_delay_multiplier: 1.3,
+          max_retry_delay_millis: 1_000,
+          initial_rpc_timeout_millis: 5_000,
+          rpc_timeout_multiplier: 1,
+          max_rpc_timeout_millis: 5_000,
+          total_timeout_millis: 15_000,
+        },
+      },
+      methods: {},
+    },
+  },
+};
 
 type ServiceAccountJson = {
   project_id?: unknown;
@@ -75,7 +94,12 @@ export function getFirebaseAdminApp() {
 }
 
 export function getFirebaseAdminDb() {
-  return getFirestore(getFirebaseAdminApp());
+  const firestore = getFirestore(getFirebaseAdminApp());
+  if (!firestoreClients.has(firestore)) {
+    firestore.settings({ clientConfig: firestoreClientConfig });
+    firestoreClients.add(firestore);
+  }
+  return firestore;
 }
 
 async function getSecureTokenCertificates(forceRefresh = false) {
@@ -209,7 +233,7 @@ export async function verifyNewsletterAdmin(request: Request) {
       || payload.auth_time > now + 60
     ) return null;
 
-    const admin = await getFirestore(getFirebaseAdminApp()).doc(`admins/${payload.sub}`).get();
+    const admin =     await getFirebaseAdminDb().doc(`admins/${payload.sub}`).get();
     if (admin.data()?.allowAdmin !== true) return null;
     return { uid: payload.sub };
   } catch (error) {

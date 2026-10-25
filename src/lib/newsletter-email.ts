@@ -4,6 +4,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { qrCodeUrl } from "@/lib/site-config";
 
 const BREVO_API = "https://api.brevo.com/v3";
+const brevoRequestTimeoutMs = 15_000;
 const ebookFilename = "como-faturar-seus-primeiros-1000-na-internet.pdf";
 
 type BrevoConfig = {
@@ -120,6 +121,7 @@ async function brevoRequest<T>(path: string, init: RequestInit = {}): Promise<T>
       ...init.headers,
     },
     cache: "no-store",
+    signal: AbortSignal.timeout(brevoRequestTimeoutMs),
   });
   if (!response.ok) {
     const responseBody = await response.text();

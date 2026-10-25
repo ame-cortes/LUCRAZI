@@ -15,6 +15,7 @@ import { createQrCodeSvgServer } from "@/lib/qr-code-styling-server";
 
 const appCheckJwks = createRemoteJWKSet(
   new URL("https://firebaseappcheck.googleapis.com/v1/jwks"),
+  { timeoutDuration: 5_000 },
 );
 const consentTextVersion = "2026-10-14";
 const requestCooldownMs = 60_000;
@@ -284,7 +285,7 @@ export async function POST(request: Request) {
         ...(existing.exists ? {} : { createdAt: FieldValue.serverTimestamp() }),
       }, { merge: true });
       return true;
-    });
+    }, { maxAttempts: 2 });
     if (!accepted) {
       return NextResponse.json({
         error: "Aguarde um minuto antes de solicitar outro QR Code para este e-mail.",
