@@ -45,20 +45,20 @@ export const qrCodeStyleOptions: {
 
 const groupedStyleConnectorWidths: Record<QrCodeStyle, number> = {
   square: 0,
-  rounded: 0.46,
-  dots: 0.62,
-  vertical: 0.72,
-  horizontal: 0.72,
-  diamond: 0.28,
-  octagon: 0.32,
-  leaf: 0.38,
-  star: 0.28,
-  pencil: 0.42,
+  rounded: 1,
+  dots: 1,
+  vertical: 1,
+  horizontal: 1,
+  diamond: 1,
+  octagon: 1,
+  leaf: 1,
+  star: 1,
+  pencil: 1,
   mosaic: 0.16,
-  tribal: 0.54,
-  heart: 0.42,
-  "pencil-vertical": 0.42,
-  relief: 0.48,
+  tribal: 1,
+  heart: 1,
+  "pencil-vertical": 1,
+  relief: 1,
 };
 
 export const qrCodeEyeStyleOptions: { id: QrCodeEyeStyle; label: string }[] = [

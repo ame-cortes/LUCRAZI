@@ -16,20 +16,20 @@ const previewModules = [
 
 const previewConnectorWidths: Record<QrCodeStyle, number> = {
   square: 0,
-  rounded: 2.76,
-  dots: 3.72,
-  vertical: 4.32,
-  horizontal: 4.32,
-  diamond: 1.68,
-  octagon: 1.92,
-  leaf: 2.28,
-  star: 1.68,
-  pencil: 2.52,
+  rounded: 6,
+  dots: 6,
+  vertical: 6,
+  horizontal: 6,
+  diamond: 6,
+  octagon: 6,
+  leaf: 6,
+  star: 6,
+  pencil: 6,
   mosaic: 0.96,
-  tribal: 3.24,
-  heart: 2.52,
-  "pencil-vertical": 2.52,
-  relief: 2.88,
+  tribal: 6,
+  heart: 6,
+  "pencil-vertical": 6,
+  relief: 6,
 };
 
 function renderPencilPreviewModules(vertical: boolean): React.JSX.Element[] {
