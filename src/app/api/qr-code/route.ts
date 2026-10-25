@@ -13,6 +13,7 @@ import {
   type QrCodeEyeStyle,
   type QrCodeStyle,
 } from "@/lib/qr-code-styling";
+import { isQrCodeStylingShape } from "@/lib/qr-code-styling-adapter";
 import { createQrCodeSvgServer } from "@/lib/qr-code-styling-server";
 
 const appCheckJwks = createRemoteJWKSet(
@@ -297,8 +298,14 @@ export async function POST(request: Request) {
   try {
     logo = parseLogo(input.logoDataUrl);
     const qrSvg = await traceQrDeliveryStage("qr-svg-generation", () => createQrSvg(input, logo));
-    // Reduz resolução quando tem logo para evitar timeout
-    const pngSize = logo ? 256 : 512;
+    // Ajusta resolução baseado no tipo de QR e presença de logo
+    const isStylingShape = isQrCodeStylingShape(input.qrStyle);
+    let pngSize = 512;
+    if (isStylingShape && logo) {
+      pngSize = 128; // Mais complexo: styling + logo
+    } else if (isStylingShape || logo) {
+      pngSize = logo ? 256 : 384;
+    }
     qrPng = await traceQrDeliveryStage("qr-png-rasterization", () =>
       sharp(Buffer.from(qrSvg))
         .resize({ width: pngSize, height: pngSize })
