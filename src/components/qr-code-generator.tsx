@@ -327,15 +327,34 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
         }),
       });
 
-      const result: unknown = await response.json();
+      const responseText = await response.text();
+      let result: unknown = null;
+      if (responseText.trim()) {
+        try {
+          result = JSON.parse(responseText) as unknown;
+        } catch {
+          console.error("A API de entrega do QR Code retornou uma resposta que não é JSON.", {
+            status: response.status,
+            contentType: response.headers.get("content-type"),
+          });
+        }
+      }
       if (!response.ok) {
         const errorMessage = typeof result === "object"
           && result !== null
           && "error" in result
           && typeof result.error === "string"
           ? result.error
-          : "Não foi possível enviar seu QR Code.";
+          : `O servidor não conseguiu confirmar o envio (HTTP ${response.status}). Tente novamente mais tarde.`;
         throw new Error(errorMessage);
+      }
+      if (
+        typeof result !== "object"
+        || result === null
+        || !("status" in result)
+        || result.status !== "sent"
+      ) {
+        throw new Error("O servidor não confirmou o envio. Verifique sua caixa de entrada antes de tentar novamente.");
       }
 
       try {
