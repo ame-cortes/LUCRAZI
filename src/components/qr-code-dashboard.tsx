@@ -24,6 +24,8 @@ import {
   type QrCodeEyeStyle,
   type QrCodeStyle,
 } from "@/lib/qr-code-styling";
+import { isQrCodeStylingShape } from "@/lib/qr-code-styling-adapter";
+import { createQrCodeStylingSvg } from "@/lib/qr-code-styling-client";
 import { siteUrl } from "@/lib/site-config";
 import QrMetricsDashboard from "@/components/qr-metrics-dashboard";
 
@@ -827,7 +829,7 @@ export default function QrCodeDashboard() {
 
   async function downloadSavedSvg(code: SavedQrCode) {
     try {
-      const svg = createQrCodeSvg(getSavedQrContent(code), {
+      const options = {
         foregroundColor: code.foregroundColor,
         backgroundColor: code.backgroundColor,
         style: code.qrStyle,
@@ -836,7 +838,10 @@ export default function QrCodeDashboard() {
         eyeFrameColor: code.eyeFrameColor,
         eyeBallColor: code.eyeBallColor,
         logoDataUrl: code.logoDataUrl,
-      });
+      };
+      const svg = isQrCodeStylingShape(code.qrStyle)
+        ? await createQrCodeStylingSvg(getSavedQrContent(code), code.qrStyle, options)
+        : createQrCodeSvg(getSavedQrContent(code), options);
       const filename = code.name.trim().replace(/[^\p{L}\p{N}-]+/gu, "-") || code.id;
       downloadFile(`qr-code-${filename}.svg`, svg, "image/svg+xml;charset=utf-8");
     } catch (downloadError) {

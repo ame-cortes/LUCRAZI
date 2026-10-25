@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
-import { createQrCodeSvg, isQrCodeEyeStyle, isQrCodeStyle } from "@/lib/qr-code-styling";
+import { isQrCodeEyeStyle, isQrCodeStyle } from "@/lib/qr-code-styling";
+import { createQrCodeSvgServer } from "@/lib/qr-code-styling-server";
 
 function normalizeApiKey(value: string) {
   return createHash("sha256").update(value.trim()).digest("hex");
@@ -112,7 +113,7 @@ export async function POST(request: Request) {
   }
 
   const id = `qr_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
-  const svg = createQrCodeSvg(parsed.content, {
+  const svg = await createQrCodeSvgServer(parsed.content, {
     foregroundColor: parsed.foregroundColor,
     backgroundColor: parsed.backgroundColor,
     style: parsed.qrStyle,

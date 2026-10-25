@@ -30,6 +30,9 @@ const previewConnectorWidths: Record<QrCodeStyle, number> = {
   heart: 3.48,
   "pencil-vertical": 3.36,
   relief: 3.12,
+  classy: 0,
+  "classy-rounded": 0,
+  "extra-rounded": 0,
 };
 
 const previewConnectorCaps: Record<QrCodeStyle, "round" | "square"> = {
@@ -48,6 +51,9 @@ const previewConnectorCaps: Record<QrCodeStyle, "round" | "square"> = {
   heart: "round",
   "pencil-vertical": "square",
   relief: "square",
+  classy: "square",
+  "classy-rounded": "square",
+  "extra-rounded": "square",
 };
 
 function renderPencilPreviewModules(vertical: boolean): React.JSX.Element[] {
@@ -170,6 +176,15 @@ function renderPreviewModule(style: QrCodeStyle, row: number, column: number): R
   }
   if (style === "relief") {
     return <path key={`${row}-${column}`} d={`M${x + 0.78} ${y + 0.12}H${x + 2.28}Q${x + 3} ${y + 0.84} ${x + 3.72} ${y + 0.12}H${x + 5.22}Q${x + 5.88} ${y + 0.12} ${x + 5.88} ${y + 0.78}V${y + 2.28}Q${x + 5.16} ${y + 3} ${x + 5.88} ${y + 3.72}V${y + 5.22}Q${x + 5.88} ${y + 5.88} ${x + 5.22} ${y + 5.88}H${x + 3.72}Q${x + 3} ${y + 5.16} ${x + 2.28} ${y + 5.88}H${x + 0.78}Q${x + 0.12} ${y + 5.88} ${x + 0.12} ${y + 5.22}V${y + 3.72}Q${x + 0.84} ${y + 3} ${x + 0.12} ${y + 2.28}V${y + 0.78}Q${x + 0.12} ${y + 0.12} ${x + 0.78} ${y + 0.12}Z`} />;
+  }
+  if (style === "classy") {
+    return <path key={`${row}-${column}`} d={`M${x + 0.12} ${y + 0.12}H${x + 4.2}L${x + 5.88} ${y + 1.8}V${y + 5.88}H${x + 1.8}L${x + 0.12} ${y + 4.2}Z`} />;
+  }
+  if (style === "classy-rounded") {
+    return <path key={`${row}-${column}`} d={`M${x + 3} ${y + 0.12}C${x + 4.9} ${y + 0.12} ${x + 5.88} ${y + 1.1} ${x + 5.88} ${y + 3}V${y + 5.88}H${x + 3}C${x + 1.1} ${y + 5.88} ${x + 0.12} ${y + 4.9} ${x + 0.12} ${y + 3}C${x + 0.12} ${y + 1.1} ${x + 1.1} ${y + 0.12} ${x + 3} ${y + 0.12}Z`} />;
+  }
+  if (style === "extra-rounded") {
+    return <rect key={`${row}-${column}`} x={x + 0.12} y={y + 0.12} width="5.76" height="5.76" rx="2.88" />;
   }
   return (
     <rect

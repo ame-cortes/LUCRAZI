@@ -13,6 +13,8 @@ import {
   type QrCodeEyeStyle,
   type QrCodeStyle,
 } from "@/lib/qr-code-styling";
+import { isQrCodeStylingShape } from "@/lib/qr-code-styling-adapter";
+import { createQrCodeStylingSvg } from "@/lib/qr-code-styling-client";
 
 type QrCodeGeneratorProps = {
   emailDeliveryEnabled: boolean;
@@ -252,7 +254,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
 
   async function handleDownloadSvg() {
     try {
-      const svg = createQrCodeSvg(content.trim() || " ", {
+      const options = {
         foregroundColor,
         backgroundColor,
         style: qrStyle,
@@ -261,7 +263,10 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
         eyeFrameColor,
         eyeBallColor,
         logoDataUrl,
-      });
+      };
+      const svg = isQrCodeStylingShape(qrStyle)
+        ? await createQrCodeStylingSvg(content.trim() || " ", qrStyle, options)
+        : createQrCodeSvg(content.trim() || " ", options);
       downloadFile("qr-code-lucrazi.svg", svg, "image/svg+xml;charset=utf-8");
     } catch (error) {
       console.error("Não foi possível exportar o QR Code como SVG.", error);

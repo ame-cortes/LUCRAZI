@@ -6,12 +6,12 @@ import { NextResponse } from "next/server";
 import { getFirebaseAdminDb } from "@/lib/firebase-admin";
 import { isBrevoEmailConfigured, sendQrCodeEmail } from "@/lib/newsletter-email";
 import {
-  createQrCodeSvg,
   isQrCodeEyeStyle,
   isQrCodeStyle,
   type QrCodeEyeStyle,
   type QrCodeStyle,
 } from "@/lib/qr-code-styling";
+import { createQrCodeSvgServer } from "@/lib/qr-code-styling-server";
 
 const appCheckJwks = createRemoteJWKSet(
   new URL("https://firebaseappcheck.googleapis.com/v1/jwks"),
@@ -153,7 +153,7 @@ function parseLogo(value: string | undefined) {
 }
 
 async function createQrSvg(input: QrRequest, logo: ReturnType<typeof parseLogo>) {
-  return createQrCodeSvg(input.content, {
+  return createQrCodeSvgServer(input.content, {
     foregroundColor: input.foregroundColor,
     backgroundColor: input.backgroundColor,
     style: input.qrStyle,

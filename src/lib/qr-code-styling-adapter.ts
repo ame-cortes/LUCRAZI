@@ -1,0 +1,107 @@
+import type { Options as QrCodeStylingOptions } from "qr-code-styling";
+import type { QrCodeEyeStyle } from "@/lib/qr-code-styling";
+
+export const QRCODE_STYLING_SHAPES = ["classy", "classy-rounded", "extra-rounded"] as const;
+export type QrCodeStylingShape = (typeof QRCODE_STYLING_SHAPES)[number];
+
+export type QrCodeStylingRenderOptions = {
+  foregroundColor: string;
+  backgroundColor: string;
+  eyeFrameStyle: QrCodeEyeStyle;
+  eyeBallStyle: QrCodeEyeStyle;
+  eyeFrameColor: string;
+  eyeBallColor: string;
+  logoDataUrl?: string;
+};
+
+export function isQrCodeStylingShape(value: string): value is QrCodeStylingShape {
+  return QRCODE_STYLING_SHAPES.includes(value as QrCodeStylingShape);
+}
+
+export function createQrCodeStylingOptions(
+  content: string,
+  options: QrCodeStylingRenderOptions,
+  margin: number,
+): Partial<QrCodeStylingOptions> {
+  return {
+    type: "svg",
+    width: 720,
+    height: 720,
+    margin,
+    data: content,
+    qrOptions: { errorCorrectionLevel: "H" },
+    dotsOptions: {
+      color: options.foregroundColor,
+      type: "classy",
+    },
+    cornersSquareOptions: { color: options.foregroundColor, type: "square" },
+    cornersDotOptions: { color: options.foregroundColor, type: "square" },
+    backgroundOptions: { color: options.backgroundColor },
+    ...(options.logoDataUrl
+      ? {
+          image: options.logoDataUrl,
+          imageOptions: { hideBackgroundDots: true, imageSize: 0.14, margin: 0 },
+        }
+      : {}),
+  };
+}
+
+function eyeShape(
+  x: number,
+  y: number,
+  size: number,
+  style: QrCodeEyeStyle,
+  color: string,
+) {
+  if (style === "circle") {
+    return `<circle cx="${x + size / 2}" cy="${y + size / 2}" r="${size / 2}" fill="${color}"/>`;
+  }
+  if (style === "rounded") {
+    return `<rect x="${x}" y="${y}" width="${size}" height="${size}" rx="${size * 0.2}" fill="${color}"/>`;
+  }
+  if (style === "diamond") {
+    return `<path d="M${x + size / 2} ${y}L${x + size} ${y + size / 2}L${x + size / 2} ${y + size}L${x} ${y + size / 2}Z" fill="${color}"/>`;
+  }
+  if (style === "octagon") {
+    return `<path d="M${x + size * 0.28} ${y}H${x + size * 0.72}L${x + size} ${y + size * 0.28}V${y + size * 0.72}L${x + size * 0.72} ${y + size}H${x + size * 0.28}L${x} ${y + size * 0.72}V${y + size * 0.28}Z" fill="${color}"/>`;
+  }
+  if (style === "leaf") {
+    return `<path d="M${x + size / 2} ${y}Q${x + size} ${y + size * 0.28} ${x + size} ${y + size / 2}Q${x + size * 0.72} ${y + size} ${x + size / 2} ${y + size}Q${x} ${y + size * 0.72} ${x} ${y + size / 2}Q${x + size * 0.28} ${y} ${x + size / 2} ${y}Z" fill="${color}"/>`;
+  }
+  if (style === "heart") {
+    return `<path d="M${x + size / 2} ${y + size * 0.96}C${x + size * 0.4} ${y + size * 0.82} ${x + size * 0.02} ${y + size * 0.58} ${x + size * 0.02} ${y + size * 0.3}C${x + size * 0.02} ${y + size * 0.02} ${x + size * 0.38} ${y - size * 0.04} ${x + size / 2} ${y + size * 0.24}C${x + size * 0.62} ${y - size * 0.04} ${x + size * 0.98} ${y + size * 0.02} ${x + size * 0.98} ${y + size * 0.3}C${x + size * 0.98} ${y + size * 0.58} ${x + size * 0.6} ${y + size * 0.82} ${x + size / 2} ${y + size * 0.96}Z" fill="${color}"/>`;
+  }
+  return `<rect x="${x}" y="${y}" width="${size}" height="${size}" fill="${color}"/>`;
+}
+
+export function addQrCodeStylingEyePatterns(
+  svg: string,
+  moduleCount: number,
+  margin: number,
+  options: QrCodeStylingRenderOptions,
+) {
+  const moduleSize = (720 - margin * 2) / moduleCount;
+  const origins: [number, number][] = [
+    [0, 0],
+    [0, moduleCount - 7],
+    [moduleCount - 7, 0],
+  ];
+  const patterns = origins.map(([row, column]) => {
+    const x = margin + column * moduleSize;
+    const y = margin + row * moduleSize;
+    return [
+      `<rect x="${x}" y="${y}" width="${moduleSize * 7}" height="${moduleSize * 7}" fill="${options.backgroundColor}"/>`,
+      eyeShape(x, y, moduleSize * 7, options.eyeFrameStyle, options.eyeFrameColor),
+      `<rect x="${x + moduleSize}" y="${y + moduleSize}" width="${moduleSize * 5}" height="${moduleSize * 5}" fill="${options.backgroundColor}"/>`,
+      eyeShape(x + moduleSize * 2, y + moduleSize * 2, moduleSize * 3, options.eyeBallStyle, options.eyeBallColor),
+    ].join("");
+  }).join("");
+
+  return svg.replace("</svg>", `${patterns}</svg>`);
+}
+
+export async function readQrCodeStylingSvg(data: Blob | Uint8Array | null) {
+  if (data instanceof Blob) return data.text();
+  if (data instanceof Uint8Array) return new TextDecoder().decode(data);
+  throw new Error("A biblioteca QRCodeStyling não retornou o SVG.");
+}

@@ -1,4 +1,5 @@
 import QRCode from "qrcode";
+import { isQrCodeStylingShape } from "@/lib/qr-code-styling-adapter";
 
 export const QR_CODE_STYLES = [
   "square",
@@ -16,6 +17,9 @@ export const QR_CODE_STYLES = [
   "heart",
   "pencil-vertical",
   "relief",
+  "classy",
+  "classy-rounded",
+  "extra-rounded",
 ] as const;
 export type QrCodeStyle = (typeof QR_CODE_STYLES)[number];
 export const QR_CODE_EYE_STYLES = ["square", "rounded", "circle", "diamond", "octagon", "leaf", "heart"] as const;
@@ -41,6 +45,9 @@ export const qrCodeStyleOptions: {
   { id: "heart", label: "Coração", description: "Corações encorpados que se encontram em grupos" },
   { id: "pencil-vertical", label: "Lápis vertical", description: "Traços verticais agrupados em hastes" },
   { id: "relief", label: "Relevo", description: "Módulos recortados unidos em relevos" },
+  { id: "classy", label: "Elegante", description: "Módulos clássicos estilizados pela QRCodeStyling" },
+  { id: "classy-rounded", label: "Elegante arredondado", description: "Traços suaves e conectados pela QRCodeStyling" },
+  { id: "extra-rounded", label: "Extra arredondado", description: "Módulos densos e arredondados pela QRCodeStyling" },
 ];
 
 const groupedStyleConnectorWidths: Record<QrCodeStyle, number> = {
@@ -59,6 +66,9 @@ const groupedStyleConnectorWidths: Record<QrCodeStyle, number> = {
   heart: 0.58,
   "pencil-vertical": 0.56,
   relief: 0.52,
+  classy: 0,
+  "classy-rounded": 0,
+  "extra-rounded": 0,
 };
 
 const groupedStyleConnectorCaps: Record<QrCodeStyle, CanvasLineCap> = {
@@ -77,6 +87,9 @@ const groupedStyleConnectorCaps: Record<QrCodeStyle, CanvasLineCap> = {
   heart: "round",
   "pencil-vertical": "square",
   relief: "square",
+  classy: "square",
+  "classy-rounded": "square",
+  "extra-rounded": "square",
 };
 
 export const qrCodeEyeStyleOptions: { id: QrCodeEyeStyle; label: string }[] = [
@@ -544,6 +557,21 @@ export async function renderQrCodeCanvas(
   const eyeBallStyle = options.eyeBallStyle || "square";
   const eyeFrameColor = options.eyeFrameColor || options.foregroundColor;
   const eyeBallColor = options.eyeBallColor || options.foregroundColor;
+
+  if (isQrCodeStylingShape(options.style)) {
+    const { createQrCodeStylingSvg, drawQrCodeStylingSvgOnCanvas } = await import("@/lib/qr-code-styling-client");
+    const svg = await createQrCodeStylingSvg(content, options.style, {
+      foregroundColor: options.foregroundColor,
+      backgroundColor: options.backgroundColor,
+      eyeFrameStyle,
+      eyeBallStyle,
+      eyeFrameColor,
+      eyeBallColor,
+      ...(options.logoDataUrl ? { logoDataUrl: options.logoDataUrl } : {}),
+    });
+    await drawQrCodeStylingSvgOnCanvas(canvas, svg);
+    return;
+  }
 
   const connectorWidth = groupedStyleConnectorWidths[options.style];
   if (connectorWidth > 0) {
