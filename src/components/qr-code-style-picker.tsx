@@ -16,20 +16,38 @@ const previewModules = [
 
 const previewConnectorWidths: Record<QrCodeStyle, number> = {
   square: 0,
-  rounded: 6,
-  dots: 6,
-  vertical: 6,
-  horizontal: 6,
-  diamond: 6,
-  octagon: 6,
-  leaf: 6,
-  star: 6,
-  pencil: 6,
+  rounded: 3.48,
+  dots: 4.68,
+  vertical: 4.08,
+  horizontal: 4.08,
+  diamond: 2.52,
+  octagon: 2.88,
+  leaf: 3.84,
+  star: 2.28,
+  pencil: 3.36,
   mosaic: 0.96,
-  tribal: 6,
-  heart: 6,
-  "pencil-vertical": 6,
-  relief: 6,
+  tribal: 3.12,
+  heart: 3.48,
+  "pencil-vertical": 3.36,
+  relief: 3.12,
+};
+
+const previewConnectorCaps: Record<QrCodeStyle, "round" | "square"> = {
+  square: "round",
+  rounded: "round",
+  dots: "round",
+  vertical: "round",
+  horizontal: "round",
+  diamond: "square",
+  octagon: "square",
+  leaf: "round",
+  star: "square",
+  pencil: "square",
+  mosaic: "square",
+  tribal: "square",
+  heart: "round",
+  "pencil-vertical": "square",
+  relief: "square",
 };
 
 function renderPencilPreviewModules(vertical: boolean): React.JSX.Element[] {
@@ -117,7 +135,7 @@ function renderGroupedPreviewConnectors(style: QrCodeStyle): React.JSX.Element {
       d={segments.join("")}
       fill="none"
       stroke="currentColor"
-      strokeLinecap="round"
+      strokeLinecap={previewConnectorCaps[style]}
       strokeWidth={previewConnectorWidths[style]}
     />
   );

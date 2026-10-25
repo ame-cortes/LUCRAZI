@@ -27,38 +27,56 @@ export const qrCodeStyleOptions: {
   description: string;
 }[] = [
   { id: "square", label: "Clássico", description: "Módulos quadrados" },
-  { id: "rounded", label: "Arredondado", description: "Módulos encorpados com cantos suaves" },
-  { id: "dots", label: "Pontos", description: "Pontos maiores e mais visíveis" },
-  { id: "vertical", label: "Vertical", description: "Traços verticais mais largos" },
-  { id: "horizontal", label: "Horizontal", description: "Traços horizontais mais largos" },
-  { id: "diamond", label: "Losangos", description: "Losangos preenchidos" },
-  { id: "octagon", label: "Geométrico", description: "Módulos geométricos encorpados" },
-  { id: "leaf", label: "Folha", description: "Folhas mais cheias" },
-  { id: "star", label: "Estrela", description: "Estrelas com braços mais largos" },
-  { id: "pencil", label: "Lápis", description: "Traços horizontais mais encorpados" },
+  { id: "rounded", label: "Arredondado", description: "Blocos agrupados com junções suaves" },
+  { id: "dots", label: "Pontos", description: "Manchas orgânicas conectadas" },
+  { id: "vertical", label: "Vertical", description: "Faixas verticais agrupadas" },
+  { id: "horizontal", label: "Horizontal", description: "Faixas horizontais agrupadas" },
+  { id: "diamond", label: "Losangos", description: "Formas angulares conectadas" },
+  { id: "octagon", label: "Geométrico", description: "Módulos facetados em grupos" },
+  { id: "leaf", label: "Folha", description: "Formas orgânicas interligadas" },
+  { id: "star", label: "Estrela", description: "Estrelas conectadas por braços" },
+  { id: "pencil", label: "Lápis", description: "Traços horizontais agrupados" },
   { id: "mosaic", label: "Mosaico", description: "Blocos conectados em formas geométricas" },
-  { id: "tribal", label: "Tribal", description: "Blocos gráficos conectados que preservam os módulos do QR" },
-  { id: "heart", label: "Coração", description: "Módulos em formato de coração" },
-  { id: "pencil-vertical", label: "Lápis vertical", description: "Traços verticais agrupados" },
-  { id: "relief", label: "Relevo", description: "Módulos geométricos com recortes suaves e identidade própria" },
+  { id: "tribal", label: "Tribal", description: "Pixels angulares unidos por caminhos quebrados" },
+  { id: "heart", label: "Coração", description: "Corações encorpados que se encontram em grupos" },
+  { id: "pencil-vertical", label: "Lápis vertical", description: "Traços verticais agrupados em hastes" },
+  { id: "relief", label: "Relevo", description: "Módulos recortados unidos em relevos" },
 ];
 
 const groupedStyleConnectorWidths: Record<QrCodeStyle, number> = {
   square: 0,
-  rounded: 1,
-  dots: 1,
-  vertical: 1,
-  horizontal: 1,
-  diamond: 1,
-  octagon: 1,
-  leaf: 1,
-  star: 1,
-  pencil: 1,
+  rounded: 0.58,
+  dots: 0.78,
+  vertical: 0.68,
+  horizontal: 0.68,
+  diamond: 0.42,
+  octagon: 0.48,
+  leaf: 0.64,
+  star: 0.38,
+  pencil: 0.56,
   mosaic: 0.16,
-  tribal: 1,
-  heart: 1,
-  "pencil-vertical": 1,
-  relief: 1,
+  tribal: 0.52,
+  heart: 0.58,
+  "pencil-vertical": 0.56,
+  relief: 0.52,
+};
+
+const groupedStyleConnectorCaps: Record<QrCodeStyle, CanvasLineCap> = {
+  square: "round",
+  rounded: "round",
+  dots: "round",
+  vertical: "round",
+  horizontal: "round",
+  diamond: "square",
+  octagon: "square",
+  leaf: "round",
+  star: "square",
+  pencil: "square",
+  mosaic: "square",
+  tribal: "square",
+  heart: "round",
+  "pencil-vertical": "square",
+  relief: "square",
 };
 
 export const qrCodeEyeStyleOptions: { id: QrCodeEyeStyle; label: string }[] = [
@@ -532,7 +550,7 @@ export async function renderQrCodeCanvas(
     context.save();
     context.strokeStyle = options.foregroundColor;
     context.lineWidth = moduleSize * connectorWidth;
-    context.lineCap = "round";
+    context.lineCap = groupedStyleConnectorCaps[options.style];
     visitGroupedStyleConnectors(qrCode, eyeFrameStyle, eyeBallStyle, (startColumn, startRow, endColumn, endRow) => {
       context.beginPath();
       context.moveTo(offsetX + startColumn * moduleSize, offsetY + startRow * moduleSize);
@@ -742,7 +760,7 @@ export function createQrCodeSvg(
       connectors.push(`M${startColumn} ${startRow}L${endColumn} ${endRow}`);
     });
     if (connectors.length) {
-      styledModules.push(`<path d="${connectors.join("")}" fill="none" stroke="${escapeXml(options.foregroundColor)}" stroke-width="${connectorWidth}" stroke-linecap="round"/>`);
+      styledModules.push(`<path d="${connectors.join("")}" fill="none" stroke="${escapeXml(options.foregroundColor)}" stroke-width="${connectorWidth}" stroke-linecap="${groupedStyleConnectorCaps[options.style]}"/>`);
     }
   }
 
