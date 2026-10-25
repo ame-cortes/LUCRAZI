@@ -63,6 +63,32 @@ function renderPencilPreviewModules(vertical: boolean): React.JSX.Element[] {
   return pencils;
 }
 
+function renderTribalPreview(): React.JSX.Element {
+  const segments: string[] = [];
+  for (let row = 0; row < previewModules.length; row++) {
+    for (let column = 0; column < previewModules[row].length; column++) {
+      if (!previewModules[row][column]) continue;
+      const centerX = column * 6 + 3;
+      const centerY = row * 6 + 3;
+      const hasRightNeighbor = previewModules[row][column + 1] === 1;
+      const hasBottomNeighbor = previewModules[row + 1]?.[column] === 1;
+      if (hasRightNeighbor) segments.push(`M${centerX} ${centerY}L${centerX + 6} ${centerY}`);
+      if (hasBottomNeighbor) segments.push(`M${centerX} ${centerY}L${centerX} ${centerY + 6}`);
+      if (!hasRightNeighbor && !hasBottomNeighbor) segments.push(`M${centerX} ${centerY}L${centerX} ${centerY}`);
+    }
+  }
+  return (
+    <path
+      d={segments.join("")}
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="5.4"
+    />
+  );
+}
+
 function renderPreviewModule(style: QrCodeStyle, row: number, column: number): React.JSX.Element {
   const x = column * 6;
   const y = row * 6;
@@ -144,7 +170,9 @@ export default function QrCodeStylePicker({
               className={`qr-style-sample qr-style-sample-${option.id}`}
               viewBox="0 0 30 30"
             >
-              {option.id === "pencil"
+              {option.id === "tribal"
+                ? renderTribalPreview()
+                : option.id === "pencil"
                 ? renderPencilPreviewModules(false)
                 : option.id === "pencil-vertical"
                   ? renderPencilPreviewModules(true)

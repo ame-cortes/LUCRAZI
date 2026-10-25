@@ -12,6 +12,7 @@ export const QR_CODE_STYLES = [
   "star",
   "pencil",
   "mosaic",
+  "tribal",
   "heart",
   "pencil-vertical",
 ] as const;
@@ -35,6 +36,7 @@ export const qrCodeStyleOptions: {
   { id: "star", label: "Estrela", description: "Estrelas com braços mais largos" },
   { id: "pencil", label: "Lápis", description: "Traços horizontais mais encorpados" },
   { id: "mosaic", label: "Mosaico", description: "Blocos conectados em formas geométricas" },
+  { id: "tribal", label: "Tribal", description: "Traços grossos conectados em caminhos contínuos" },
   { id: "heart", label: "Coração", description: "Módulos em formato de coração" },
   { id: "pencil-vertical", label: "Lápis vertical", description: "Traços verticais agrupados" },
 ];
@@ -261,6 +263,41 @@ function drawMosaicModules(
   for (const run of activeRuns.values()) paintRun(run);
 }
 
+function visitTribalSegments(
+  qrCode: ReturnType<typeof createQrCode>,
+  frameStyle: QrCodeEyeStyle,
+  ballStyle: QrCodeEyeStyle,
+  visit: (startColumn: number, startRow: number, endColumn: number, endRow: number) => void,
+) {
+  const size = qrCode.modules.size;
+  for (let row = 0; row < size; row++) {
+    for (let column = 0; column < size; column++) {
+      if (
+        !qrCode.modules.get(row, column)
+        || qrCode.modules.isReserved(row, column) === 1
+        || isExcludedFinderModule(row, column, size, frameStyle, ballStyle)
+      ) continue;
+
+      const hasRightNeighbor = column + 1 < size
+        && qrCode.modules.get(row, column + 1)
+        && qrCode.modules.isReserved(row, column + 1) !== 1
+        && !isExcludedFinderModule(row, column + 1, size, frameStyle, ballStyle);
+      const hasBottomNeighbor = row + 1 < size
+        && qrCode.modules.get(row + 1, column)
+        && qrCode.modules.isReserved(row + 1, column) !== 1
+        && !isExcludedFinderModule(row + 1, column, size, frameStyle, ballStyle);
+      const centerColumn = column + quietZone + 0.5;
+      const centerRow = row + quietZone + 0.5;
+
+      if (hasRightNeighbor) visit(centerColumn, centerRow, centerColumn + 1, centerRow);
+      if (hasBottomNeighbor) visit(centerColumn, centerRow, centerColumn, centerRow + 1);
+      if (!hasRightNeighbor && !hasBottomNeighbor) {
+        visit(centerColumn, centerRow, centerColumn, centerRow);
+      }
+    }
+  }
+}
+
 function drawEyeShape(
   context: CanvasRenderingContext2D,
   x: number,
@@ -431,6 +468,32 @@ export async function renderQrCodeCanvas(
       eyeFrameStyle,
       eyeBallStyle,
     );
+  } else if (options.style === "tribal") {
+    context.save();
+    context.strokeStyle = options.foregroundColor;
+    context.lineCap = "round";
+    context.lineJoin = "round";
+    context.lineWidth = moduleSize * 0.9;
+    visitTribalSegments(qrCode, eyeFrameStyle, eyeBallStyle, (startColumn, startRow, endColumn, endRow) => {
+      context.beginPath();
+      context.moveTo(offsetX + startColumn * moduleSize, offsetY + startRow * moduleSize);
+      context.lineTo(offsetX + endColumn * moduleSize, offsetY + endRow * moduleSize);
+      context.stroke();
+    });
+    context.restore();
+    for (let row = 0; row < qrCode.modules.size; row++) {
+      for (let column = 0; column < qrCode.modules.size; column++) {
+        if (
+          qrCode.modules.get(row, column)
+          && qrCode.modules.isReserved(row, column) === 1
+          && !isExcludedFinderModule(row, column, qrCode.modules.size, eyeFrameStyle, eyeBallStyle)
+        ) {
+          const x = offsetX + (column + quietZone) * moduleSize;
+          const y = offsetY + (row + quietZone) * moduleSize;
+          context.fillRect(x, y, moduleSize, moduleSize);
+        }
+      }
+    }
   } else {
     for (let row = 0; row < qrCode.modules.size; row++) {
       for (let column = 0; column < qrCode.modules.size; column++) {
@@ -591,7 +654,24 @@ export function createQrCodeSvg(
   const squarePaths: string[] = [];
   const styledModules: string[] = [];
 
-  if (options.style === "mosaic") {
+  if (options.style === "tribal") {
+    const segments: string[] = [];
+    visitTribalSegments(qrCode, eyeFrameStyle, eyeBallStyle, (startColumn, startRow, endColumn, endRow) => {
+      segments.push(`M${startColumn} ${startRow}L${endColumn} ${endRow}`);
+    });
+    if (segments.length) {
+      styledModules.push(`<path d="${segments.join("")}" fill="none" stroke="${escapeXml(options.foregroundColor)}" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>`);
+    }
+    for (let row = 0; row < qrCode.modules.size; row++) {
+      for (let column = 0; column < qrCode.modules.size; column++) {
+        if (
+          qrCode.modules.get(row, column)
+          && !isExcludedFinderModule(row, column, qrCode.modules.size, eyeFrameStyle, eyeBallStyle)
+          && qrCode.modules.isReserved(row, column) === 1
+        ) squarePaths.push(`M${column + quietZone} ${row + quietZone}h1v1h-1z`);
+      }
+    }
+  } else if (options.style === "mosaic") {
     const size = qrCode.modules.size;
     const activeRuns = new Map<string, { startRow: number; endRow: number; startColumn: number; endColumn: number }>();
     const paintRun = (run: { startRow: number; endRow: number; startColumn: number; endColumn: number }) => {
