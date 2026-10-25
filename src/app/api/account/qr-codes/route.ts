@@ -25,6 +25,8 @@ function parseQrCode(value: unknown) {
   const qrStyle = value.qrStyle === undefined ? "square" : value.qrStyle;
   const eyeFrameStyle = value.eyeFrameStyle === undefined ? "square" : value.eyeFrameStyle;
   const eyeBallStyle = value.eyeBallStyle === undefined ? "square" : value.eyeBallStyle;
+  const eyeFrameColor = value.eyeFrameColor === undefined ? foregroundColor : value.eyeFrameColor;
+  const eyeBallColor = value.eyeBallColor === undefined ? foregroundColor : value.eyeBallColor;
   const socialIconColor = value.socialIconColor === undefined || value.socialIconColor === ""
     ? foregroundColor
     : value.socialIconColor;
@@ -45,6 +47,8 @@ function parseQrCode(value: unknown) {
     || !isQrCodeStyle(qrStyle)
     || !isQrCodeEyeStyle(eyeFrameStyle)
     || !isQrCodeEyeStyle(eyeBallStyle)
+    || typeof eyeFrameColor !== "string" || !/^#[\da-f]{6}$/i.test(eyeFrameColor)
+    || typeof eyeBallColor !== "string" || !/^#[\da-f]{6}$/i.test(eyeBallColor)
     || typeof socialIconColor !== "string"
     || !/^#[\da-f]{6}$/i.test(socialIconColor)
     || logoDataUrl.length > Math.ceil(maxLogoBytes * 4 / 3) + 64
@@ -78,6 +82,8 @@ function parseQrCode(value: unknown) {
     qrStyle,
     eyeFrameStyle,
     eyeBallStyle,
+    eyeFrameColor,
+    eyeBallColor,
     socialIconColor,
     logoDataUrl,
     socialIcon,
@@ -131,6 +137,12 @@ export async function GET(request: Request) {
           qrStyle: isQrCodeStyle(data.qrStyle) ? data.qrStyle : "square",
           eyeFrameStyle: isQrCodeEyeStyle(data.eyeFrameStyle) ? data.eyeFrameStyle : "square",
           eyeBallStyle: isQrCodeEyeStyle(data.eyeBallStyle) ? data.eyeBallStyle : "square",
+          eyeFrameColor: typeof data.eyeFrameColor === "string" && /^#[\da-f]{6}$/i.test(data.eyeFrameColor)
+            ? data.eyeFrameColor
+            : data.foregroundColor,
+          eyeBallColor: typeof data.eyeBallColor === "string" && /^#[\da-f]{6}$/i.test(data.eyeBallColor)
+            ? data.eyeBallColor
+            : data.foregroundColor,
           socialIconColor: typeof data.socialIconColor === "string" && /^#[\da-f]{6}$/i.test(data.socialIconColor)
             ? data.socialIconColor
             : data.foregroundColor,

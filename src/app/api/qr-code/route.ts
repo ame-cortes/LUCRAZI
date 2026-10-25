@@ -29,6 +29,8 @@ type QrRequest = {
   qrStyle: QrCodeStyle;
   eyeFrameStyle: QrCodeEyeStyle;
   eyeBallStyle: QrCodeEyeStyle;
+  eyeFrameColor: string;
+  eyeBallColor: string;
   logoDataUrl?: string;
 };
 
@@ -86,6 +88,8 @@ function parseQrRequest(value: unknown): QrRequest | null {
     || (value.qrStyle !== undefined && !isQrCodeStyle(value.qrStyle))
     || (value.eyeFrameStyle !== undefined && !isQrCodeEyeStyle(value.eyeFrameStyle))
     || (value.eyeBallStyle !== undefined && !isQrCodeEyeStyle(value.eyeBallStyle))
+    || (value.eyeFrameColor !== undefined && !validHexColor(value.eyeFrameColor))
+    || (value.eyeBallColor !== undefined && !validHexColor(value.eyeBallColor))
     || value.consent !== true
     || (value.logoDataUrl !== undefined && typeof value.logoDataUrl !== "string")
   ) return null;
@@ -121,6 +125,8 @@ function parseQrRequest(value: unknown): QrRequest | null {
     qrStyle: isQrCodeStyle(value.qrStyle) ? value.qrStyle : "square",
     eyeFrameStyle: isQrCodeEyeStyle(value.eyeFrameStyle) ? value.eyeFrameStyle : "square",
     eyeBallStyle: isQrCodeEyeStyle(value.eyeBallStyle) ? value.eyeBallStyle : "square",
+    eyeFrameColor: validHexColor(value.eyeFrameColor) ? value.eyeFrameColor : value.foregroundColor,
+    eyeBallColor: validHexColor(value.eyeBallColor) ? value.eyeBallColor : value.foregroundColor,
     ...(typeof value.logoDataUrl === "string" ? { logoDataUrl: value.logoDataUrl } : {}),
   };
 }
@@ -153,6 +159,8 @@ async function createQrSvg(input: QrRequest, logo: ReturnType<typeof parseLogo>)
     style: input.qrStyle,
     eyeFrameStyle: input.eyeFrameStyle,
     eyeBallStyle: input.eyeBallStyle,
+    eyeFrameColor: input.eyeFrameColor,
+    eyeBallColor: input.eyeBallColor,
     logoDataUrl: logo ? `data:image/${logo.format};base64,${logo.base64}` : "",
   });
 }

@@ -53,6 +53,8 @@ export async function PATCH(
   const qrStyle = body.qrStyle === undefined ? "square" : body.qrStyle;
   const eyeFrameStyle = body.eyeFrameStyle === undefined ? "square" : body.eyeFrameStyle;
   const eyeBallStyle = body.eyeBallStyle === undefined ? "square" : body.eyeBallStyle;
+  const eyeFrameColor = body.eyeFrameColor === undefined ? foregroundColor : body.eyeFrameColor;
+  const eyeBallColor = body.eyeBallColor === undefined ? foregroundColor : body.eyeBallColor;
   const socialIconColor = body.socialIconColor === undefined || body.socialIconColor === ""
     ? foregroundColor
     : body.socialIconColor;
@@ -69,6 +71,8 @@ export async function PATCH(
     || !isQrCodeStyle(qrStyle)
     || !isQrCodeEyeStyle(eyeFrameStyle)
     || !isQrCodeEyeStyle(eyeBallStyle)
+    || typeof eyeFrameColor !== "string" || !/^#[\da-f]{6}$/i.test(eyeFrameColor)
+    || typeof eyeBallColor !== "string" || !/^#[\da-f]{6}$/i.test(eyeBallColor)
     || typeof socialIconColor !== "string" || !/^#[\da-f]{6}$/i.test(socialIconColor)
     || logoDataUrl.length > 350_000
     || (logoDataUrl.length > 0 && !/^data:image\/(?:png|jpeg);base64,[A-Za-z\d+/]+=*$/.test(logoDataUrl))
@@ -113,6 +117,8 @@ export async function PATCH(
         qrStyle,
         eyeFrameStyle,
         eyeBallStyle,
+        eyeFrameColor,
+        eyeBallColor,
         socialIconColor,
         logoDataUrl: access.hasLogo ? logoDataUrl : "",
         socialIcon: access.hasLogo ? socialIcon : "",

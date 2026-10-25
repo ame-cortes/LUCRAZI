@@ -4873,6 +4873,21 @@ button:focus-visible {
   font-size: 12px;
 }
 
+.qr-eye-style-options input[type="color"] {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 4px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.qr-eye-color output {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+}
+
 .qr-style-option {
   display: grid;
   justify-items: center;

@@ -28,6 +28,8 @@ function parseJsonBody(body: unknown) {
   const qrStyle = record.qrStyle === undefined ? "square" : record.qrStyle;
   const eyeFrameStyle = record.eyeFrameStyle === undefined ? "square" : record.eyeFrameStyle;
   const eyeBallStyle = record.eyeBallStyle === undefined ? "square" : record.eyeBallStyle;
+  const eyeFrameColor = record.eyeFrameColor === undefined ? foreground : record.eyeFrameColor;
+  const eyeBallColor = record.eyeBallColor === undefined ? foreground : record.eyeBallColor;
   const logoDataUrl = typeof record.logoDataUrl === "string" ? record.logoDataUrl : undefined;
 
   if (!destination && !content) {
@@ -41,6 +43,8 @@ function parseJsonBody(body: unknown) {
     !isQrCodeStyle(qrStyle)
     || !isQrCodeEyeStyle(eyeFrameStyle)
     || !isQrCodeEyeStyle(eyeBallStyle)
+    || typeof eyeFrameColor !== "string" || !/^#[\da-f]{6}$/i.test(eyeFrameColor)
+    || typeof eyeBallColor !== "string" || !/^#[\da-f]{6}$/i.test(eyeBallColor)
   ) return null;
 
   return {
@@ -51,6 +55,8 @@ function parseJsonBody(body: unknown) {
     qrStyle,
     eyeFrameStyle,
     eyeBallStyle,
+    eyeFrameColor,
+    eyeBallColor,
     logoDataUrl,
   };
 }
@@ -112,6 +118,8 @@ export async function POST(request: Request) {
     style: parsed.qrStyle,
     eyeFrameStyle: parsed.eyeFrameStyle,
     eyeBallStyle: parsed.eyeBallStyle,
+    eyeFrameColor: parsed.eyeFrameColor,
+    eyeBallColor: parsed.eyeBallColor,
   });
 
   return NextResponse.json({
@@ -125,6 +133,8 @@ export async function POST(request: Request) {
       qrStyle: parsed.qrStyle,
       eyeFrameStyle: parsed.eyeFrameStyle,
       eyeBallStyle: parsed.eyeBallStyle,
+      eyeFrameColor: parsed.eyeFrameColor,
+      eyeBallColor: parsed.eyeBallColor,
       logoIncluded: Boolean(parsed.logoDataUrl),
     },
     qrCode: {

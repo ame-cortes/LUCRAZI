@@ -36,6 +36,8 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
   const [qrStyle, setQrStyle] = useState<QrCodeStyle>("square");
   const [eyeFrameStyle, setEyeFrameStyle] = useState<QrCodeEyeStyle>("square");
   const [eyeBallStyle, setEyeBallStyle] = useState<QrCodeEyeStyle>("square");
+  const [eyeFrameColor, setEyeFrameColor] = useState("#243B2B");
+  const [eyeBallColor, setEyeBallColor] = useState("#243B2B");
   const [logoDataUrl, setLogoDataUrl] = useState("");
   const [email, setEmail] = useState("");
   const [consented, setConsented] = useState(false);
@@ -53,6 +55,8 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
     qrStyle,
     eyeFrameStyle,
     eyeBallStyle,
+    eyeFrameColor,
+    eyeBallColor,
     logoDataUrl,
   ]);
   const downloadsUnlocked = deliveredRequestKey !== "" && deliveredRequestKey === requestKey;
@@ -83,6 +87,8 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
       style: qrStyle,
       eyeFrameStyle,
       eyeBallStyle,
+      eyeFrameColor,
+      eyeBallColor,
       logoDataUrl,
     }).catch((error: unknown) => {
       if (cancelled) return;
@@ -93,7 +99,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
     return () => {
       cancelled = true;
     };
-  }, [backgroundColor, content, eyeBallStyle, eyeFrameStyle, foregroundColor, logoDataUrl, qrStyle]);
+  }, [backgroundColor, content, eyeBallColor, eyeBallStyle, eyeFrameColor, eyeFrameStyle, foregroundColor, logoDataUrl, qrStyle]);
 
   async function handleLogoChange(event: ChangeEvent<HTMLInputElement>) {
     setPreviewError("");
@@ -179,6 +185,8 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
         style: qrStyle,
         eyeFrameStyle,
         eyeBallStyle,
+        eyeFrameColor,
+        eyeBallColor,
         logoDataUrl,
       });
       downloadFile("qr-code-lucrazi.svg", svg, "image/svg+xml;charset=utf-8");
@@ -230,6 +238,8 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
           qrStyle,
           eyeFrameStyle,
           eyeBallStyle,
+          eyeFrameColor,
+          eyeBallColor,
           ...(logoDataUrl ? { logoDataUrl } : {}),
           consent: consented,
         }),
@@ -341,9 +351,13 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
           value={qrStyle}
           eyeFrameStyle={eyeFrameStyle}
           eyeBallStyle={eyeBallStyle}
+          eyeFrameColor={eyeFrameColor}
+          eyeBallColor={eyeBallColor}
           onChange={setQrStyle}
           onEyeFrameStyleChange={setEyeFrameStyle}
           onEyeBallStyleChange={setEyeBallStyle}
+          onEyeFrameColorChange={setEyeFrameColor}
+          onEyeBallColorChange={setEyeBallColor}
           disabled={isSubmitting}
         />
 

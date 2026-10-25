@@ -14,29 +14,51 @@ const previewModules = [
   [1, 1, 1, 0, 1],
 ];
 
-function renderPencilPreviewRow(row: number[], rowIndex: number): React.JSX.Element[] {
-  const y = rowIndex * 6;
+function renderPencilPreviewModules(vertical: boolean): React.JSX.Element[] {
   const pencils: React.JSX.Element[] = [];
-  let column = 0;
-  while (column < row.length) {
-    if (!row[column]) {
-      column++;
-      continue;
-    }
-    const start = column;
-    column++;
-    while (column < row.length && row[column]) column++;
+  const lines = vertical ? previewModules[0].length : previewModules.length;
+  const length = vertical ? previewModules.length : previewModules[0].length;
+  for (let line = 0; line < lines; line++) {
+    let position = 0;
+    while (position < length) {
+      const isDark = vertical ? previewModules[position][line] : previewModules[line][position];
+      if (!isDark) {
+        position++;
+        continue;
+      }
+      const start = position++;
+      while (
+        position < length
+        && (vertical ? previewModules[position][line] : previewModules[line][position])
+      ) position++;
 
-    const x = start * 6;
-    const width = (column - start) * 6;
-    const tip = Math.min(1.68, width * 0.2);
-    const cap = Math.min(0.72, width * 0.12);
-    pencils.push(
-      <path
-        key={`pencil-${rowIndex}-${start}`}
-        d={`M${x} ${y + 3}L${x + tip} ${y + 0.15}H${x + width - cap}Q${x + width} ${y + 0.15} ${x + width} ${y + 3}Q${x + width} ${y + 5.85} ${x + width - cap} ${y + 5.85}H${x + tip}Z`}
-      />,
-    );
+      const x = (vertical ? line : start) * 6;
+      const y = (vertical ? start : line) * 6;
+      const width = vertical ? 6 : (position - start) * 6;
+      const height = vertical ? (position - start) * 6 : 6;
+      const tip = Math.min(height * 0.28, width * 0.2);
+      const cap = Math.min(height * 0.12, width * 0.12);
+      const inset = height * 0.025;
+      if (vertical) {
+        const verticalTip = Math.min(width * 0.28, height * 0.2);
+        const verticalCap = Math.min(width * 0.12, height * 0.12);
+        const verticalInset = width * 0.025;
+        const centerX = x + width / 2;
+        pencils.push(
+          <path
+            key={`pencil-${line}-${start}`}
+            d={`M${centerX} ${y}L${x + width - verticalInset} ${y + verticalTip}V${y + height - verticalCap}Q${x + width - verticalInset} ${y + height} ${centerX} ${y + height}Q${x + verticalInset} ${y + height} ${x + verticalInset} ${y + height - verticalCap}V${y + verticalTip}Z`}
+          />,
+        );
+      } else {
+        pencils.push(
+          <path
+            key={`pencil-${line}-${start}`}
+            d={`M${x} ${y + height / 2}L${x + tip} ${y + inset}H${x + width - cap}Q${x + width} ${y + inset} ${x + width} ${y + height / 2}Q${x + width} ${y + height - inset} ${x + width - cap} ${y + height - inset}H${x + tip}Z`}
+          />,
+        );
+      }
+    }
   }
   return pencils;
 }
@@ -84,17 +106,25 @@ export default function QrCodeStylePicker({
   value,
   eyeFrameStyle,
   eyeBallStyle,
+  eyeFrameColor,
+  eyeBallColor,
   onChange,
   onEyeFrameStyleChange,
   onEyeBallStyleChange,
+  onEyeFrameColorChange,
+  onEyeBallColorChange,
   disabled = false,
 }: {
   value: QrCodeStyle;
   eyeFrameStyle: QrCodeEyeStyle;
   eyeBallStyle: QrCodeEyeStyle;
+  eyeFrameColor: string;
+  eyeBallColor: string;
   onChange: (style: QrCodeStyle) => void;
   onEyeFrameStyleChange: (style: QrCodeEyeStyle) => void;
   onEyeBallStyleChange: (style: QrCodeEyeStyle) => void;
+  onEyeFrameColorChange: (color: string) => void;
+  onEyeBallColorChange: (color: string) => void;
   disabled?: boolean;
 }) {
   return (
@@ -114,13 +144,15 @@ export default function QrCodeStylePicker({
               className={`qr-style-sample qr-style-sample-${option.id}`}
               viewBox="0 0 30 30"
             >
-              {previewModules.flatMap((row, rowIndex) =>
-                option.id === "pencil"
-                  ? renderPencilPreviewRow(row, rowIndex)
-                  : row.flatMap((isDark, columnIndex) => isDark
-                    ? [renderPreviewModule(option.id, rowIndex, columnIndex)]
-                    : []),
-              )}
+              {option.id === "pencil"
+                ? renderPencilPreviewModules(false)
+                : option.id === "pencil-vertical"
+                  ? renderPencilPreviewModules(true)
+                  : previewModules.flatMap((row, rowIndex) =>
+                    row.flatMap((isDark, columnIndex) => isDark
+                      ? [renderPreviewModule(option.id, rowIndex, columnIndex)]
+                      : []),
+                  )}
             </svg>
             <span>{option.label}</span>
             <small>{option.description}</small>
@@ -153,6 +185,26 @@ export default function QrCodeStylePicker({
               <option key={option.id} value={option.id}>{option.label}</option>
             ))}
           </select>
+        </label>
+        <label className="qr-eye-color">
+          Cor da moldura
+          <input
+            aria-label="Cor da moldura dos marcadores"
+            onChange={(event) => onEyeFrameColorChange(event.target.value)}
+            type="color"
+            value={eyeFrameColor}
+          />
+          <output>{eyeFrameColor}</output>
+        </label>
+        <label className="qr-eye-color">
+          Cor do centro
+          <input
+            aria-label="Cor do centro dos marcadores"
+            onChange={(event) => onEyeBallColorChange(event.target.value)}
+            type="color"
+            value={eyeBallColor}
+          />
+          <output>{eyeBallColor}</output>
         </label>
       </div>
       <p className="qr-style-hint">

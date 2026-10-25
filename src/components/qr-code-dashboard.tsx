@@ -52,6 +52,8 @@ type SavedQrCode = {
   qrStyle: QrCodeStyle;
   eyeFrameStyle: QrCodeEyeStyle;
   eyeBallStyle: QrCodeEyeStyle;
+  eyeFrameColor: string;
+  eyeBallColor: string;
   logoDataUrl: string;
   socialIcon: SocialIconId | "";
   socialIconColor: string;
@@ -122,6 +124,12 @@ function readSavedCode(value: unknown): SavedQrCode | null {
     qrStyle: isQrCodeStyle(value.qrStyle) ? value.qrStyle : "square",
     eyeFrameStyle: isQrCodeEyeStyle(value.eyeFrameStyle) ? value.eyeFrameStyle : "square",
     eyeBallStyle: isQrCodeEyeStyle(value.eyeBallStyle) ? value.eyeBallStyle : "square",
+    eyeFrameColor: typeof value.eyeFrameColor === "string" && /^#[\da-f]{6}$/i.test(value.eyeFrameColor)
+      ? value.eyeFrameColor
+      : value.foregroundColor,
+    eyeBallColor: typeof value.eyeBallColor === "string" && /^#[\da-f]{6}$/i.test(value.eyeBallColor)
+      ? value.eyeBallColor
+      : value.foregroundColor,
     logoDataUrl: typeof value.logoDataUrl === "string" ? value.logoDataUrl : "",
     socialIcon: isSocialIconId(value.socialIcon) ? value.socialIcon : "",
     socialIconColor: typeof value.socialIconColor === "string" && /^#[\da-f]{6}$/i.test(value.socialIconColor)
@@ -235,6 +243,8 @@ async function renderSavedQrCode(code: SavedQrCode) {
     style: code.qrStyle,
     eyeFrameStyle: code.eyeFrameStyle,
     eyeBallStyle: code.eyeBallStyle,
+    eyeFrameColor: code.eyeFrameColor,
+    eyeBallColor: code.eyeBallColor,
     logoDataUrl: code.logoDataUrl,
   });
   return canvas;
@@ -298,6 +308,8 @@ export default function QrCodeDashboard() {
   const [qrStyle, setQrStyle] = useState<QrCodeStyle>("square");
   const [eyeFrameStyle, setEyeFrameStyle] = useState<QrCodeEyeStyle>("square");
   const [eyeBallStyle, setEyeBallStyle] = useState<QrCodeEyeStyle>("square");
+  const [eyeFrameColor, setEyeFrameColor] = useState("#243B2B");
+  const [eyeBallColor, setEyeBallColor] = useState("#243B2B");
   const [logoDataUrl, setLogoDataUrl] = useState("");
   const [socialIcon, setSocialIcon] = useState<SocialIconId | "">("");
   const [socialIconColor, setSocialIconColor] = useState("#243B2B");
@@ -364,6 +376,8 @@ export default function QrCodeDashboard() {
             style: savedCode.qrStyle,
             eyeFrameStyle: savedCode.eyeFrameStyle,
             eyeBallStyle: savedCode.eyeBallStyle,
+            eyeFrameColor: savedCode.eyeFrameColor,
+            eyeBallColor: savedCode.eyeBallColor,
           });
           return { ...savedCode, qrImage: canvas.toDataURL("image/png") };
         } catch {
@@ -428,6 +442,8 @@ export default function QrCodeDashboard() {
       style: qrStyle,
       eyeFrameStyle,
       eyeBallStyle,
+      eyeFrameColor,
+      eyeBallColor,
       logoDataUrl,
     }).catch((error: unknown) => {
       if (cancelled) return;
@@ -438,7 +454,7 @@ export default function QrCodeDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [backgroundColor, eyeBallStyle, eyeFrameStyle, foregroundColor, logoDataUrl, qrCanvasContent, qrStyle]);
+  }, [backgroundColor, eyeBallColor, eyeBallStyle, eyeFrameColor, eyeFrameStyle, foregroundColor, logoDataUrl, qrCanvasContent, qrStyle]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -453,6 +469,8 @@ export default function QrCodeDashboard() {
         style: qrStyle,
         eyeFrameStyle,
         eyeBallStyle,
+        eyeFrameColor,
+        eyeBallColor,
         logoDataUrl,
       }).catch((error: unknown) => {
         if (cancelled) return;
@@ -466,7 +484,7 @@ export default function QrCodeDashboard() {
     }, 100);
 
     return () => clearTimeout(timeoutId);
-  }, [user, backgroundColor, eyeBallStyle, eyeFrameStyle, foregroundColor, logoDataUrl, qrCanvasContent, qrStyle]);
+  }, [user, backgroundColor, eyeBallColor, eyeBallStyle, eyeFrameColor, eyeFrameStyle, foregroundColor, logoDataUrl, qrCanvasContent, qrStyle]);
 
   function resetEditor() {
     socialIconRequestRef.current++;
@@ -480,6 +498,8 @@ export default function QrCodeDashboard() {
     setQrStyle("square");
     setEyeFrameStyle("square");
     setEyeBallStyle("square");
+    setEyeFrameColor("#243B2B");
+    setEyeBallColor("#243B2B");
     setLogoDataUrl("");
     setSocialIcon("");
     setSocialIconColor("#243B2B");
@@ -516,6 +536,8 @@ export default function QrCodeDashboard() {
     setQrStyle(code.qrStyle);
     setEyeFrameStyle(code.eyeFrameStyle);
     setEyeBallStyle(code.eyeBallStyle);
+    setEyeFrameColor(code.eyeFrameColor);
+    setEyeBallColor(code.eyeBallColor);
     setLogoDataUrl(code.logoDataUrl || "");
     setSocialIcon(code.socialIcon);
     setSocialIconColor(code.socialIconColor);
@@ -756,6 +778,8 @@ export default function QrCodeDashboard() {
             qrStyle,
             eyeFrameStyle,
             eyeBallStyle,
+            eyeFrameColor,
+            eyeBallColor,
             logoDataUrl: access.hasLogo ? logoDataUrl : "",
             socialIcon: access.hasLogo ? socialIcon : "",
             socialIconColor: access.hasLogo ? socialIconColor : "",
@@ -867,6 +891,8 @@ export default function QrCodeDashboard() {
         style: code.qrStyle,
         eyeFrameStyle: code.eyeFrameStyle,
         eyeBallStyle: code.eyeBallStyle,
+        eyeFrameColor: code.eyeFrameColor,
+        eyeBallColor: code.eyeBallColor,
         logoDataUrl: code.logoDataUrl,
       });
       const filename = code.name.trim().replace(/[^\p{L}\p{N}-]+/gu, "-") || code.id;
@@ -1171,9 +1197,13 @@ export default function QrCodeDashboard() {
                     value={qrStyle}
                     eyeFrameStyle={eyeFrameStyle}
                     eyeBallStyle={eyeBallStyle}
+                    eyeFrameColor={eyeFrameColor}
+                    eyeBallColor={eyeBallColor}
                     onChange={setQrStyle}
                     onEyeFrameStyleChange={setEyeFrameStyle}
                     onEyeBallStyleChange={setEyeBallStyle}
+                    onEyeFrameColorChange={setEyeFrameColor}
+                    onEyeBallColorChange={setEyeBallColor}
                     disabled={busy}
                   />
                   <div className="qr-field">
