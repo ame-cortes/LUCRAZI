@@ -1,3 +1,5 @@
+export const maxDuration = 30;
+
 import { createHash } from "node:crypto";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { createRemoteJWKSet, jwtVerify } from "jose";
@@ -260,7 +262,7 @@ export async function POST(request: Request) {
     const qrSvg = await traceQrDeliveryStage("qr-svg-generation", () => createQrSvg(input, logo));
     qrPng = await traceQrDeliveryStage("qr-png-rasterization", () =>
       sharp(Buffer.from(qrSvg))
-        .resize({ width: 1080, height: 1080 })
+        .resize({ width: 512, height: 512 })
         .png()
         .toBuffer());
   } catch (error) {
@@ -312,33 +314,33 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Não foi possível registrar seu pedido. Tente novamente mais tarde." }, { status: 503 });
   }
 
-  try {
-    await traceQrDeliveryStage("brevo-email-delivery", () => sendQrCodeEmail(input.email, qrPng));
-  } catch (error) {
-    console.error("O pedido de QR Code foi registrado, mas o arquivo não foi enviado pela Brevo.", error);
+  // Envia e-mail de forma assíncrona com timeout mais curto para não bloquear a resposta
+  void (async () => {
     try {
-      await traceQrDeliveryStage("firestore-failed-delivery-update", () =>
+      const emailPromise = traceQrDeliveryStage("brevo-email-delivery", () => sendQrCodeEmail(input.email, qrPng));
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error("Timeout no envio de e-mail")), 5000)
+      );
+      await Promise.race([emailPromise, timeoutPromise]);
+      
+      await traceQrDeliveryStage("firestore-sent-delivery-update", () =>
         lead.update({
-          deliveryStatus: "failed",
-          deliveryUpdatedAt: FieldValue.serverTimestamp(),
+          deliveryStatus: "sent",
+          deliverySentAt: FieldValue.serverTimestamp(),
         }));
-    } catch (updateError) {
-      console.error("Não foi possível registrar a falha na entrega do QR Code.", updateError);
+    } catch (error) {
+      console.error("O pedido de QR Code foi registrado, mas o arquivo não foi enviado pela Brevo imediatamente.", error);
+      try {
+        await traceQrDeliveryStage("firestore-failed-delivery-update", () =>
+          lead.update({
+            deliveryStatus: "pending_retry",
+            deliveryUpdatedAt: FieldValue.serverTimestamp(),
+          }));
+      } catch (updateError) {
+        console.error("Não foi possível registrar o status de entrega do QR Code.", updateError);
+      }
     }
-    return NextResponse.json({
-      error: "Não conseguimos enviar o QR Code agora. Tente novamente em um minuto.",
-    }, { status: 502 });
-  }
-
-  try {
-    await traceQrDeliveryStage("firestore-sent-delivery-update", () =>
-      lead.update({
-        deliveryStatus: "sent",
-        deliverySentAt: FieldValue.serverTimestamp(),
-      }));
-  } catch (error) {
-    console.error("O QR Code foi enviado, mas não foi possível registrar o resultado no Firestore.", error);
-  }
+  })();
 
   return NextResponse.json({ status: "sent" }, { status: 201 });
 }
