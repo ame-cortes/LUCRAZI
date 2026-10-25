@@ -343,10 +343,6 @@ export async function POST(request: Request) {
     const message = error instanceof Error ? error.message : "Não foi possível preparar o QR Code.";
     return NextResponse.json({ error: message }, { status: 400 });
   }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Não foi possível preparar o QR Code.";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
 
   let db;
   try {
@@ -371,7 +367,7 @@ export async function POST(request: Request) {
     }, { status: 429 });
   }
   
-  // Registra o pedido de forma não-bloqueante (apenas SVG)
+  // Registra o pedido e processa envio em background
   void (async () => {
     try {
       await traceQrDeliveryStage("firestore-lead-registration", async () => {
@@ -391,34 +387,6 @@ export async function POST(request: Request) {
       });
     } catch (error) {
       console.error("Não foi possível registrar o pedido de QR Code no Firestore.", error);
-    }
-  })();
-
-  // Envia e-mail de forma assíncrona com timeout mais curto para não bloquear a resposta
-  void (async () => {
-    try {
-      const emailPromise = traceQrDeliveryStage("brevo-email-delivery", () => sendQrCodeEmail(input.email, qrPng));
-      const timeoutPromise = new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error("Timeout no envio de e-mail")), 5000)
-      );
-      await Promise.race([emailPromise, timeoutPromise]);
-      
-      await traceQrDeliveryStage("firestore-sent-delivery-update", () =>
-        lead.update({
-          deliveryStatus: "sent",
-          deliverySentAt: FieldValue.serverTimestamp(),
-        }));
-    } catch (error) {
-      console.error("O pedido de QR Code foi registrado, mas o arquivo não foi enviado pela Brevo imediatamente.", error);
-      try {
-        await traceQrDeliveryStage("firestore-failed-delivery-update", () =>
-          lead.update({
-            deliveryStatus: "pending_retry",
-            deliveryUpdatedAt: FieldValue.serverTimestamp(),
-          }));
-      } catch (updateError) {
-        console.error("Não foi possível registrar o status de entrega do QR Code.", updateError);
-      }
     }
   })();
 
