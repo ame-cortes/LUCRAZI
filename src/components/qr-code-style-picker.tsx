@@ -236,7 +236,7 @@ export default function QrCodeStylePicker({
         </label>
       </div>
       <p className="qr-style-hint">
-        Marcadores com coração usam cantos arredondados para preservar a leitura. O centro branco dos marcadores e a margem de segurança são mantidos.
+        A moldura em coração é mantida. O centro branco quadrado e a margem de segurança ajudam a preservar a leitura.
       </p>
     </fieldset>
   );
