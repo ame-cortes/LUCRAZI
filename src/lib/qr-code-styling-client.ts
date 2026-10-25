@@ -12,9 +12,10 @@ export async function createQrCodeStylingSvg(
   shape: QrCodeStylingShape,
   options: QrCodeStylingRenderOptions,
 ) {
+  const stylingOptions = createQrCodeStylingOptions(content, options, 0);
   const initialCode = new QRCodeStyling({
-    ...createQrCodeStylingOptions(content, options, 0),
-    dotsOptions: { color: options.foregroundColor, type: shape },
+    ...stylingOptions,
+    dotsOptions: { ...stylingOptions.dotsOptions, type: shape },
   });
   const moduleCount = initialCode._qr?.getModuleCount();
   if (!moduleCount) throw new Error("A biblioteca QRCodeStyling não criou a matriz do QR.");

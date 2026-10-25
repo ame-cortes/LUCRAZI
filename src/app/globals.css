@@ -3893,6 +3893,20 @@ button:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
+.qr-gradient-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.qr-gradient-option input {
+  width: 16px;
+  height: 16px;
+  accent-color: #789a3f;
+}
+
 .qr-field input[type="file"] {
   width: 100%;
   min-height: 46px;

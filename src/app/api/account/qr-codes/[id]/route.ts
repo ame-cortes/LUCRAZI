@@ -49,6 +49,7 @@ export async function PATCH(
     ? body.contentType
     : null;
   const foregroundColor = body.foregroundColor;
+  const gradientEndColor = body.gradientEndColor === undefined ? "" : body.gradientEndColor;
   const backgroundColor = body.backgroundColor;
   const qrStyle = body.qrStyle === undefined ? "square" : body.qrStyle;
   const eyeFrameStyle = body.eyeFrameStyle === undefined ? "square" : body.eyeFrameStyle;
@@ -67,6 +68,7 @@ export async function PATCH(
     || content.length < 1 || content.length > 2048
     || !contentType
     || typeof foregroundColor !== "string" || !/^#[\da-f]{6}$/i.test(foregroundColor)
+    || (typeof gradientEndColor !== "string" || (gradientEndColor !== "" && !/^#[\da-f]{6}$/i.test(gradientEndColor)))
     || typeof backgroundColor !== "string" || !/^#[\da-f]{6}$/i.test(backgroundColor)
     || !isQrCodeStyle(qrStyle)
     || !isQrCodeEyeStyle(eyeFrameStyle)
@@ -113,6 +115,7 @@ export async function PATCH(
         content,
         contentType,
         foregroundColor,
+        gradientEndColor,
         backgroundColor,
         qrStyle,
         eyeFrameStyle,

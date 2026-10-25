@@ -22,9 +22,10 @@ async function createQrCodeStylingSvgServer(
   shape: QrCodeStylingShape,
   options: QrCodeStylingRenderOptions,
 ) {
+  const stylingOptions = createQrCodeStylingOptions(content, options, 0);
   const qrCode = new QRCodeStyling({
-    ...createQrCodeStylingOptions(content, options, 0),
-    dotsOptions: { color: options.foregroundColor, type: shape },
+    ...stylingOptions,
+    dotsOptions: { ...stylingOptions.dotsOptions, type: shape },
     jsdom: JSDOM,
   });
 

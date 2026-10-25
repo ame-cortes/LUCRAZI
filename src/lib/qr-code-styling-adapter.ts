@@ -6,6 +6,7 @@ export type QrCodeStylingShape = (typeof QRCODE_STYLING_SHAPES)[number];
 
 export type QrCodeStylingRenderOptions = {
   foregroundColor: string;
+  gradientEndColor?: string;
   backgroundColor: string;
   eyeFrameStyle: QrCodeEyeStyle;
   eyeBallStyle: QrCodeEyeStyle;
@@ -23,6 +24,15 @@ export function createQrCodeStylingOptions(
   options: QrCodeStylingRenderOptions,
   margin: number,
 ): Partial<QrCodeStylingOptions> {
+  const gradient = options.gradientEndColor
+    ? {
+        type: "linear" as const,
+        colorStops: [
+          { offset: 0, color: options.foregroundColor },
+          { offset: 1, color: options.gradientEndColor },
+        ],
+      }
+    : undefined;
   return {
     type: "svg",
     width: 720,
@@ -33,9 +43,10 @@ export function createQrCodeStylingOptions(
     dotsOptions: {
       color: options.foregroundColor,
       type: "classy",
+      ...(gradient ? { gradient } : {}),
     },
-    cornersSquareOptions: { color: options.foregroundColor, type: "square" },
-    cornersDotOptions: { color: options.foregroundColor, type: "square" },
+    cornersSquareOptions: { color: options.foregroundColor, type: "square", ...(gradient ? { gradient } : {}) },
+    cornersDotOptions: { color: options.foregroundColor, type: "square", ...(gradient ? { gradient } : {}) },
     backgroundOptions: { color: options.backgroundColor },
     ...(options.logoDataUrl
       ? {
@@ -89,15 +100,24 @@ export function addQrCodeStylingEyePatterns(
   const patterns = origins.map(([row, column]) => {
     const x = margin + column * moduleSize;
     const y = margin + row * moduleSize;
+    const frameColor = options.eyeFrameColor === options.foregroundColor
+      ? options.gradientEndColor ? "url(#qr-code-gradient)" : options.eyeFrameColor
+      : options.eyeFrameColor;
+    const ballColor = options.eyeBallColor === options.foregroundColor
+      ? options.gradientEndColor ? "url(#qr-code-gradient)" : options.eyeBallColor
+      : options.eyeBallColor;
     return [
       `<rect x="${x}" y="${y}" width="${moduleSize * 7}" height="${moduleSize * 7}" fill="${options.backgroundColor}"/>`,
-      eyeShape(x, y, moduleSize * 7, options.eyeFrameStyle, options.eyeFrameColor),
+      eyeShape(x, y, moduleSize * 7, options.eyeFrameStyle, frameColor),
       `<rect x="${x + moduleSize}" y="${y + moduleSize}" width="${moduleSize * 5}" height="${moduleSize * 5}" fill="${options.backgroundColor}"/>`,
-      eyeShape(x + moduleSize * 2, y + moduleSize * 2, moduleSize * 3, options.eyeBallStyle, options.eyeBallColor),
+      eyeShape(x + moduleSize * 2, y + moduleSize * 2, moduleSize * 3, options.eyeBallStyle, ballColor),
     ].join("");
   }).join("");
 
-  return svg.replace("</svg>", `${patterns}</svg>`);
+  const gradient = options.gradientEndColor
+    ? `<defs><linearGradient id="qr-code-gradient" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="720" y2="0"><stop offset="0%" stop-color="${options.foregroundColor}"/><stop offset="100%" stop-color="${options.gradientEndColor}"/></linearGradient></defs>`
+    : "";
+  return svg.replace("</svg>", `${gradient}${patterns}</svg>`);
 }
 
 export async function readQrCodeStylingSvg(data: Blob | Uint8Array | null) {

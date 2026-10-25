@@ -19,14 +19,10 @@ const previewConnectorWidths: Record<QrCodeStyle, number> = {
   rounded: 3.48,
   dots: 4.68,
   vertical: 4.08,
-  horizontal: 4.08,
-  diamond: 2.52,
-  octagon: 2.88,
   leaf: 3.84,
   star: 2.28,
   pencil: 3.36,
   mosaic: 0.96,
-  tribal: 3.12,
   heart: 3.48,
   "pencil-vertical": 3.36,
   relief: 3.12,
@@ -40,14 +36,10 @@ const previewConnectorCaps: Record<QrCodeStyle, "round" | "square"> = {
   rounded: "round",
   dots: "round",
   vertical: "round",
-  horizontal: "round",
-  diamond: "square",
-  octagon: "square",
   leaf: "round",
   star: "square",
   pencil: "square",
   mosaic: "square",
-  tribal: "square",
   heart: "round",
   "pencil-vertical": "square",
   relief: "square",
@@ -105,26 +97,6 @@ function renderPencilPreviewModules(vertical: boolean): React.JSX.Element[] {
   return pencils;
 }
 
-function renderTribalPreview(): React.JSX.Element {
-  const modules: React.JSX.Element[] = [];
-  for (let row = 0; row < previewModules.length; row++) {
-    for (let column = 0; column < previewModules[row].length; column++) {
-      if (!previewModules[row][column]) continue;
-      modules.push(
-        <rect
-          key={`tribal-${row}-${column}`}
-          x={column * 6 + 0.6}
-          y={row * 6 + 0.6}
-          width="4.8"
-          height="4.8"
-          rx="0.96"
-        />,
-      );
-    }
-  }
-  return <g>{modules}</g>;
-}
-
 function renderGroupedPreviewConnectors(style: QrCodeStyle): React.JSX.Element {
   const segments: string[] = [];
   for (let row = 0; row < previewModules.length; row++) {
@@ -155,15 +127,6 @@ function renderPreviewModule(style: QrCodeStyle, row: number, column: number): R
   }
   if (style === "vertical") {
     return <rect key={`${row}-${column}`} x={x + 0.12} y={y + 0.06} width="5.76" height="5.88" rx="2.88" />;
-  }
-  if (style === "horizontal") {
-    return <rect key={`${row}-${column}`} x={x + 0.06} y={y + 0.12} width="5.88" height="5.76" rx="2.88" />;
-  }
-  if (style === "diamond") {
-    return <polygon key={`${row}-${column}`} points={`${x + 3},${y + 0.03} ${x + 5.97},${y + 3} ${x + 3},${y + 5.97} ${x + 0.03},${y + 3}`} />;
-  }
-  if (style === "octagon") {
-    return <polygon key={`${row}-${column}`} points={`${x + 0.48},${y + 0.03} ${x + 5.52},${y + 0.03} ${x + 5.97},${y + 0.48} ${x + 5.97},${y + 5.52} ${x + 5.52},${y + 5.97} ${x + 0.48},${y + 5.97} ${x + 0.03},${y + 5.52} ${x + 0.03},${y + 0.48}`} />;
   }
   if (style === "leaf") {
     return <path key={`${row}-${column}`} d={`M${x + 3} ${y + 0.2}Q${x + 5.8} ${y + 1.6} ${x + 5.4} ${y + 3.8}Q${x + 5} ${y + 5.8} ${x + 3} ${y + 5.9}Q${x + 1} ${y + 5.8} ${x + 0.6} ${y + 3.8}Q${x + 0.2} ${y + 1.6} ${x + 3} ${y + 0.2}Z`} />;
@@ -241,9 +204,7 @@ export default function QrCodeStylePicker({
               viewBox="0 0 30 30"
             >
               {option.id !== "square" && renderGroupedPreviewConnectors(option.id)}
-              {option.id === "tribal"
-                ? renderTribalPreview()
-                : option.id === "pencil"
+              {option.id === "pencil"
                 ? renderPencilPreviewModules(false)
                 : option.id === "pencil-vertical"
                   ? renderPencilPreviewModules(true)

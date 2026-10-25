@@ -38,6 +38,8 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
   const [contentType, setContentType] = useState<"url" | "text">("url");
   const [content, setContent] = useState("https://www.lucrazi.com.br");
   const [foregroundColor, setForegroundColor] = useState("#243B2B");
+  const [gradientEnabled, setGradientEnabled] = useState(false);
+  const [gradientEndColor, setGradientEndColor] = useState("#C8F169");
   const [backgroundColor, setBackgroundColor] = useState("#FFFFFF");
   const [qrStyle, setQrStyle] = useState<QrCodeStyle>("square");
   const [eyeFrameStyle, setEyeFrameStyle] = useState<QrCodeEyeStyle>("square");
@@ -60,6 +62,8 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
     content.trim(),
     contentType,
     foregroundColor,
+    gradientEnabled,
+    gradientEndColor,
     backgroundColor,
     qrStyle,
     eyeFrameStyle,
@@ -94,6 +98,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
     setPreviewError("");
     void renderQrCodeCanvas(canvas, value, {
       foregroundColor,
+      ...(gradientEnabled ? { gradientEndColor } : {}),
       backgroundColor,
       style: qrStyle,
       eyeFrameStyle,
@@ -110,7 +115,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
     return () => {
       cancelled = true;
     };
-  }, [backgroundColor, content, eyeBallColor, eyeBallStyle, eyeFrameColor, eyeFrameStyle, foregroundColor, logoDataUrl, qrStyle]);
+  }, [backgroundColor, content, eyeBallColor, eyeBallStyle, eyeFrameColor, eyeFrameStyle, foregroundColor, gradientEnabled, gradientEndColor, logoDataUrl, qrStyle]);
 
   async function handleLogoChange(event: ChangeEvent<HTMLInputElement>) {
     setPreviewError("");
@@ -256,6 +261,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
     try {
       const options = {
         foregroundColor,
+        ...(gradientEnabled ? { gradientEndColor } : {}),
         backgroundColor,
         style: qrStyle,
         eyeFrameStyle,
@@ -316,6 +322,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
           content: trimmedContent,
           contentType,
           foregroundColor,
+          ...(gradientEnabled ? { gradientEndColor } : {}),
           backgroundColor,
           qrStyle,
           eyeFrameStyle,
@@ -435,6 +442,29 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
             />
             <output htmlFor="qr-foreground">{foregroundColor}</output>
           </div>
+          <label className="qr-gradient-option" htmlFor="qr-gradient-enabled">
+            <input
+              checked={gradientEnabled}
+              disabled={isSubmitting}
+              id="qr-gradient-enabled"
+              onChange={(event) => setGradientEnabled(event.target.checked)}
+              type="checkbox"
+            />
+            Aplicar degradê
+          </label>
+          {gradientEnabled && (
+            <div className="qr-color-row">
+              <label htmlFor="qr-gradient-end">Cor final</label>
+              <input
+                disabled={isSubmitting}
+                id="qr-gradient-end"
+                onChange={(event) => setGradientEndColor(event.target.value)}
+                type="color"
+                value={gradientEndColor}
+              />
+              <output htmlFor="qr-gradient-end">{gradientEndColor}</output>
+            </div>
+          )}
           <div className="qr-color-row">
             <label htmlFor="qr-background">Fundo</label>
             <input

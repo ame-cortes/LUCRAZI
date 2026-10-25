@@ -21,6 +21,7 @@ function parseQrCode(value: unknown) {
     ? value.contentType
     : null;
   const foregroundColor = value.foregroundColor;
+  const gradientEndColor = value.gradientEndColor === undefined ? "" : value.gradientEndColor;
   const backgroundColor = value.backgroundColor;
   const qrStyle = value.qrStyle === undefined ? "square" : value.qrStyle;
   const eyeFrameStyle = value.eyeFrameStyle === undefined ? "square" : value.eyeFrameStyle;
@@ -42,6 +43,7 @@ function parseQrCode(value: unknown) {
     || !contentType
     || typeof foregroundColor !== "string"
     || !/^#[\da-f]{6}$/i.test(foregroundColor)
+    || (typeof gradientEndColor !== "string" || (gradientEndColor !== "" && !/^#[\da-f]{6}$/i.test(gradientEndColor)))
     || typeof backgroundColor !== "string"
     || !/^#[\da-f]{6}$/i.test(backgroundColor)
     || !isQrCodeStyle(qrStyle)
@@ -78,6 +80,7 @@ function parseQrCode(value: unknown) {
     content,
     contentType,
     foregroundColor,
+    gradientEndColor,
     backgroundColor,
     qrStyle,
     eyeFrameStyle,
@@ -133,6 +136,9 @@ export async function GET(request: Request) {
           content: data.content,
           contentType: data.contentType,
           foregroundColor: data.foregroundColor,
+          gradientEndColor: typeof data.gradientEndColor === "string" && /^#[\da-f]{6}$/i.test(data.gradientEndColor)
+            ? data.gradientEndColor
+            : "",
           backgroundColor: data.backgroundColor,
           qrStyle: isQrCodeStyle(data.qrStyle) ? data.qrStyle : "square",
           eyeFrameStyle: isQrCodeEyeStyle(data.eyeFrameStyle) ? data.eyeFrameStyle : "square",

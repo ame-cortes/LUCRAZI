@@ -6,14 +6,10 @@ export const QR_CODE_STYLES = [
   "rounded",
   "dots",
   "vertical",
-  "horizontal",
-  "diamond",
-  "octagon",
   "leaf",
   "star",
   "pencil",
   "mosaic",
-  "tribal",
   "heart",
   "pencil-vertical",
   "relief",
@@ -34,14 +30,10 @@ export const qrCodeStyleOptions: {
   { id: "rounded", label: "Arredondado", description: "Blocos agrupados com junções suaves" },
   { id: "dots", label: "Pontos", description: "Manchas orgânicas conectadas" },
   { id: "vertical", label: "Vertical", description: "Faixas verticais agrupadas" },
-  { id: "horizontal", label: "Horizontal", description: "Faixas horizontais agrupadas" },
-  { id: "diamond", label: "Losangos", description: "Formas angulares conectadas" },
-  { id: "octagon", label: "Geométrico", description: "Módulos facetados em grupos" },
   { id: "leaf", label: "Folha", description: "Formas orgânicas interligadas" },
   { id: "star", label: "Estrela", description: "Estrelas conectadas por braços" },
   { id: "pencil", label: "Lápis", description: "Traços horizontais agrupados" },
   { id: "mosaic", label: "Mosaico", description: "Blocos conectados em formas geométricas" },
-  { id: "tribal", label: "Tribal", description: "Pixels angulares unidos por caminhos quebrados" },
   { id: "heart", label: "Coração", description: "Corações encorpados que se encontram em grupos" },
   { id: "pencil-vertical", label: "Lápis vertical", description: "Traços verticais agrupados em hastes" },
   { id: "relief", label: "Relevo", description: "Módulos recortados unidos em relevos" },
@@ -55,14 +47,10 @@ const groupedStyleConnectorWidths: Record<QrCodeStyle, number> = {
   rounded: 0.58,
   dots: 0.78,
   vertical: 0.68,
-  horizontal: 0.68,
-  diamond: 0.42,
-  octagon: 0.48,
   leaf: 0.64,
   star: 0.38,
   pencil: 0.56,
   mosaic: 0.16,
-  tribal: 0.52,
   heart: 0.58,
   "pencil-vertical": 0.56,
   relief: 0.52,
@@ -76,14 +64,10 @@ const groupedStyleConnectorCaps: Record<QrCodeStyle, CanvasLineCap> = {
   rounded: "round",
   dots: "round",
   vertical: "round",
-  horizontal: "round",
-  diamond: "square",
-  octagon: "square",
   leaf: "round",
   star: "square",
   pencil: "square",
   mosaic: "square",
-  tribal: "square",
   heart: "round",
   "pencil-vertical": "square",
   relief: "square",
@@ -208,36 +192,6 @@ function drawReliefModule(context: CanvasRenderingContext2D, x: number, y: numbe
   context.quadraticCurveTo(x, y, x + inset, y);
   context.closePath();
   context.fill();
-}
-
-function drawTribalModules(
-  context: CanvasRenderingContext2D,
-  qrCode: ReturnType<typeof createQrCode>,
-  moduleSize: number,
-  offsetX: number,
-  offsetY: number,
-  frameStyle: QrCodeEyeStyle,
-  ballStyle: QrCodeEyeStyle,
-) {
-  const inset = moduleSize * 0.1;
-  for (let row = 0; row < qrCode.modules.size; row++) {
-    for (let column = 0; column < qrCode.modules.size; column++) {
-      if (
-        !qrCode.modules.get(row, column)
-        || isExcludedFinderModule(row, column, qrCode.modules.size, frameStyle, ballStyle)
-      ) continue;
-
-      const x = offsetX + (column + quietZone) * moduleSize;
-      const y = offsetY + (row + quietZone) * moduleSize;
-      if (qrCode.modules.isReserved(row, column) === 1) {
-        context.fillRect(x, y, moduleSize, moduleSize);
-      } else {
-        context.beginPath();
-        context.roundRect(x + inset, y + inset, moduleSize - inset * 2, moduleSize - inset * 2, moduleSize * 0.16);
-        context.fill();
-      }
-    }
-  }
 }
 
 function reliefSvgPath(x: number, y: number, size: number) {
@@ -414,7 +368,7 @@ function drawEyeShape(
   y: number,
   size: number,
   style: QrCodeEyeStyle,
-  color: string,
+  color: string | CanvasGradient,
 ) {
   context.fillStyle = color;
   if (style === "circle") {
@@ -472,8 +426,8 @@ function drawFinderPatterns(
   offsetY: number,
   foregroundColor: string,
   backgroundColor: string,
-  frameColor: string,
-  ballColor: string,
+  frameColor: string | CanvasGradient,
+  ballColor: string | CanvasGradient,
   frameStyle: QrCodeEyeStyle,
   ballStyle: QrCodeEyeStyle,
 ) {
@@ -530,6 +484,7 @@ export async function renderQrCodeCanvas(
   content: string,
   options: {
     foregroundColor: string;
+    gradientEndColor?: string;
     backgroundColor: string;
     style: QrCodeStyle;
     eyeFrameStyle?: QrCodeEyeStyle;
@@ -552,7 +507,14 @@ export async function renderQrCodeCanvas(
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.fillStyle = options.backgroundColor;
   context.fillRect(0, 0, canvas.width, canvas.height);
-  context.fillStyle = options.foregroundColor;
+  let foregroundPaint: string | CanvasGradient = options.foregroundColor;
+  if (options.gradientEndColor) {
+    const gradient = context.createLinearGradient(0, 0, canvas.width, 0);
+    gradient.addColorStop(0, options.foregroundColor);
+    gradient.addColorStop(1, options.gradientEndColor);
+    foregroundPaint = gradient;
+  }
+  context.fillStyle = foregroundPaint;
   const eyeFrameStyle = options.eyeFrameStyle || "square";
   const eyeBallStyle = options.eyeBallStyle || "square";
   const eyeFrameColor = options.eyeFrameColor || options.foregroundColor;
@@ -562,6 +524,7 @@ export async function renderQrCodeCanvas(
     const { createQrCodeStylingSvg, drawQrCodeStylingSvgOnCanvas } = await import("@/lib/qr-code-styling-client");
     const svg = await createQrCodeStylingSvg(content, options.style, {
       foregroundColor: options.foregroundColor,
+      ...(options.gradientEndColor ? { gradientEndColor: options.gradientEndColor } : {}),
       backgroundColor: options.backgroundColor,
       eyeFrameStyle,
       eyeBallStyle,
@@ -576,7 +539,7 @@ export async function renderQrCodeCanvas(
   const connectorWidth = groupedStyleConnectorWidths[options.style];
   if (connectorWidth > 0) {
     context.save();
-    context.strokeStyle = options.foregroundColor;
+    context.strokeStyle = foregroundPaint;
     context.lineWidth = moduleSize * connectorWidth;
     context.lineCap = groupedStyleConnectorCaps[options.style];
     visitGroupedStyleConnectors(qrCode, eyeFrameStyle, eyeBallStyle, (startColumn, startRow, endColumn, endRow) => {
@@ -601,16 +564,6 @@ export async function renderQrCodeCanvas(
     );
   } else if (options.style === "mosaic") {
     drawMosaicModules(
-      context,
-      qrCode,
-      moduleSize,
-      offsetX,
-      offsetY,
-      eyeFrameStyle,
-      eyeBallStyle,
-    );
-  } else if (options.style === "tribal") {
-    drawTribalModules(
       context,
       qrCode,
       moduleSize,
@@ -645,30 +598,6 @@ export async function renderQrCodeCanvas(
         } else if (options.style === "vertical") {
           context.beginPath();
           context.roundRect(x + moduleSize * 0.02, y + moduleSize * 0.01, moduleSize * 0.96, moduleSize * 0.98, moduleSize * 0.48);
-          context.fill();
-        } else if (options.style === "horizontal") {
-          context.beginPath();
-          context.roundRect(x + moduleSize * 0.01, y + moduleSize * 0.02, moduleSize * 0.98, moduleSize * 0.96, moduleSize * 0.48);
-          context.fill();
-        } else if (options.style === "diamond") {
-          context.beginPath();
-          context.moveTo(x + moduleSize / 2, y + moduleSize * 0.02);
-          context.lineTo(x + moduleSize * 0.98, y + moduleSize / 2);
-          context.lineTo(x + moduleSize / 2, y + moduleSize * 0.98);
-          context.lineTo(x + moduleSize * 0.02, y + moduleSize / 2);
-          context.closePath();
-          context.fill();
-        } else if (options.style === "octagon") {
-          context.beginPath();
-          context.moveTo(x + moduleSize * 0.16, y + moduleSize * 0.01);
-          context.lineTo(x + moduleSize * 0.84, y + moduleSize * 0.01);
-          context.lineTo(x + moduleSize * 0.99, y + moduleSize * 0.16);
-          context.lineTo(x + moduleSize * 0.99, y + moduleSize * 0.84);
-          context.lineTo(x + moduleSize * 0.84, y + moduleSize * 0.99);
-          context.lineTo(x + moduleSize * 0.16, y + moduleSize * 0.99);
-          context.lineTo(x + moduleSize * 0.01, y + moduleSize * 0.84);
-          context.lineTo(x + moduleSize * 0.01, y + moduleSize * 0.16);
-          context.closePath();
           context.fill();
         } else if (options.style === "leaf") {
           context.beginPath();
@@ -719,8 +648,8 @@ export async function renderQrCodeCanvas(
       offsetY,
       options.foregroundColor,
       options.backgroundColor,
-      eyeFrameColor,
-      eyeBallColor,
+      eyeFrameColor === options.foregroundColor ? foregroundPaint : eyeFrameColor,
+      eyeBallColor === options.foregroundColor ? foregroundPaint : eyeBallColor,
       eyeFrameStyle,
       eyeBallStyle,
     );
@@ -763,6 +692,7 @@ export function createQrCodeSvg(
   content: string,
   options: {
     foregroundColor: string;
+    gradientEndColor?: string;
     backgroundColor: string;
     style: QrCodeStyle;
     eyeFrameStyle?: QrCodeEyeStyle;
@@ -776,8 +706,11 @@ export function createQrCodeSvg(
   const totalModules = qrCode.modules.size + quietZone * 2;
   const eyeFrameStyle = options.eyeFrameStyle || "square";
   const eyeBallStyle = options.eyeBallStyle || "square";
-  const eyeFrameColor = escapeXml(options.eyeFrameColor || options.foregroundColor);
-  const eyeBallColor = escapeXml(options.eyeBallColor || options.foregroundColor);
+  const eyeFrameColor = options.eyeFrameColor || options.foregroundColor;
+  const eyeBallColor = options.eyeBallColor || options.foregroundColor;
+  const foregroundPaint = options.gradientEndColor ? "url(#qr-code-gradient)" : escapeXml(options.foregroundColor);
+  const eyeFramePaint = eyeFrameColor === options.foregroundColor ? foregroundPaint : escapeXml(eyeFrameColor);
+  const eyeBallPaint = eyeBallColor === options.foregroundColor ? foregroundPaint : escapeXml(eyeBallColor);
   const squarePaths: string[] = [];
   const styledModules: string[] = [];
 
@@ -792,25 +725,7 @@ export function createQrCodeSvg(
     }
   }
 
-  if (options.style === "tribal") {
-    const inset = 0.1;
-    for (let row = 0; row < qrCode.modules.size; row++) {
-      for (let column = 0; column < qrCode.modules.size; column++) {
-        if (
-          !qrCode.modules.get(row, column)
-          || isExcludedFinderModule(row, column, qrCode.modules.size, eyeFrameStyle, eyeBallStyle)
-        ) continue;
-
-        const x = column + quietZone;
-        const y = row + quietZone;
-        if (qrCode.modules.isReserved(row, column) === 1) {
-          squarePaths.push(`M${x} ${y}h1v1h-1z`);
-        } else {
-          styledModules.push(`<rect x="${x + inset}" y="${y + inset}" width="${1 - inset * 2}" height="${1 - inset * 2}" rx="0.16"/>`);
-        }
-      }
-    }
-  } else if (options.style === "mosaic") {
+  if (options.style === "mosaic") {
     const cornerRadius = 0.08;
     const size = qrCode.modules.size;
     const activeRuns = new Map<string, { startRow: number; endRow: number; startColumn: number; endColumn: number }>();
@@ -930,12 +845,6 @@ export function createQrCodeSvg(
           styledModules.push(`<circle cx="${x + 0.5}" cy="${y + 0.5}" r="0.5"/>`);
         } else if (options.style === "vertical") {
           styledModules.push(`<rect x="${x + 0.02}" y="${y + 0.01}" width="0.96" height="0.98" rx="0.48"/>`);
-        } else if (options.style === "horizontal") {
-          styledModules.push(`<rect x="${x + 0.01}" y="${y + 0.02}" width="0.98" height="0.96" rx="0.48"/>`);
-        } else if (options.style === "diamond") {
-          styledModules.push(`<path d="M${x + 0.5} ${y + 0.005}L${x + 0.995} ${y + 0.5}L${x + 0.5} ${y + 0.995}L${x + 0.005} ${y + 0.5}Z"/>`);
-        } else if (options.style === "octagon") {
-          styledModules.push(`<path d="M${x + 0.16} ${y + 0.005}H${x + 0.84}L${x + 0.995} ${y + 0.16}V${y + 0.84}L${x + 0.84} ${y + 0.995}H${x + 0.16}L${x + 0.005} ${y + 0.84}V${y + 0.16}Z"/>`);
         } else if (options.style === "leaf") {
           styledModules.push(`<path d="M${x + 0.5} ${y + 0.005}Q${x + 1} ${y + 0.26} ${x + 0.98} ${y + 0.66}Q${x + 0.94} ${y + 1} ${x + 0.5} ${y + 1}Q${x + 0.06} ${y + 1} ${x + 0.02} ${y + 0.66}Q${x} ${y + 0.26} ${x + 0.5} ${y + 0.005}Z"/>`);
         } else if (options.style === "star") {
@@ -948,20 +857,19 @@ export function createQrCodeSvg(
   }
 
   const background = escapeXml(options.backgroundColor);
-  const foreground = escapeXml(options.foregroundColor);
   const eyePatterns = eyeFrameStyle === "square"
     && eyeBallStyle === "square"
-    && eyeFrameColor === escapeXml(options.foregroundColor)
-    && eyeBallColor === escapeXml(options.foregroundColor)
+    && eyeFrameColor === options.foregroundColor
+    && eyeBallColor === options.foregroundColor
     ? ""
     : [[0, 0], [0, qrCode.modules.size - 7], [qrCode.modules.size - 7, 0]]
       .map(([row, column]) => {
         const x = column + quietZone;
         const y = row + quietZone;
         return [
-          renderSvgEyeShape(x, y, 7, eyeFrameStyle, eyeFrameColor),
+          renderSvgEyeShape(x, y, 7, eyeFrameStyle, eyeFramePaint),
           renderSvgEyeShape(x + 1, y + 1, 5, "square", background),
-          renderSvgEyeShape(x + 2, y + 2, 3, eyeBallStyle === "heart" ? "rounded" : eyeBallStyle, eyeBallColor),
+          renderSvgEyeShape(x + 2, y + 2, 3, eyeBallStyle === "heart" ? "rounded" : eyeBallStyle, eyeBallPaint),
         ].join("");
       })
       .join("");
@@ -975,10 +883,13 @@ export function createQrCodeSvg(
   }
 
   const squarePath = squarePaths.length
-    ? `<path fill="${foreground}" d="${squarePaths.join("")}"/>`
+    ? `<path fill="${foregroundPaint}" d="${squarePaths.join("")}"/>`
     : "";
   const styledPath = styledModules.length
-    ? `<g fill="${foreground}">${styledModules.join("")}</g>`
+    ? `<g fill="${foregroundPaint}">${styledModules.join("")}</g>`
     : "";
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="720" height="720" viewBox="0 0 ${totalModules} ${totalModules}"><rect width="100%" height="100%" fill="${background}"/>${squarePath}${styledPath}${eyePatterns}${logo}</svg>`;
+  const gradient = options.gradientEndColor
+    ? `<defs><linearGradient id="qr-code-gradient" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${totalModules}" y2="0"><stop offset="0%" stop-color="${escapeXml(options.foregroundColor)}"/><stop offset="100%" stop-color="${escapeXml(options.gradientEndColor)}"/></linearGradient></defs>`
+    : "";
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="720" height="720" viewBox="0 0 ${totalModules} ${totalModules}">${gradient}<rect width="100%" height="100%" fill="${background}"/>${squarePath}${styledPath}${eyePatterns}${logo}</svg>`;
 }

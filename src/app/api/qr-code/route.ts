@@ -25,6 +25,7 @@ type QrRequest = {
   content: string;
   contentType: "url" | "text";
   foregroundColor: string;
+  gradientEndColor?: string;
   backgroundColor: string;
   qrStyle: QrCodeStyle;
   eyeFrameStyle: QrCodeEyeStyle;
@@ -84,6 +85,7 @@ function parseQrRequest(value: unknown): QrRequest | null {
     || typeof value.content !== "string"
     || (value.contentType !== "url" && value.contentType !== "text")
     || !validHexColor(value.foregroundColor)
+    || (value.gradientEndColor !== undefined && !validHexColor(value.gradientEndColor))
     || !validHexColor(value.backgroundColor)
     || (value.qrStyle !== undefined && !isQrCodeStyle(value.qrStyle))
     || (value.eyeFrameStyle !== undefined && !isQrCodeEyeStyle(value.eyeFrameStyle))
@@ -121,6 +123,7 @@ function parseQrRequest(value: unknown): QrRequest | null {
     content,
     contentType: value.contentType,
     foregroundColor: value.foregroundColor,
+    ...(validHexColor(value.gradientEndColor) ? { gradientEndColor: value.gradientEndColor } : {}),
     backgroundColor: value.backgroundColor,
     qrStyle: isQrCodeStyle(value.qrStyle) ? value.qrStyle : "square",
     eyeFrameStyle: isQrCodeEyeStyle(value.eyeFrameStyle) ? value.eyeFrameStyle : "square",
@@ -155,6 +158,7 @@ function parseLogo(value: string | undefined) {
 async function createQrSvg(input: QrRequest, logo: ReturnType<typeof parseLogo>) {
   return createQrCodeSvgServer(input.content, {
     foregroundColor: input.foregroundColor,
+    ...(input.gradientEndColor ? { gradientEndColor: input.gradientEndColor } : {}),
     backgroundColor: input.backgroundColor,
     style: input.qrStyle,
     eyeFrameStyle: input.eyeFrameStyle,

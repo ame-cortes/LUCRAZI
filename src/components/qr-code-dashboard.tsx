@@ -36,6 +36,7 @@ type SavedQrCode = {
   content: string;
   contentType: "url" | "text";
   foregroundColor: string;
+  gradientEndColor: string;
   backgroundColor: string;
   qrStyle: QrCodeStyle;
   eyeFrameStyle: QrCodeEyeStyle;
@@ -90,6 +91,9 @@ function readSavedCode(value: unknown): SavedQrCode | null {
     content: value.content,
     contentType: value.contentType,
     foregroundColor: value.foregroundColor,
+    gradientEndColor: typeof value.gradientEndColor === "string" && /^#[\da-f]{6}$/i.test(value.gradientEndColor)
+      ? value.gradientEndColor
+      : "",
     backgroundColor: value.backgroundColor,
     qrStyle: isQrCodeStyle(value.qrStyle) ? value.qrStyle : "square",
     eyeFrameStyle: isQrCodeEyeStyle(value.eyeFrameStyle) ? value.eyeFrameStyle : "square",
@@ -209,6 +213,7 @@ async function renderSavedQrCode(code: SavedQrCode) {
   canvas.height = 720;
   await renderQrCodeCanvas(canvas, getSavedQrContent(code), {
     foregroundColor: code.foregroundColor,
+    ...(code.gradientEndColor ? { gradientEndColor: code.gradientEndColor } : {}),
     backgroundColor: code.backgroundColor,
     style: code.qrStyle,
     eyeFrameStyle: code.eyeFrameStyle,
@@ -248,6 +253,8 @@ export default function QrCodeDashboard() {
   const [content, setContent] = useState("seu-site-aqui.com.br");
   const [contentType, setContentType] = useState<"url" | "text">("url");
   const [foregroundColor, setForegroundColor] = useState("#243B2B");
+  const [gradientEnabled, setGradientEnabled] = useState(false);
+  const [gradientEndColor, setGradientEndColor] = useState("#C8F169");
   const [backgroundColor, setBackgroundColor] = useState("#FFFFFF");
   const [qrStyle, setQrStyle] = useState<QrCodeStyle>("square");
   const [eyeFrameStyle, setEyeFrameStyle] = useState<QrCodeEyeStyle>("square");
@@ -316,6 +323,7 @@ export default function QrCodeDashboard() {
           canvas.height = 480;
           await renderQrCodeCanvas(canvas, getSavedQrContent(savedCode), {
             foregroundColor: savedCode.foregroundColor,
+            ...(savedCode.gradientEndColor ? { gradientEndColor: savedCode.gradientEndColor } : {}),
             backgroundColor: savedCode.backgroundColor,
             style: savedCode.qrStyle,
             eyeFrameStyle: savedCode.eyeFrameStyle,
@@ -382,6 +390,7 @@ export default function QrCodeDashboard() {
     setError("");
     void renderQrCodeCanvas(canvas, qrCanvasContent, {
       foregroundColor,
+      ...(gradientEnabled ? { gradientEndColor } : {}),
       backgroundColor,
       style: qrStyle,
       eyeFrameStyle,
@@ -398,7 +407,7 @@ export default function QrCodeDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [backgroundColor, eyeBallColor, eyeBallStyle, eyeFrameColor, eyeFrameStyle, foregroundColor, logoDataUrl, qrCanvasContent, qrStyle]);
+  }, [backgroundColor, eyeBallColor, eyeBallStyle, eyeFrameColor, eyeFrameStyle, foregroundColor, gradientEnabled, gradientEndColor, logoDataUrl, qrCanvasContent, qrStyle]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -409,6 +418,7 @@ export default function QrCodeDashboard() {
       setError("");
       void renderQrCodeCanvas(canvas, qrCanvasContent, {
         foregroundColor,
+        ...(gradientEnabled ? { gradientEndColor } : {}),
         backgroundColor,
         style: qrStyle,
         eyeFrameStyle,
@@ -428,7 +438,7 @@ export default function QrCodeDashboard() {
     }, 100);
 
     return () => clearTimeout(timeoutId);
-  }, [user, backgroundColor, eyeBallColor, eyeBallStyle, eyeFrameColor, eyeFrameStyle, foregroundColor, logoDataUrl, qrCanvasContent, qrStyle]);
+  }, [user, backgroundColor, eyeBallColor, eyeBallStyle, eyeFrameColor, eyeFrameStyle, foregroundColor, gradientEnabled, gradientEndColor, logoDataUrl, qrCanvasContent, qrStyle]);
 
   function resetEditor() {
     socialIconRequestRef.current++;
@@ -438,6 +448,8 @@ export default function QrCodeDashboard() {
     setContent("seu-site-aqui.com.br");
     setContentType("url");
     setForegroundColor("#243B2B");
+    setGradientEnabled(false);
+    setGradientEndColor("#C8F169");
     setBackgroundColor("#FFFFFF");
     setQrStyle("square");
     setEyeFrameStyle("square");
@@ -476,6 +488,8 @@ export default function QrCodeDashboard() {
     setContent(code.content);
     setContentType(code.contentType);
     setForegroundColor(code.foregroundColor);
+    setGradientEnabled(Boolean(code.gradientEndColor));
+    setGradientEndColor(code.gradientEndColor || "#C8F169");
     setBackgroundColor(code.backgroundColor);
     setQrStyle(code.qrStyle);
     setEyeFrameStyle(code.eyeFrameStyle);
@@ -718,6 +732,7 @@ export default function QrCodeDashboard() {
             content: normalizedContent,
             contentType,
             foregroundColor,
+            ...(gradientEnabled ? { gradientEndColor } : {}),
             backgroundColor,
             qrStyle,
             eyeFrameStyle,
@@ -831,6 +846,7 @@ export default function QrCodeDashboard() {
     try {
       const options = {
         foregroundColor: code.foregroundColor,
+        ...(code.gradientEndColor ? { gradientEndColor: code.gradientEndColor } : {}),
         backgroundColor: code.backgroundColor,
         style: code.qrStyle,
         eyeFrameStyle: code.eyeFrameStyle,
@@ -1129,6 +1145,28 @@ export default function QrCodeDashboard() {
                       />
                       <output htmlFor="qr-foreground">{foregroundColor}</output>
                     </div>
+                    <label className="qr-gradient-option" htmlFor="qr-gradient-enabled">
+                      <input
+                        checked={gradientEnabled}
+                        disabled={busy}
+                        id="qr-gradient-enabled"
+                        onChange={(event) => setGradientEnabled(event.target.checked)}
+                        type="checkbox"
+                      />
+                      Aplicar degradê
+                    </label>
+                    {gradientEnabled && (
+                      <div className="qr-color-row">
+                        <label htmlFor="qr-gradient-end">Cor final</label>
+                        <input
+                          id="qr-gradient-end"
+                          type="color"
+                          value={gradientEndColor}
+                          onChange={(event) => setGradientEndColor(event.target.value)}
+                        />
+                        <output htmlFor="qr-gradient-end">{gradientEndColor}</output>
+                      </div>
+                    )}
                     <div className="qr-color-row">
                       <label htmlFor="qr-background">Fundo</label>
                       <input
