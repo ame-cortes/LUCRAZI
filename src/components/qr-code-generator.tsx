@@ -3,6 +3,8 @@
 import { getToken } from "firebase/app-check";
 import Link from "next/link";
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { type SocialIconId } from "@/lib/social-icons";
+import { renderSocialIconDataUrl, socialIconOptions } from "@/lib/qr-code-social-icons";
 import { getFirebaseAppCheck } from "@/lib/firebase";
 import QrCodeStylePicker from "@/components/qr-code-style-picker";
 import {
@@ -29,6 +31,8 @@ function downloadFile(filename: string, content: BlobPart, type: string) {
 
 export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const socialIconRequestRef = useRef(0);
   const [contentType, setContentType] = useState<"url" | "text">("url");
   const [content, setContent] = useState("https://www.lucrazi.com.br");
   const [foregroundColor, setForegroundColor] = useState("#243B2B");
@@ -39,6 +43,9 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
   const [eyeFrameColor, setEyeFrameColor] = useState("#243B2B");
   const [eyeBallColor, setEyeBallColor] = useState("#243B2B");
   const [logoDataUrl, setLogoDataUrl] = useState("");
+  const [socialIcon, setSocialIcon] = useState<SocialIconId | "">("");
+  const [socialIconColor, setSocialIconColor] = useState("#243B2B");
+  const [renderingSocialIcon, setRenderingSocialIcon] = useState(false);
   const [email, setEmail] = useState("");
   const [consented, setConsented] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -57,6 +64,8 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
     eyeBallStyle,
     eyeFrameColor,
     eyeBallColor,
+    socialIcon,
+    socialIconColor,
     logoDataUrl,
   ]);
   const downloadsUnlocked = deliveredRequestKey !== "" && deliveredRequestKey === requestKey;
@@ -105,32 +114,40 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
     setPreviewError("");
     const input = event.currentTarget;
     const file = input.files?.[0];
+    const requestId = ++socialIconRequestRef.current;
     if (!file) {
+      setSocialIcon("");
       setLogoDataUrl("");
       return;
     }
 
     if (file.size > 256 * 1024 || !["image/png", "image/jpeg"].includes(file.type)) {
       setLogoDataUrl("");
+      setSocialIcon("");
+      setRenderingSocialIcon(false);
       setPreviewError("Escolha um logo PNG ou JPEG de até 256 KB.");
       input.value = "";
       return;
     }
+    setSocialIcon("");
 
     let bytes: Uint8Array;
     try {
       bytes = new Uint8Array(await file.arrayBuffer());
     } catch (error) {
+      if (requestId !== socialIconRequestRef.current) return;
       console.error("Não foi possível ler o arquivo do logo.", error);
       setPreviewError("Não foi possível ler o arquivo do logo. Tente novamente.");
       input.value = "";
       return;
     }
+    if (requestId !== socialIconRequestRef.current) return;
     const isPng = bytes.length >= 8
       && [137, 80, 78, 71, 13, 10, 26, 10].every((byte, index) => bytes[index] === byte);
     const isJpeg = bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
     if ((file.type === "image/png" && !isPng) || (file.type === "image/jpeg" && !isJpeg)) {
       setLogoDataUrl("");
+      setRenderingSocialIcon(false);
       setPreviewError("O arquivo não corresponde a uma imagem PNG ou JPEG válida.");
       input.value = "";
       return;
@@ -138,6 +155,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
 
     const reader = new FileReader();
     reader.onload = () => {
+      if (requestId !== socialIconRequestRef.current) return;
       if (typeof reader.result !== "string") {
         setPreviewError("Não foi possível ler o arquivo do logo.");
         return;
@@ -145,6 +163,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
       const dataUrl = reader.result;
       const image = new Image();
       image.onload = () => {
+        if (requestId !== socialIconRequestRef.current) return;
         if (image.naturalWidth > 2048 || image.naturalHeight > 2048) {
           setPreviewError("O logo precisa ter dimensões de até 2048 x 2048 pixels.");
           input.value = "";
@@ -152,11 +171,65 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
         }
         setLogoDataUrl(dataUrl);
       };
-      image.onerror = () => setPreviewError("O arquivo não contém uma imagem PNG ou JPEG válida.");
+      image.onerror = () => {
+        if (requestId === socialIconRequestRef.current) {
+          setPreviewError("O arquivo não contém uma imagem PNG ou JPEG válida.");
+        }
+      };
       image.src = dataUrl;
     };
-    reader.onerror = () => setPreviewError("Não foi possível ler o arquivo do logo.");
+    reader.onerror = () => {
+      if (requestId === socialIconRequestRef.current) setPreviewError("Não foi possível ler o arquivo do logo.");
+    };
     reader.readAsDataURL(file);
+  }
+
+  async function selectSocialIcon(iconId: SocialIconId | "") {
+    socialIconRequestRef.current++;
+    const requestId = socialIconRequestRef.current;
+    setPreviewError("");
+    setSocialIcon(iconId);
+    setLogoDataUrl("");
+    if (logoInputRef.current) logoInputRef.current.value = "";
+    if (!iconId) {
+      setSocialIconColor(foregroundColor);
+      setRenderingSocialIcon(false);
+      return;
+    }
+
+    setSocialIconColor(foregroundColor);
+    setRenderingSocialIcon(true);
+    try {
+      const dataUrl = await renderSocialIconDataUrl(iconId, foregroundColor);
+      if (requestId === socialIconRequestRef.current) setLogoDataUrl(dataUrl);
+    } catch (iconError) {
+      if (requestId === socialIconRequestRef.current) {
+        console.error("Não foi possível preparar o ícone social do QR Code.", iconError);
+        setPreviewError(iconError instanceof Error ? iconError.message : "Não foi possível preparar o ícone social.");
+      }
+    } finally {
+      if (requestId === socialIconRequestRef.current) setRenderingSocialIcon(false);
+    }
+  }
+
+  async function handleSocialIconColorChange(event: ChangeEvent<HTMLInputElement>) {
+    const color = event.currentTarget.value;
+    setSocialIconColor(color);
+    if (!socialIcon) return;
+    const iconId = socialIcon;
+    const requestId = ++socialIconRequestRef.current;
+    setRenderingSocialIcon(true);
+    try {
+      const dataUrl = await renderSocialIconDataUrl(iconId, color);
+      if (requestId === socialIconRequestRef.current) setLogoDataUrl(dataUrl);
+    } catch (iconError) {
+      if (requestId === socialIconRequestRef.current) {
+        console.error("Não foi possível atualizar a cor do ícone social.", iconError);
+        setPreviewError(iconError instanceof Error ? iconError.message : "Não foi possível atualizar a cor do ícone.");
+      }
+    } finally {
+      if (requestId === socialIconRequestRef.current) setRenderingSocialIcon(false);
+    }
   }
 
   async function handleDownloadPng() {
@@ -199,6 +272,10 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
   async function handleEmailDelivery(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError("");
+    if (renderingSocialIcon) {
+      setFormError("Aguarde o ícone terminar de carregar antes de enviar.");
+      return;
+    }
     if (!consented) {
       setFormError("Autorize o uso do e-mail para receber o arquivo solicitado.");
       return;
@@ -362,16 +439,65 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
         />
 
         <div className="qr-field">
+          <span className="qr-field-label">Ícone de rede social no centro (grátis)</span>
+          <div className="qr-social-icons" role="group" aria-label="Escolher ícone de rede social">
+            <button
+              aria-pressed={socialIcon === ""}
+              className="qr-social-icon-option qr-social-icon-none"
+              disabled={isSubmitting || renderingSocialIcon}
+              onClick={() => void selectSocialIcon("")}
+              type="button"
+            >
+              <span aria-hidden="true">×</span>
+              Sem ícone
+            </button>
+            {socialIconOptions.map(({ id, label, Icon }) => (
+              <button
+                key={id}
+                aria-label={label}
+                aria-pressed={socialIcon === id}
+                className="qr-social-icon-option"
+                disabled={isSubmitting || renderingSocialIcon}
+                onClick={() => void selectSocialIcon(id)}
+                title={label}
+                type="button"
+              >
+                <Icon aria-hidden="true" color={socialIcon === id ? socialIconColor : foregroundColor} size={20} />
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
+          {socialIcon && (
+            <div className="qr-color-row qr-social-icon-color">
+              <label htmlFor="qr-public-social-icon-color">Cor do ícone</label>
+              <input
+                id="qr-public-social-icon-color"
+                type="color"
+                value={socialIconColor}
+                disabled={isSubmitting || renderingSocialIcon}
+                onChange={(event) => void handleSocialIconColorChange(event)}
+              />
+              <output htmlFor="qr-public-social-icon-color">{socialIconColor}</output>
+            </div>
+          )}
+          <span className="qr-field-hint">
+            Escolha um ícone para aparecer no QR Code estático, sem precisar de plano de métricas.
+            {renderingSocialIcon ? " Preparando ícone…" : ""}
+          </span>
+        </div>
+
+        <div className="qr-field">
           <label htmlFor="qr-logo">Logo (opcional)</label>
           <input
             accept="image/png,image/jpeg"
             disabled={isSubmitting}
             id="qr-logo"
+            ref={logoInputRef}
             onChange={(event) => void handleLogoChange(event)}
             type="file"
           />
           <span className="qr-field-hint">
-            PNG ou JPEG, até 256 KB. Usado na prévia e no envio solicitado; não é armazenado.
+            PNG ou JPEG, até 256 KB. Selecione um logo próprio para substituir o ícone social. Usado na prévia e no envio solicitado; não é armazenado.
           </span>
         </div>
       </section>
@@ -460,7 +586,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
                   Isso não me inscreve em campanhas.
                 </span>
               </label>
-              <button className="button button-dark" disabled={isSubmitting} type="submit">
+              <button className="button button-dark" disabled={isSubmitting || renderingSocialIcon} type="submit">
                 {isSubmitting ? "Enviando..." : "Enviar e liberar downloads"} <span aria-hidden="true">↗</span>
               </button>
               {formError && <p aria-live="polite" className="qr-error" role="alert">{formError}</p>}
