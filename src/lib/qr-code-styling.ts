@@ -14,7 +14,7 @@ export const QR_CODE_STYLES = [
   "heart",
 ] as const;
 export type QrCodeStyle = (typeof QR_CODE_STYLES)[number];
-export const QR_CODE_EYE_STYLES = ["square", "rounded", "circle", "diamond", "octagon", "leaf"] as const;
+export const QR_CODE_EYE_STYLES = ["square", "rounded", "circle", "diamond", "octagon", "leaf", "heart"] as const;
 export type QrCodeEyeStyle = (typeof QR_CODE_EYE_STYLES)[number];
 
 export const qrCodeStyleOptions: {
@@ -42,6 +42,7 @@ export const qrCodeEyeStyleOptions: { id: QrCodeEyeStyle; label: string }[] = [
   { id: "diamond", label: "Losango" },
   { id: "octagon", label: "Geométrico" },
   { id: "leaf", label: "Folha" },
+  { id: "heart", label: "Coração" },
 ];
 
 const quietZone = 4;
@@ -171,6 +172,15 @@ function drawEyeShape(
   } else if (style === "rounded") {
     context.beginPath();
     context.roundRect(x, y, size, size, size * 0.2);
+    context.fill();
+  } else if (style === "heart") {
+    context.beginPath();
+    context.moveTo(x + size / 2, y + size * 0.96);
+    context.bezierCurveTo(x + size * 0.4, y + size * 0.82, x + size * 0.02, y + size * 0.58, x + size * 0.02, y + size * 0.3);
+    context.bezierCurveTo(x + size * 0.02, y + size * 0.02, x + size * 0.38, y - size * 0.04, x + size / 2, y + size * 0.24);
+    context.bezierCurveTo(x + size * 0.62, y - size * 0.04, x + size * 0.98, y + size * 0.02, x + size * 0.98, y + size * 0.3);
+    context.bezierCurveTo(x + size * 0.98, y + size * 0.58, x + size * 0.6, y + size * 0.82, x + size / 2, y + size * 0.96);
+    context.closePath();
     context.fill();
   } else if (style === "diamond" || style === "octagon" || style === "leaf") {
     context.beginPath();
@@ -405,6 +415,9 @@ function escapeXml(value: string) {
 function renderSvgEyeShape(x: number, y: number, size: number, style: QrCodeEyeStyle, color: string) {
   if (style === "circle") {
     return `<circle cx="${x + size / 2}" cy="${y + size / 2}" r="${size / 2}" fill="${color}"/>`;
+  }
+  if (style === "heart") {
+    return `<path d="M${x + size / 2} ${y + size * 0.96}C${x + size * 0.4} ${y + size * 0.82} ${x + size * 0.02} ${y + size * 0.58} ${x + size * 0.02} ${y + size * 0.3}C${x + size * 0.02} ${y + size * 0.02} ${x + size * 0.38} ${y - size * 0.04} ${x + size / 2} ${y + size * 0.24}C${x + size * 0.62} ${y - size * 0.04} ${x + size * 0.98} ${y + size * 0.02} ${x + size * 0.98} ${y + size * 0.3}C${x + size * 0.98} ${y + size * 0.58} ${x + size * 0.6} ${y + size * 0.82} ${x + size / 2} ${y + size * 0.96}Z" fill="${color}"/>`;
   }
   if (style === "diamond") {
     return `<path d="M${x + size / 2} ${y}L${x + size} ${y + size / 2}L${x + size / 2} ${y + size}L${x} ${y + size / 2}Z" fill="${color}"/>`;
