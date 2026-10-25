@@ -441,10 +441,9 @@ function drawFinderPatterns(
   origins.forEach(([row, column]) => {
     const x = offsetX + (column + quietZone) * moduleSize;
     const y = offsetY + (row + quietZone) * moduleSize;
-    const scanSafeBallStyle = ballStyle === "heart" ? "rounded" : ballStyle;
     drawEyeShape(context, x, y, moduleSize * 7, frameStyle, frameColor);
     drawEyeShape(context, x + moduleSize, y + moduleSize, moduleSize * 5, "square", backgroundColor);
-    drawEyeShape(context, x + moduleSize * 2, y + moduleSize * 2, moduleSize * 3, scanSafeBallStyle, ballColor);
+    drawEyeShape(context, x + moduleSize * 2, y + moduleSize * 2, moduleSize * 3, ballStyle, ballColor);
   });
 }
 
@@ -885,7 +884,7 @@ export function createQrCodeSvg(
         return [
           renderSvgEyeShape(x, y, 7, eyeFrameStyle, eyeFramePaint),
           renderSvgEyeShape(x + 1, y + 1, 5, "square", background),
-          renderSvgEyeShape(x + 2, y + 2, 3, eyeBallStyle === "heart" ? "rounded" : eyeBallStyle, eyeBallPaint),
+          renderSvgEyeShape(x + 2, y + 2, 3, eyeBallStyle, eyeBallPaint),
         ].join("");
       })
       .join("");
