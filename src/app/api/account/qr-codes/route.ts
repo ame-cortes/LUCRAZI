@@ -3,6 +3,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
 import { getBillingAccess } from "@/lib/billing-plans";
 import { getFirebaseAdminDb, verifyFirebaseIdToken } from "@/lib/firebase-admin";
+import { isQrCodeStyle } from "@/lib/qr-code-styling";
 import { isSocialIconId } from "@/lib/social-icons";
 
 const qrCollectionName = "qrCodes";
@@ -21,6 +22,7 @@ function parseQrCode(value: unknown) {
     : null;
   const foregroundColor = value.foregroundColor;
   const backgroundColor = value.backgroundColor;
+  const qrStyle = value.qrStyle === undefined ? "square" : value.qrStyle;
   const socialIconColor = value.socialIconColor === undefined || value.socialIconColor === ""
     ? foregroundColor
     : value.socialIconColor;
@@ -38,6 +40,7 @@ function parseQrCode(value: unknown) {
     || !/^#[\da-f]{6}$/i.test(foregroundColor)
     || typeof backgroundColor !== "string"
     || !/^#[\da-f]{6}$/i.test(backgroundColor)
+    || !isQrCodeStyle(qrStyle)
     || typeof socialIconColor !== "string"
     || !/^#[\da-f]{6}$/i.test(socialIconColor)
     || logoDataUrl.length > Math.ceil(maxLogoBytes * 4 / 3) + 64
@@ -68,6 +71,7 @@ function parseQrCode(value: unknown) {
     contentType,
     foregroundColor,
     backgroundColor,
+    qrStyle,
     socialIconColor,
     logoDataUrl,
     socialIcon,
@@ -118,6 +122,7 @@ export async function GET(request: Request) {
           contentType: data.contentType,
           foregroundColor: data.foregroundColor,
           backgroundColor: data.backgroundColor,
+          qrStyle: isQrCodeStyle(data.qrStyle) ? data.qrStyle : "square",
           socialIconColor: typeof data.socialIconColor === "string" && /^#[\da-f]{6}$/i.test(data.socialIconColor)
             ? data.socialIconColor
             : data.foregroundColor,

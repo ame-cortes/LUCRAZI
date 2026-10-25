@@ -2,6 +2,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
 import { getBillingAccess } from "@/lib/billing-plans";
 import { getFirebaseAdminDb, verifyFirebaseIdToken } from "@/lib/firebase-admin";
+import { isQrCodeStyle } from "@/lib/qr-code-styling";
 import { isSocialIconId } from "@/lib/social-icons";
 
 function jsonError(message: string, status: number) {
@@ -49,6 +50,7 @@ export async function PATCH(
     : null;
   const foregroundColor = body.foregroundColor;
   const backgroundColor = body.backgroundColor;
+  const qrStyle = body.qrStyle === undefined ? "square" : body.qrStyle;
   const socialIconColor = body.socialIconColor === undefined || body.socialIconColor === ""
     ? foregroundColor
     : body.socialIconColor;
@@ -62,6 +64,7 @@ export async function PATCH(
     || !contentType
     || typeof foregroundColor !== "string" || !/^#[\da-f]{6}$/i.test(foregroundColor)
     || typeof backgroundColor !== "string" || !/^#[\da-f]{6}$/i.test(backgroundColor)
+    || !isQrCodeStyle(qrStyle)
     || typeof socialIconColor !== "string" || !/^#[\da-f]{6}$/i.test(socialIconColor)
     || logoDataUrl.length > 350_000
     || (logoDataUrl.length > 0 && !/^data:image\/(?:png|jpeg);base64,[A-Za-z\d+/]+=*$/.test(logoDataUrl))
@@ -103,6 +106,7 @@ export async function PATCH(
         contentType,
         foregroundColor,
         backgroundColor,
+        qrStyle,
         socialIconColor,
         logoDataUrl: access.hasLogo ? logoDataUrl : "",
         socialIcon: access.hasLogo ? socialIcon : "",

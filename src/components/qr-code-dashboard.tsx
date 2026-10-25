@@ -1,6 +1,5 @@
 "use client";
 
-import QRCode from "qrcode";
 import { createElement, useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { IconType } from "react-icons";
@@ -30,6 +29,13 @@ import Link from "next/link";
 import { getPersistentFirebaseAuth, getFirebaseAuth, isFirebaseConfigured } from "@/lib/firebase";
 import { billingPlans, type BillingAccess, type PaidPlanId } from "@/lib/billing-plans";
 import { isSocialIconId, type SocialIconId } from "@/lib/social-icons";
+import QrCodeStylePicker from "@/components/qr-code-style-picker";
+import {
+  createQrCodeSvg,
+  isQrCodeStyle,
+  renderQrCodeCanvas,
+  type QrCodeStyle,
+} from "@/lib/qr-code-styling";
 import { siteUrl } from "@/lib/site-config";
 import QrMetricsDashboard from "@/components/qr-metrics-dashboard";
 
@@ -41,6 +47,7 @@ type SavedQrCode = {
   contentType: "url" | "text";
   foregroundColor: string;
   backgroundColor: string;
+  qrStyle: QrCodeStyle;
   logoDataUrl: string;
   socialIcon: SocialIconId | "";
   socialIconColor: string;
@@ -108,6 +115,7 @@ function readSavedCode(value: unknown): SavedQrCode | null {
     contentType: value.contentType,
     foregroundColor: value.foregroundColor,
     backgroundColor: value.backgroundColor,
+    qrStyle: isQrCodeStyle(value.qrStyle) ? value.qrStyle : "square",
     logoDataUrl: typeof value.logoDataUrl === "string" ? value.logoDataUrl : "",
     socialIcon: isSocialIconId(value.socialIcon) ? value.socialIcon : "",
     socialIconColor: typeof value.socialIconColor === "string" && /^#[\da-f]{6}$/i.test(value.socialIconColor)
@@ -213,39 +221,14 @@ function getSavedQrContent(code: SavedQrCode) {
 
 async function renderSavedQrCode(code: SavedQrCode) {
   const canvas = document.createElement("canvas");
-  await QRCode.toCanvas(canvas, getSavedQrContent(code), {
-    errorCorrectionLevel: "H",
-    margin: 4,
-    width: 720,
-    color: { dark: code.foregroundColor, light: code.backgroundColor },
+  canvas.width = 720;
+  canvas.height = 720;
+  await renderQrCodeCanvas(canvas, getSavedQrContent(code), {
+    foregroundColor: code.foregroundColor,
+    backgroundColor: code.backgroundColor,
+    style: code.qrStyle,
+    logoDataUrl: code.logoDataUrl,
   });
-
-  if (code.logoDataUrl) {
-    const image = new Image();
-    await new Promise<void>((resolve, reject) => {
-      image.onload = () => resolve();
-      image.onerror = () => reject(new Error("Não foi possível carregar o logo deste QR Code."));
-      image.src = code.logoDataUrl;
-    });
-    const context = canvas.getContext("2d");
-    if (!context) throw new Error("O navegador não conseguiu preparar a imagem do QR Code.");
-
-    const logoSize = canvas.width * 0.2;
-    const backingSize = logoSize * 1.25;
-    const center = canvas.width / 2;
-    context.fillStyle = code.backgroundColor;
-    context.beginPath();
-    context.roundRect(
-      center - backingSize / 2,
-      center - backingSize / 2,
-      backingSize,
-      backingSize,
-      backingSize * 0.12,
-    );
-    context.fill();
-    context.drawImage(image, center - logoSize / 2, center - logoSize / 2, logoSize, logoSize);
-  }
-
   return canvas;
 }
 
@@ -304,6 +287,7 @@ export default function QrCodeDashboard() {
   const [contentType, setContentType] = useState<"url" | "text">("url");
   const [foregroundColor, setForegroundColor] = useState("#243B2B");
   const [backgroundColor, setBackgroundColor] = useState("#FFFFFF");
+  const [qrStyle, setQrStyle] = useState<QrCodeStyle>("square");
   const [logoDataUrl, setLogoDataUrl] = useState("");
   const [socialIcon, setSocialIcon] = useState<SocialIconId | "">("");
   const [socialIconColor, setSocialIconColor] = useState("#243B2B");
@@ -361,15 +345,15 @@ export default function QrCodeDashboard() {
 
         // Gerar imagem do QR Code para preview
         try {
-          const qrDataUrl = await QRCode.toDataURL(getSavedQrContent(savedCode), {
-            width: 120,
-            margin: 1,
-            color: {
-              dark: savedCode.foregroundColor,
-              light: savedCode.backgroundColor,
-            },
+          const canvas = document.createElement("canvas");
+          canvas.width = 240;
+          canvas.height = 240;
+          await renderQrCodeCanvas(canvas, getSavedQrContent(savedCode), {
+            foregroundColor: savedCode.foregroundColor,
+            backgroundColor: savedCode.backgroundColor,
+            style: savedCode.qrStyle,
           });
-          return { ...savedCode, qrImage: qrDataUrl };
+          return { ...savedCode, qrImage: canvas.toDataURL("image/png") };
         } catch {
           return savedCode;
         }
@@ -426,48 +410,11 @@ export default function QrCodeDashboard() {
 
     let cancelled = false;
     setError("");
-    QRCode.toCanvas(canvas, qrCanvasContent, {
-      errorCorrectionLevel: "H",
-      margin: 4,
-      width: 360,
-      color: { dark: foregroundColor, light: backgroundColor },
-    }).then(() => {
-      if (cancelled) return;
-      if (!logoDataUrl) return;
-
-      const image = new Image();
-      image.onload = () => {
-        if (cancelled) return;
-        const context = canvas.getContext("2d");
-        if (!context) {
-          setError("Seu navegador não conseguiu desenhar a prévia.");
-          return;
-        }
-        const logoSize = canvas.width * 0.2;
-        const backingSize = logoSize * 1.25;
-        const center = canvas.width / 2;
-        context.fillStyle = backgroundColor;
-        context.beginPath();
-        context.roundRect(
-          center - backingSize / 2,
-          center - backingSize / 2,
-          backingSize,
-          backingSize,
-          backingSize * 0.12,
-        );
-        context.fill();
-        context.drawImage(
-          image,
-          center - logoSize / 2,
-          center - logoSize / 2,
-          logoSize,
-          logoSize,
-        );
-      };
-      image.onerror = () => {
-        if (!cancelled) setError("Não foi possível carregar o logo escolhido.");
-      };
-      image.src = logoDataUrl;
+    void renderQrCodeCanvas(canvas, qrCanvasContent, {
+      foregroundColor,
+      backgroundColor,
+      style: qrStyle,
+      logoDataUrl,
     }).catch((error: unknown) => {
       if (cancelled) return;
       console.error("Não foi possível gerar a prévia do QR Code.", error);
@@ -477,7 +424,7 @@ export default function QrCodeDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [backgroundColor, foregroundColor, logoDataUrl, qrCanvasContent]);
+  }, [backgroundColor, foregroundColor, logoDataUrl, qrCanvasContent, qrStyle]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -486,48 +433,11 @@ export default function QrCodeDashboard() {
 
       let cancelled = false;
       setError("");
-      QRCode.toCanvas(canvas, qrCanvasContent, {
-        errorCorrectionLevel: "H",
-        margin: 4,
-        width: 360,
-        color: { dark: foregroundColor, light: backgroundColor },
-      }).then(() => {
-        if (cancelled) return;
-        if (!logoDataUrl) return;
-
-        const image = new Image();
-        image.onload = () => {
-          if (cancelled) return;
-          const context = canvas.getContext("2d");
-          if (!context) {
-            setError("Seu navegador não conseguiu desenhar a prévia.");
-            return;
-          }
-          const logoSize = canvas.width * 0.2;
-          const backingSize = logoSize * 1.25;
-          const center = canvas.width / 2;
-          context.fillStyle = backgroundColor;
-          context.beginPath();
-          context.roundRect(
-            center - backingSize / 2,
-            center - backingSize / 2,
-            backingSize,
-            backingSize,
-            backingSize * 0.12,
-          );
-          context.fill();
-          context.drawImage(
-            image,
-            center - logoSize / 2,
-            center - logoSize / 2,
-            logoSize,
-            logoSize,
-          );
-        };
-        image.onerror = () => {
-          if (!cancelled) setError("Não foi possível carregar o logo escolhido.");
-        };
-        image.src = logoDataUrl;
+      void renderQrCodeCanvas(canvas, qrCanvasContent, {
+        foregroundColor,
+        backgroundColor,
+        style: qrStyle,
+        logoDataUrl,
       }).catch((error: unknown) => {
         if (cancelled) return;
         console.error("Não foi possível gerar a prévia do QR Code.", error);
@@ -540,7 +450,7 @@ export default function QrCodeDashboard() {
     }, 100);
 
     return () => clearTimeout(timeoutId);
-  }, [user, backgroundColor, foregroundColor, logoDataUrl, qrCanvasContent]);
+  }, [user, backgroundColor, foregroundColor, logoDataUrl, qrCanvasContent, qrStyle]);
 
   function resetEditor() {
     socialIconRequestRef.current++;
@@ -551,6 +461,7 @@ export default function QrCodeDashboard() {
     setContentType("url");
     setForegroundColor("#243B2B");
     setBackgroundColor("#FFFFFF");
+    setQrStyle("square");
     setLogoDataUrl("");
     setSocialIcon("");
     setSocialIconColor("#243B2B");
@@ -584,6 +495,7 @@ export default function QrCodeDashboard() {
     setContentType(code.contentType);
     setForegroundColor(code.foregroundColor);
     setBackgroundColor(code.backgroundColor);
+    setQrStyle(code.qrStyle);
     setLogoDataUrl(code.logoDataUrl || "");
     setSocialIcon(code.socialIcon);
     setSocialIconColor(code.socialIconColor);
@@ -821,6 +733,7 @@ export default function QrCodeDashboard() {
             contentType,
             foregroundColor,
             backgroundColor,
+            qrStyle,
             logoDataUrl: access.hasLogo ? logoDataUrl : "",
             socialIcon: access.hasLogo ? socialIcon : "",
             socialIconColor: access.hasLogo ? socialIconColor : "",
@@ -926,25 +839,12 @@ export default function QrCodeDashboard() {
 
   async function downloadSavedSvg(code: SavedQrCode) {
     try {
-      let svg = await QRCode.toString(getSavedQrContent(code), {
-        type: "svg",
-        errorCorrectionLevel: "H",
-        margin: 4,
-        width: 720,
-        color: { dark: code.foregroundColor, light: code.backgroundColor },
+      const svg = createQrCodeSvg(getSavedQrContent(code), {
+        foregroundColor: code.foregroundColor,
+        backgroundColor: code.backgroundColor,
+        style: code.qrStyle,
+        logoDataUrl: code.logoDataUrl,
       });
-      if (code.logoDataUrl) {
-        const escapedBackground = code.backgroundColor.replace(/[&<>"']/g, (character) => ({
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          "\"": "&quot;",
-          "'": "&apos;",
-        })[character] || character);
-        const escapedLogo = code.logoDataUrl.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
-        const overlay = `<rect x="38%" y="38%" width="24%" height="24%" rx="3%" fill="${escapedBackground}"/><image href="${escapedLogo}" x="40%" y="40%" width="20%" height="20%" preserveAspectRatio="xMidYMid meet"/>`;
-        svg = svg.replace("</svg>", `${overlay}</svg>`);
-      }
       const filename = code.name.trim().replace(/[^\p{L}\p{N}-]+/gu, "-") || code.id;
       downloadFile(`qr-code-${filename}.svg`, svg, "image/svg+xml;charset=utf-8");
     } catch (downloadError) {
@@ -1243,6 +1143,7 @@ export default function QrCodeDashboard() {
                       <output htmlFor="qr-background">{backgroundColor}</output>
                     </div>
                   </fieldset>
+                  <QrCodeStylePicker value={qrStyle} onChange={setQrStyle} disabled={busy} />
                   <div className="qr-field">
                     <span className="qr-field-label">Ícone no centro do QR Code</span>
                     <div className="qr-social-icons" role="group" aria-label="Escolher ícone de rede social">
@@ -1336,7 +1237,7 @@ export default function QrCodeDashboard() {
                   width={360}
                   height={360}
                 />
-                <p className="qr-preview-hint">Escaneie o código com a câmera antes de imprimir ou compartilhar.</p>
+                <p className="qr-preview-hint">Os três marcadores de leitura e a margem branca são preservados. Faça um teste de leitura antes de imprimir.</p>
                 {!access.hasMetrics && contentType === "url" && (
                   <div className="qr-preview-upsell">
                     <p>

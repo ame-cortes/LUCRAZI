@@ -1,20 +1,20 @@
 "use client";
 
 import { getToken } from "firebase/app-check";
-import QRCode from "qrcode";
 import Link from "next/link";
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { getFirebaseAppCheck } from "@/lib/firebase";
+import QrCodeStylePicker from "@/components/qr-code-style-picker";
+import {
+  createQrCodeSvg,
+  renderQrCodeCanvas,
+  type QrCodeStyle,
+} from "@/lib/qr-code-styling";
 
 type QrCodeGeneratorProps = {
   emailDeliveryEnabled: boolean;
 };
 
-const qrOptions = {
-  errorCorrectionLevel: "H" as const,
-  margin: 4,
-  width: 360,
-};
 const rememberedEmailStorageKey = "lucrazi.qr-code.email";
 
 function downloadFile(filename: string, content: BlobPart, type: string) {
@@ -26,54 +26,13 @@ function downloadFile(filename: string, content: BlobPart, type: string) {
   window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
 }
 
-async function createSvg(content: string, foregroundColor: string, backgroundColor: string, logoDataUrl: string) {
-  const svg = await QRCode.toString(content, {
-    type: "svg",
-    ...qrOptions,
-    color: { dark: foregroundColor, light: backgroundColor },
-  });
-  if (!logoDataUrl) return svg;
-
-  const document = new DOMParser().parseFromString(svg, "image/svg+xml");
-  const root = document.documentElement;
-  if (root.localName !== "svg" || document.querySelector("parsererror")) {
-    throw new Error("Não foi possível preparar o arquivo SVG.");
-  }
-
-  const viewBox = root.getAttribute("viewBox")?.trim().split(/\s+/).map(Number);
-  if (!viewBox || viewBox.length !== 4 || viewBox.some((value) => !Number.isFinite(value))) {
-    throw new Error("O gerador retornou um SVG sem dimensões válidas.");
-  }
-
-  const [, , width, height] = viewBox;
-  const logoSize = Math.min(width, height) * 0.2;
-  const backingSize = logoSize * 1.25;
-  const namespace = "http://www.w3.org/2000/svg";
-  const backing = document.createElementNS(namespace, "rect");
-  backing.setAttribute("x", String((width - backingSize) / 2));
-  backing.setAttribute("y", String((height - backingSize) / 2));
-  backing.setAttribute("width", String(backingSize));
-  backing.setAttribute("height", String(backingSize));
-  backing.setAttribute("rx", String(backingSize * 0.12));
-  backing.setAttribute("fill", backgroundColor);
-
-  const image = document.createElementNS(namespace, "image");
-  image.setAttribute("href", logoDataUrl);
-  image.setAttribute("x", String((width - logoSize) / 2));
-  image.setAttribute("y", String((height - logoSize) / 2));
-  image.setAttribute("width", String(logoSize));
-  image.setAttribute("height", String(logoSize));
-  image.setAttribute("preserveAspectRatio", "xMidYMid meet");
-  root.append(backing, image);
-  return new XMLSerializer().serializeToString(document);
-}
-
 export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [contentType, setContentType] = useState<"url" | "text">("url");
   const [content, setContent] = useState("https://www.lucrazi.com.br");
   const [foregroundColor, setForegroundColor] = useState("#243B2B");
   const [backgroundColor, setBackgroundColor] = useState("#FFFFFF");
+  const [qrStyle, setQrStyle] = useState<QrCodeStyle>("square");
   const [logoDataUrl, setLogoDataUrl] = useState("");
   const [email, setEmail] = useState("");
   const [consented, setConsented] = useState(false);
@@ -88,6 +47,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
     contentType,
     foregroundColor,
     backgroundColor,
+    qrStyle,
     logoDataUrl,
   ]);
   const downloadsUnlocked = deliveredRequestKey !== "" && deliveredRequestKey === requestKey;
@@ -112,45 +72,11 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
 
     let cancelled = false;
     setPreviewError("");
-    QRCode.toCanvas(canvas, value, {
-      ...qrOptions,
-      color: { dark: foregroundColor, light: backgroundColor },
-    }).then(() => {
-      if (cancelled || !logoDataUrl) return;
-
-      const image = new Image();
-      image.onload = () => {
-        if (cancelled) return;
-        const context = canvas.getContext("2d");
-        if (!context) {
-          setPreviewError("Seu navegador não conseguiu desenhar a prévia.");
-          return;
-        }
-        const logoSize = canvas.width * 0.2;
-        const backingSize = logoSize * 1.25;
-        const center = canvas.width / 2;
-        context.fillStyle = backgroundColor;
-        context.beginPath();
-        context.roundRect(
-          center - backingSize / 2,
-          center - backingSize / 2,
-          backingSize,
-          backingSize,
-          backingSize * 0.12,
-        );
-        context.fill();
-        context.drawImage(
-          image,
-          center - logoSize / 2,
-          center - logoSize / 2,
-          logoSize,
-          logoSize,
-        );
-      };
-      image.onerror = () => {
-        if (!cancelled) setPreviewError("Não foi possível carregar o logo escolhido.");
-      };
-      image.src = logoDataUrl;
+    void renderQrCodeCanvas(canvas, value, {
+      foregroundColor,
+      backgroundColor,
+      style: qrStyle,
+      logoDataUrl,
     }).catch((error: unknown) => {
       if (cancelled) return;
       console.error("Não foi possível gerar a prévia do QR Code.", error);
@@ -160,7 +86,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
     return () => {
       cancelled = true;
     };
-  }, [backgroundColor, content, foregroundColor, logoDataUrl]);
+  }, [backgroundColor, content, foregroundColor, logoDataUrl, qrStyle]);
 
   async function handleLogoChange(event: ChangeEvent<HTMLInputElement>) {
     setPreviewError("");
@@ -240,7 +166,12 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
 
   async function handleDownloadSvg() {
     try {
-      const svg = await createSvg(content.trim() || " ", foregroundColor, backgroundColor, logoDataUrl);
+      const svg = createQrCodeSvg(content.trim() || " ", {
+        foregroundColor,
+        backgroundColor,
+        style: qrStyle,
+        logoDataUrl,
+      });
       downloadFile("qr-code-lucrazi.svg", svg, "image/svg+xml;charset=utf-8");
     } catch (error) {
       console.error("Não foi possível exportar o QR Code como SVG.", error);
@@ -287,6 +218,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
           contentType,
           foregroundColor,
           backgroundColor,
+          qrStyle,
           ...(logoDataUrl ? { logoDataUrl } : {}),
           consent: consented,
         }),
@@ -394,6 +326,8 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
           </div>
         </fieldset>
 
+        <QrCodeStylePicker value={qrStyle} onChange={setQrStyle} disabled={isSubmitting} />
+
         <div className="qr-field">
           <label htmlFor="qr-logo">Logo (opcional)</label>
           <input
@@ -419,7 +353,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
           role="img"
           width={360}
         />
-        <p className="qr-preview-hint">Escaneie o código com a câmera antes de imprimir ou compartilhar.</p>
+        <p className="qr-preview-hint">Os três marcadores de leitura e a margem branca são preservados. Faça um teste de leitura antes de imprimir.</p>
         {downloadsUnlocked ? (
           <>
             <p aria-live="polite" className="qr-success" role="status">

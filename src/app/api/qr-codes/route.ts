@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
-import QRCode from "qrcode";
+import { createQrCodeSvg, isQrCodeStyle } from "@/lib/qr-code-styling";
 
 function normalizeApiKey(value: string) {
   return createHash("sha256").update(value.trim()).digest("hex");
@@ -25,6 +25,7 @@ function parseJsonBody(body: unknown) {
   const content = typeof record.content === "string" ? record.content.trim() : "";
   const foreground = typeof record.foregroundColor === "string" ? record.foregroundColor : "#243B2B";
   const background = typeof record.backgroundColor === "string" ? record.backgroundColor : "#FFFFFF";
+  const qrStyle = record.qrStyle === undefined ? "square" : record.qrStyle;
   const logoDataUrl = typeof record.logoDataUrl === "string" ? record.logoDataUrl : undefined;
 
   if (!destination && !content) {
@@ -34,12 +35,14 @@ function parseJsonBody(body: unknown) {
   if (destination && !/^https?:\/\//i.test(destination)) {
     return null;
   }
+  if (!isQrCodeStyle(qrStyle)) return null;
 
   return {
     content: content || destination,
     target: destination || undefined,
     foregroundColor: /^#[0-9a-fA-F]{6}$/.test(foreground) ? foreground : "#243B2B",
     backgroundColor: /^#[0-9a-fA-F]{6}$/.test(background) ? background : "#FFFFFF",
+    qrStyle,
     logoDataUrl,
   };
 }
@@ -95,14 +98,10 @@ export async function POST(request: Request) {
   }
 
   const id = `qr_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
-  const svg = await QRCode.toString(parsed.content, {
-    type: "svg",
-    errorCorrectionLevel: "H",
-    margin: 2,
-    color: {
-      dark: parsed.foregroundColor,
-      light: parsed.backgroundColor,
-    },
+  const svg = createQrCodeSvg(parsed.content, {
+    foregroundColor: parsed.foregroundColor,
+    backgroundColor: parsed.backgroundColor,
+    style: parsed.qrStyle,
   });
 
   return NextResponse.json({
@@ -113,6 +112,7 @@ export async function POST(request: Request) {
     metadata: {
       foregroundColor: parsed.foregroundColor,
       backgroundColor: parsed.backgroundColor,
+      qrStyle: parsed.qrStyle,
       logoIncluded: Boolean(parsed.logoDataUrl),
     },
     qrCode: {

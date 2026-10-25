@@ -1,11 +1,15 @@
 import { createHash } from "node:crypto";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { createRemoteJWKSet, jwtVerify } from "jose";
-import QRCode from "qrcode";
 import sharp from "sharp";
 import { NextResponse } from "next/server";
 import { getFirebaseAdminDb } from "@/lib/firebase-admin";
 import { isBrevoEmailConfigured, sendQrCodeEmail } from "@/lib/newsletter-email";
+import {
+  createQrCodeSvg,
+  isQrCodeStyle,
+  type QrCodeStyle,
+} from "@/lib/qr-code-styling";
 
 const appCheckJwks = createRemoteJWKSet(
   new URL("https://firebaseappcheck.googleapis.com/v1/jwks"),
@@ -20,6 +24,7 @@ type QrRequest = {
   contentType: "url" | "text";
   foregroundColor: string;
   backgroundColor: string;
+  qrStyle: QrCodeStyle;
   logoDataUrl?: string;
 };
 
@@ -74,6 +79,7 @@ function parseQrRequest(value: unknown): QrRequest | null {
     || (value.contentType !== "url" && value.contentType !== "text")
     || !validHexColor(value.foregroundColor)
     || !validHexColor(value.backgroundColor)
+    || (value.qrStyle !== undefined && !isQrCodeStyle(value.qrStyle))
     || value.consent !== true
     || (value.logoDataUrl !== undefined && typeof value.logoDataUrl !== "string")
   ) return null;
@@ -106,6 +112,7 @@ function parseQrRequest(value: unknown): QrRequest | null {
     contentType: value.contentType,
     foregroundColor: value.foregroundColor,
     backgroundColor: value.backgroundColor,
+    qrStyle: isQrCodeStyle(value.qrStyle) ? value.qrStyle : "square",
     ...(typeof value.logoDataUrl === "string" ? { logoDataUrl: value.logoDataUrl } : {}),
   };
 }
@@ -132,33 +139,12 @@ function parseLogo(value: string | undefined) {
 }
 
 async function createQrSvg(input: QrRequest, logo: ReturnType<typeof parseLogo>) {
-  const svg = await QRCode.toString(input.content, {
-    type: "svg",
-    errorCorrectionLevel: "H",
-    margin: 4,
-    color: {
-      dark: input.foregroundColor,
-      light: input.backgroundColor,
-    },
+  return createQrCodeSvg(input.content, {
+    foregroundColor: input.foregroundColor,
+    backgroundColor: input.backgroundColor,
+    style: input.qrStyle,
+    logoDataUrl: logo ? `data:image/${logo.format};base64,${logo.base64}` : "",
   });
-  if (!logo) return svg;
-
-  const viewBox = svg.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/);
-  const dimensions = viewBox?.slice(1).map(Number);
-  if (!dimensions || dimensions.length !== 2 || dimensions.some((dimension) => !Number.isFinite(dimension))) {
-    throw new Error("A biblioteca de QR Code retornou um SVG inválido.");
-  }
-
-  const [width, height] = dimensions;
-  const logoSize = Math.min(width, height) * 0.2;
-  const backingSize = logoSize * 1.25;
-  const imageX = (width - logoSize) / 2;
-  const imageY = (height - logoSize) / 2;
-  const backingX = (width - backingSize) / 2;
-  const backingY = (height - backingSize) / 2;
-  const image = `<rect x="${backingX}" y="${backingY}" width="${backingSize}" height="${backingSize}" rx="${backingSize * 0.12}" fill="${input.backgroundColor}"/><image href="data:image/${logo.format};base64,${logo.base64}" x="${imageX}" y="${imageY}" width="${logoSize}" height="${logoSize}" preserveAspectRatio="xMidYMid meet"/>`;
-
-  return svg.replace("</svg>", `${image}</svg>`);
 }
 
 export async function POST(request: Request) {
