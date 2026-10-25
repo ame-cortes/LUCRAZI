@@ -22,15 +22,15 @@ export const qrCodeStyleOptions: {
   description: string;
 }[] = [
   { id: "square", label: "Clássico", description: "Módulos quadrados" },
-  { id: "rounded", label: "Arredondado", description: "Módulos com cantos suaves" },
-  { id: "dots", label: "Pontos", description: "Módulos em círculos" },
-  { id: "vertical", label: "Vertical", description: "Traços em pé" },
-  { id: "horizontal", label: "Horizontal", description: "Traços deitados" },
-  { id: "diamond", label: "Losangos", description: "Módulos em losango" },
-  { id: "octagon", label: "Geométrico", description: "Módulos com cortes" },
-  { id: "leaf", label: "Folha", description: "Módulos alongados" },
-  { id: "star", label: "Estrela", description: "Estrelas com pontas finas" },
-  { id: "pencil", label: "Lápis", description: "Traços em forma de lápis" },
+  { id: "rounded", label: "Arredondado", description: "Módulos encorpados com cantos suaves" },
+  { id: "dots", label: "Pontos", description: "Pontos maiores e mais visíveis" },
+  { id: "vertical", label: "Vertical", description: "Traços verticais mais largos" },
+  { id: "horizontal", label: "Horizontal", description: "Traços horizontais mais largos" },
+  { id: "diamond", label: "Losangos", description: "Losangos preenchidos" },
+  { id: "octagon", label: "Geométrico", description: "Módulos geométricos encorpados" },
+  { id: "leaf", label: "Folha", description: "Folhas mais cheias" },
+  { id: "star", label: "Estrela", description: "Estrelas com braços mais largos" },
+  { id: "pencil", label: "Lápis", description: "Lápis horizontais unidos" },
 ];
 
 export const qrCodeEyeStyleOptions: { id: QrCodeEyeStyle; label: string }[] = [
@@ -58,6 +58,99 @@ function isFinderPatternModule(row: number, column: number, size: number): boole
     || (row < 7 && column >= size - 7)
     || (row >= size - 7 && column < 7)
   );
+}
+
+function isExcludedFinderModule(
+  row: number,
+  column: number,
+  size: number,
+  frameStyle: QrCodeEyeStyle,
+  ballStyle: QrCodeEyeStyle,
+): boolean {
+  return (frameStyle !== "square" || ballStyle !== "square")
+    && isFinderPatternModule(row, column, size);
+}
+
+function pencilGeometry(width: number, height: number) {
+  return {
+    tip: Math.min(height * 0.28, width * 0.2),
+    cap: Math.min(height * 0.12, width * 0.12),
+    inset: height * 0.025,
+  };
+}
+
+function pencilSvgPath(x: number, y: number, width: number, height: number) {
+  const { tip, cap, inset } = pencilGeometry(width, height);
+  const centerY = y + height / 2;
+  return `M${x} ${centerY}L${x + tip} ${y + inset}H${x + width - cap}Q${x + width} ${y + inset} ${x + width} ${centerY}Q${x + width} ${y + height - inset} ${x + width - cap} ${y + height - inset}H${x + tip}Z`;
+}
+
+function drawPencilRun(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) {
+  const { tip, cap, inset } = pencilGeometry(width, height);
+  const centerY = y + height / 2;
+  context.beginPath();
+  context.moveTo(x, centerY);
+  context.lineTo(x + tip, y + inset);
+  context.lineTo(x + width - cap, y + inset);
+  context.quadraticCurveTo(x + width, y + inset, x + width, centerY);
+  context.quadraticCurveTo(x + width, y + height - inset, x + width - cap, y + height - inset);
+  context.lineTo(x + tip, y + height - inset);
+  context.closePath();
+  context.fill();
+}
+
+function drawPencilModules(
+  context: CanvasRenderingContext2D,
+  qrCode: ReturnType<typeof createQrCode>,
+  moduleSize: number,
+  offsetX: number,
+  offsetY: number,
+  frameStyle: QrCodeEyeStyle,
+  ballStyle: QrCodeEyeStyle,
+) {
+  for (let row = 0; row < qrCode.modules.size; row++) {
+    let column = 0;
+    while (column < qrCode.modules.size) {
+      if (isExcludedFinderModule(row, column, qrCode.modules.size, frameStyle, ballStyle)) {
+        column++;
+        continue;
+      }
+      if (!qrCode.modules.get(row, column)) {
+        column++;
+        continue;
+      }
+      if (qrCode.modules.isReserved(row, column) === 1) {
+        const x = offsetX + (column + quietZone) * moduleSize;
+        const y = offsetY + (row + quietZone) * moduleSize;
+        context.fillRect(x, y, moduleSize, moduleSize);
+        column++;
+        continue;
+      }
+
+      const start = column;
+      column++;
+      while (
+        column < qrCode.modules.size
+        && !isExcludedFinderModule(row, column, qrCode.modules.size, frameStyle, ballStyle)
+        && qrCode.modules.get(row, column)
+        && qrCode.modules.isReserved(row, column) !== 1
+      ) column++;
+
+      drawPencilRun(
+        context,
+        offsetX + (start + quietZone) * moduleSize,
+        offsetY + (row + quietZone) * moduleSize,
+        (column - start) * moduleSize,
+        moduleSize,
+      );
+    }
+  }
 }
 
 function drawEyeShape(
@@ -194,95 +287,79 @@ export async function renderQrCodeCanvas(
   const eyeFrameStyle = options.eyeFrameStyle || "square";
   const eyeBallStyle = options.eyeBallStyle || "square";
 
-  for (let row = 0; row < qrCode.modules.size; row++) {
-    for (let column = 0; column < qrCode.modules.size; column++) {
-      if (
-        eyeFrameStyle !== "square" || eyeBallStyle !== "square"
-      ) {
-        if (isFinderPatternModule(row, column, qrCode.modules.size)) continue;
-      }
-      if (!qrCode.modules.get(row, column)) continue;
+  if (options.style === "pencil") {
+    drawPencilModules(context, qrCode, moduleSize, offsetX, offsetY, eyeFrameStyle, eyeBallStyle);
+  } else {
+    for (let row = 0; row < qrCode.modules.size; row++) {
+      for (let column = 0; column < qrCode.modules.size; column++) {
+        if (isExcludedFinderModule(row, column, qrCode.modules.size, eyeFrameStyle, eyeBallStyle)) continue;
+        if (!qrCode.modules.get(row, column)) continue;
 
-      const x = offsetX + (column + quietZone) * moduleSize;
-      const y = offsetY + (row + quietZone) * moduleSize;
-      const isFunctionModule = qrCode.modules.isReserved(row, column) === 1;
-      if (options.style === "square" || isFunctionModule) {
-        context.fillRect(x, y, moduleSize, moduleSize);
-      } else if (options.style === "rounded") {
-        const inset = moduleSize * 0.07;
-        const cellSize = moduleSize - inset * 2;
-        context.beginPath();
-        context.roundRect(x + inset, y + inset, cellSize, cellSize, moduleSize * 0.24);
-        context.fill();
-      } else if (options.style === "dots") {
-        context.beginPath();
-        context.arc(x + moduleSize / 2, y + moduleSize / 2, moduleSize * 0.46, 0, Math.PI * 2);
-        context.fill();
-      } else if (options.style === "vertical") {
-        context.beginPath();
-        context.roundRect(x + moduleSize * 0.14, y + moduleSize * 0.04, moduleSize * 0.72, moduleSize * 0.92, moduleSize * 0.36);
-        context.fill();
-      } else if (options.style === "horizontal") {
-        context.beginPath();
-        context.roundRect(x + moduleSize * 0.04, y + moduleSize * 0.14, moduleSize * 0.92, moduleSize * 0.72, moduleSize * 0.36);
-        context.fill();
-      } else if (options.style === "diamond") {
-        context.beginPath();
-        context.moveTo(x + moduleSize / 2, y + moduleSize * 0.06);
-        context.lineTo(x + moduleSize * 0.94, y + moduleSize / 2);
-        context.lineTo(x + moduleSize / 2, y + moduleSize * 0.94);
-        context.lineTo(x + moduleSize * 0.06, y + moduleSize / 2);
-        context.closePath();
-        context.fill();
-      } else if (options.style === "octagon") {
-        context.beginPath();
-        context.moveTo(x + moduleSize * 0.28, y + moduleSize * 0.04);
-        context.lineTo(x + moduleSize * 0.72, y + moduleSize * 0.04);
-        context.lineTo(x + moduleSize * 0.96, y + moduleSize * 0.28);
-        context.lineTo(x + moduleSize * 0.96, y + moduleSize * 0.72);
-        context.lineTo(x + moduleSize * 0.72, y + moduleSize * 0.96);
-        context.lineTo(x + moduleSize * 0.28, y + moduleSize * 0.96);
-        context.lineTo(x + moduleSize * 0.04, y + moduleSize * 0.72);
-        context.lineTo(x + moduleSize * 0.04, y + moduleSize * 0.28);
-        context.closePath();
-        context.fill();
-      } else if (options.style === "leaf") {
-        context.beginPath();
-        context.moveTo(x + moduleSize / 2, y + moduleSize * 0.04);
-        context.quadraticCurveTo(x + moduleSize * 0.98, y + moduleSize * 0.3, x + moduleSize * 0.9, y + moduleSize * 0.64);
-        context.quadraticCurveTo(x + moduleSize * 0.82, y + moduleSize * 0.96, x + moduleSize / 2, y + moduleSize * 0.98);
-        context.quadraticCurveTo(x + moduleSize * 0.18, y + moduleSize * 0.96, x + moduleSize * 0.1, y + moduleSize * 0.64);
-        context.quadraticCurveTo(x + moduleSize * 0.02, y + moduleSize * 0.3, x + moduleSize / 2, y + moduleSize * 0.04);
-        context.closePath();
-        context.fill();
-      } else if (options.style === "star") {
-        context.beginPath();
-        context.moveTo(x + moduleSize / 2, y + moduleSize * 0.05);
-        context.lineTo(x + moduleSize * 0.66, y + moduleSize * 0.34);
-        context.lineTo(x + moduleSize * 0.95, y + moduleSize / 2);
-        context.lineTo(x + moduleSize * 0.66, y + moduleSize * 0.66);
-        context.lineTo(x + moduleSize / 2, y + moduleSize * 0.95);
-        context.lineTo(x + moduleSize * 0.34, y + moduleSize * 0.66);
-        context.lineTo(x + moduleSize * 0.05, y + moduleSize / 2);
-        context.lineTo(x + moduleSize * 0.34, y + moduleSize * 0.34);
-        context.closePath();
-        context.fill();
-      } else {
-        context.beginPath();
-        context.moveTo(x + moduleSize * 0.22, y + moduleSize * 0.24);
-        context.lineTo(x + moduleSize * 0.78, y + moduleSize * 0.24);
-        context.lineTo(x + moduleSize * 0.78, y + moduleSize * 0.72);
-        context.lineTo(x + moduleSize / 2, y + moduleSize * 0.98);
-        context.lineTo(x + moduleSize * 0.22, y + moduleSize * 0.72);
-        context.closePath();
-        context.fill();
-        context.beginPath();
-        context.moveTo(x + moduleSize * 0.22, y + moduleSize * 0.24);
-        context.lineTo(x + moduleSize * 0.22, y + moduleSize * 0.12);
-        context.quadraticCurveTo(x + moduleSize * 0.5, y + moduleSize * 0.04, x + moduleSize * 0.78, y + moduleSize * 0.12);
-        context.lineTo(x + moduleSize * 0.78, y + moduleSize * 0.24);
-        context.closePath();
-        context.fill();
+        const x = offsetX + (column + quietZone) * moduleSize;
+        const y = offsetY + (row + quietZone) * moduleSize;
+        const isFunctionModule = qrCode.modules.isReserved(row, column) === 1;
+        if (options.style === "square" || isFunctionModule) {
+          context.fillRect(x, y, moduleSize, moduleSize);
+        } else if (options.style === "rounded") {
+          const inset = moduleSize * 0.025;
+          const cellSize = moduleSize - inset * 2;
+          context.beginPath();
+          context.roundRect(x + inset, y + inset, cellSize, cellSize, moduleSize * 0.2);
+          context.fill();
+        } else if (options.style === "dots") {
+          context.beginPath();
+          context.arc(x + moduleSize / 2, y + moduleSize / 2, moduleSize * 0.49, 0, Math.PI * 2);
+          context.fill();
+        } else if (options.style === "vertical") {
+          context.beginPath();
+          context.roundRect(x + moduleSize * 0.06, y + moduleSize * 0.02, moduleSize * 0.88, moduleSize * 0.96, moduleSize * 0.44);
+          context.fill();
+        } else if (options.style === "horizontal") {
+          context.beginPath();
+          context.roundRect(x + moduleSize * 0.02, y + moduleSize * 0.06, moduleSize * 0.96, moduleSize * 0.88, moduleSize * 0.44);
+          context.fill();
+        } else if (options.style === "diamond") {
+          context.beginPath();
+          context.moveTo(x + moduleSize / 2, y + moduleSize * 0.02);
+          context.lineTo(x + moduleSize * 0.98, y + moduleSize / 2);
+          context.lineTo(x + moduleSize / 2, y + moduleSize * 0.98);
+          context.lineTo(x + moduleSize * 0.02, y + moduleSize / 2);
+          context.closePath();
+          context.fill();
+        } else if (options.style === "octagon") {
+          context.beginPath();
+          context.moveTo(x + moduleSize * 0.2, y + moduleSize * 0.02);
+          context.lineTo(x + moduleSize * 0.8, y + moduleSize * 0.02);
+          context.lineTo(x + moduleSize * 0.98, y + moduleSize * 0.2);
+          context.lineTo(x + moduleSize * 0.98, y + moduleSize * 0.8);
+          context.lineTo(x + moduleSize * 0.8, y + moduleSize * 0.98);
+          context.lineTo(x + moduleSize * 0.2, y + moduleSize * 0.98);
+          context.lineTo(x + moduleSize * 0.02, y + moduleSize * 0.8);
+          context.lineTo(x + moduleSize * 0.02, y + moduleSize * 0.2);
+          context.closePath();
+          context.fill();
+        } else if (options.style === "leaf") {
+          context.beginPath();
+          context.moveTo(x + moduleSize / 2, y + moduleSize * 0.02);
+          context.quadraticCurveTo(x + moduleSize * 0.98, y + moduleSize * 0.28, x + moduleSize * 0.96, y + moduleSize * 0.64);
+          context.quadraticCurveTo(x + moduleSize * 0.92, y + moduleSize * 0.98, x + moduleSize / 2, y + moduleSize * 0.98);
+          context.quadraticCurveTo(x + moduleSize * 0.08, y + moduleSize * 0.98, x + moduleSize * 0.04, y + moduleSize * 0.64);
+          context.quadraticCurveTo(x + moduleSize * 0.02, y + moduleSize * 0.28, x + moduleSize / 2, y + moduleSize * 0.02);
+          context.closePath();
+          context.fill();
+        } else if (options.style === "star") {
+          context.beginPath();
+          context.moveTo(x + moduleSize / 2, y + moduleSize * 0.03);
+          context.lineTo(x + moduleSize * 0.7, y + moduleSize * 0.3);
+          context.lineTo(x + moduleSize * 0.97, y + moduleSize / 2);
+          context.lineTo(x + moduleSize * 0.7, y + moduleSize * 0.7);
+          context.lineTo(x + moduleSize / 2, y + moduleSize * 0.97);
+          context.lineTo(x + moduleSize * 0.3, y + moduleSize * 0.7);
+          context.lineTo(x + moduleSize * 0.03, y + moduleSize / 2);
+          context.lineTo(x + moduleSize * 0.3, y + moduleSize * 0.3);
+          context.closePath();
+          context.fill();
+        }
       }
     }
   }
@@ -349,37 +426,67 @@ export function createQrCodeSvg(
   const squarePaths: string[] = [];
   const styledModules: string[] = [];
 
-  for (let row = 0; row < qrCode.modules.size; row++) {
-    for (let column = 0; column < qrCode.modules.size; column++) {
-      if (
-        (eyeFrameStyle !== "square" || eyeBallStyle !== "square")
-        && isFinderPatternModule(row, column, qrCode.modules.size)
-      ) continue;
-      if (!qrCode.modules.get(row, column)) continue;
+  if (options.style === "pencil") {
+    for (let row = 0; row < qrCode.modules.size; row++) {
+      let column = 0;
+      while (column < qrCode.modules.size) {
+        if (isExcludedFinderModule(row, column, qrCode.modules.size, eyeFrameStyle, eyeBallStyle)) {
+          column++;
+          continue;
+        }
+        if (!qrCode.modules.get(row, column)) {
+          column++;
+          continue;
+        }
+        if (qrCode.modules.isReserved(row, column) === 1) {
+          const x = column + quietZone;
+          const y = row + quietZone;
+          squarePaths.push(`M${x} ${y}h1v1h-1z`);
+          column++;
+          continue;
+        }
 
-      const x = column + quietZone;
-      const y = row + quietZone;
-      const isFunctionModule = qrCode.modules.isReserved(row, column) === 1;
-      if (options.style === "square" || isFunctionModule) {
-        squarePaths.push(`M${x} ${y}h1v1h-1z`);
-      } else if (options.style === "rounded") {
-        styledModules.push(`<rect x="${x + 0.07}" y="${y + 0.07}" width="0.86" height="0.86" rx="0.24"/>`);
-      } else if (options.style === "dots") {
-        styledModules.push(`<circle cx="${x + 0.5}" cy="${y + 0.5}" r="0.46"/>`);
-      } else if (options.style === "vertical") {
-        styledModules.push(`<rect x="${x + 0.14}" y="${y + 0.04}" width="0.72" height="0.92" rx="0.36"/>`);
-      } else if (options.style === "horizontal") {
-        styledModules.push(`<rect x="${x + 0.04}" y="${y + 0.14}" width="0.92" height="0.72" rx="0.36"/>`);
-      } else if (options.style === "diamond") {
-        styledModules.push(`<path d="M${x + 0.5} ${y + 0.06}L${x + 0.94} ${y + 0.5}L${x + 0.5} ${y + 0.94}L${x + 0.06} ${y + 0.5}Z"/>`);
-      } else if (options.style === "octagon") {
-        styledModules.push(`<path d="M${x + 0.28} ${y + 0.04}H${x + 0.72}L${x + 0.96} ${y + 0.28}V${y + 0.72}L${x + 0.72} ${y + 0.96}H${x + 0.28}L${x + 0.04} ${y + 0.72}V${y + 0.28}Z"/>`);
-      } else if (options.style === "leaf") {
-        styledModules.push(`<path d="M${x + 0.5} ${y + 0.04}Q${x + 0.98} ${y + 0.3} ${x + 0.9} ${y + 0.64}Q${x + 0.82} ${y + 0.96} ${x + 0.5} ${y + 0.98}Q${x + 0.18} ${y + 0.96} ${x + 0.1} ${y + 0.64}Q${x + 0.02} ${y + 0.3} ${x + 0.5} ${y + 0.04}Z"/>`);
-      } else if (options.style === "star") {
-        styledModules.push(`<path d="M${x + 0.5} ${y + 0.05}L${x + 0.66} ${y + 0.34}L${x + 0.95} ${y + 0.5}L${x + 0.66} ${y + 0.66}L${x + 0.5} ${y + 0.95}L${x + 0.34} ${y + 0.66}L${x + 0.05} ${y + 0.5}L${x + 0.34} ${y + 0.34}Z"/>`);
-      } else {
-        styledModules.push(`<path d="M${x + 0.22} ${y + 0.24}H${x + 0.78}V${y + 0.72}L${x + 0.5} ${y + 0.98}L${x + 0.22} ${y + 0.72}Z M${x + 0.22} ${y + 0.24}V${y + 0.12}Q${x + 0.5} ${y + 0.04} ${x + 0.78} ${y + 0.12}V${y + 0.24}Z"/>`);
+        const start = column;
+        column++;
+        while (
+          column < qrCode.modules.size
+          && !isExcludedFinderModule(row, column, qrCode.modules.size, eyeFrameStyle, eyeBallStyle)
+          && qrCode.modules.get(row, column)
+          && qrCode.modules.isReserved(row, column) !== 1
+        ) column++;
+        styledModules.push(
+          `<path d="${pencilSvgPath(start + quietZone, row + quietZone, column - start, 1)}"/>`,
+        );
+      }
+    }
+  } else {
+    for (let row = 0; row < qrCode.modules.size; row++) {
+      for (let column = 0; column < qrCode.modules.size; column++) {
+        if (isExcludedFinderModule(row, column, qrCode.modules.size, eyeFrameStyle, eyeBallStyle)) continue;
+        if (!qrCode.modules.get(row, column)) continue;
+
+        const x = column + quietZone;
+        const y = row + quietZone;
+        const isFunctionModule = qrCode.modules.isReserved(row, column) === 1;
+        if (options.style === "square" || isFunctionModule) {
+          squarePaths.push(`M${x} ${y}h1v1h-1z`);
+        } else if (options.style === "rounded") {
+          styledModules.push(`<rect x="${x + 0.025}" y="${y + 0.025}" width="0.95" height="0.95" rx="0.2"/>`);
+        } else if (options.style === "dots") {
+          styledModules.push(`<circle cx="${x + 0.5}" cy="${y + 0.5}" r="0.49"/>`);
+        } else if (options.style === "vertical") {
+          styledModules.push(`<rect x="${x + 0.06}" y="${y + 0.02}" width="0.88" height="0.96" rx="0.44"/>`);
+        } else if (options.style === "horizontal") {
+          styledModules.push(`<rect x="${x + 0.02}" y="${y + 0.06}" width="0.96" height="0.88" rx="0.44"/>`);
+        } else if (options.style === "diamond") {
+          styledModules.push(`<path d="M${x + 0.5} ${y + 0.02}L${x + 0.98} ${y + 0.5}L${x + 0.5} ${y + 0.98}L${x + 0.02} ${y + 0.5}Z"/>`);
+        } else if (options.style === "octagon") {
+          styledModules.push(`<path d="M${x + 0.2} ${y + 0.02}H${x + 0.8}L${x + 0.98} ${y + 0.2}V${y + 0.8}L${x + 0.8} ${y + 0.98}H${x + 0.2}L${x + 0.02} ${y + 0.8}V${y + 0.2}Z"/>`);
+        } else if (options.style === "leaf") {
+          styledModules.push(`<path d="M${x + 0.5} ${y + 0.02}Q${x + 0.98} ${y + 0.28} ${x + 0.96} ${y + 0.64}Q${x + 0.92} ${y + 0.98} ${x + 0.5} ${y + 0.98}Q${x + 0.08} ${y + 0.98} ${x + 0.04} ${y + 0.64}Q${x + 0.02} ${y + 0.28} ${x + 0.5} ${y + 0.02}Z"/>`);
+        } else if (options.style === "star") {
+          styledModules.push(`<path d="M${x + 0.5} ${y + 0.03}L${x + 0.7} ${y + 0.3}L${x + 0.97} ${y + 0.5}L${x + 0.7} ${y + 0.7}L${x + 0.5} ${y + 0.97}L${x + 0.3} ${y + 0.7}L${x + 0.03} ${y + 0.5}L${x + 0.3} ${y + 0.3}Z"/>`);
+        }
       }
     }
   }

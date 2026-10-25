@@ -14,46 +14,65 @@ const previewModules = [
   [1, 1, 1, 0, 1],
 ];
 
+function renderPencilPreviewRow(row: number[], rowIndex: number): React.JSX.Element[] {
+  const y = rowIndex * 6;
+  const pencils: React.JSX.Element[] = [];
+  let column = 0;
+  while (column < row.length) {
+    if (!row[column]) {
+      column++;
+      continue;
+    }
+    const start = column;
+    column++;
+    while (column < row.length && row[column]) column++;
+
+    const x = start * 6;
+    const width = (column - start) * 6;
+    const tip = Math.min(1.68, width * 0.2);
+    const cap = Math.min(0.72, width * 0.12);
+    pencils.push(
+      <path
+        key={`pencil-${rowIndex}-${start}`}
+        d={`M${x} ${y + 3}L${x + tip} ${y + 0.15}H${x + width - cap}Q${x + width} ${y + 0.15} ${x + width} ${y + 3}Q${x + width} ${y + 5.85} ${x + width - cap} ${y + 5.85}H${x + tip}Z`}
+      />,
+    );
+  }
+  return pencils;
+}
+
 function renderPreviewModule(style: QrCodeStyle, row: number, column: number): React.JSX.Element {
   const x = column * 6;
   const y = row * 6;
   if (style === "dots") {
-    return <circle key={`${row}-${column}`} cx={x + 3} cy={y + 3} r="2.76" />;
+    return <circle key={`${row}-${column}`} cx={x + 3} cy={y + 3} r="2.94" />;
   }
   if (style === "vertical") {
-    return <rect key={`${row}-${column}`} x={x + 0.84} y={y + 0.2} width="4.32" height="4.6" rx="2.16" />;
+    return <rect key={`${row}-${column}`} x={x + 0.36} y={y + 0.12} width="5.28" height="5.76" rx="2.64" />;
   }
   if (style === "horizontal") {
-    return <rect key={`${row}-${column}`} x={x + 0.2} y={y + 0.84} width="4.6" height="4.32" rx="2.16" />;
+    return <rect key={`${row}-${column}`} x={x + 0.12} y={y + 0.36} width="5.76" height="5.28" rx="2.64" />;
   }
   if (style === "diamond") {
-    return <polygon key={`${row}-${column}`} points={`${x + 3},${y + 0.3} ${x + 5.7},${y + 3} ${x + 3},${y + 5.7} ${x + 0.3},${y + 3}`} />;
+    return <polygon key={`${row}-${column}`} points={`${x + 3},${y + 0.12} ${x + 5.88},${y + 3} ${x + 3},${y + 5.88} ${x + 0.12},${y + 3}`} />;
   }
   if (style === "octagon") {
-    return <polygon key={`${row}-${column}`} points={`${x + 1.4},${y + 0.2} ${x + 3.6},${y + 0.2} ${x + 4.8},${y + 1.4} ${x + 4.8},${y + 3.6} ${x + 3.6},${y + 4.8} ${x + 1.4},${y + 4.8} ${x + 0.2},${y + 3.6} ${x + 0.2},${y + 1.4}`} />;
+    return <polygon key={`${row}-${column}`} points={`${x + 0.84},${y + 0.12} ${x + 5.16},${y + 0.12} ${x + 5.88},${y + 0.84} ${x + 5.88},${y + 5.16} ${x + 5.16},${y + 5.88} ${x + 0.84},${y + 5.88} ${x + 0.12},${y + 5.16} ${x + 0.12},${y + 0.84}`} />;
   }
   if (style === "leaf") {
     return <path key={`${row}-${column}`} d={`M${x + 3} ${y + 0.2}Q${x + 5.8} ${y + 1.6} ${x + 5.4} ${y + 3.8}Q${x + 5} ${y + 5.8} ${x + 3} ${y + 5.9}Q${x + 1} ${y + 5.8} ${x + 0.6} ${y + 3.8}Q${x + 0.2} ${y + 1.6} ${x + 3} ${y + 0.2}Z`} />;
   }
   if (style === "star") {
-    return <polygon key={`${row}-${column}`} points={`${x + 3},${y + 0.3} ${x + 3.96},${y + 2.04} ${x + 5.7},${y + 3} ${x + 3.96},${y + 3.96} ${x + 3},${y + 5.7} ${x + 2.04},${y + 3.96} ${x + 0.3},${y + 3} ${x + 2.04},${y + 2.04}`} />;
-  }
-  if (style === "pencil") {
-    return (
-      <g key={`${row}-${column}`}>
-        <path d={`M${x + 1.68} ${y + 1.44}H${x + 4.32}V${y + 4.32}L${x + 3} ${y + 5.88}L${x + 1.68} ${y + 4.32}Z`} />
-        <path d={`M${x + 1.68} ${y + 1.44}V${y + 0.72}Q${x + 3} ${y + 0.24} ${x + 4.32} ${y + 0.72}V${y + 1.44}Z`} />
-      </g>
-    );
+    return <polygon key={`${row}-${column}`} points={`${x + 3},${y + 0.12} ${x + 4.2},${y + 1.8} ${x + 5.88},${y + 3} ${x + 4.2},${y + 4.2} ${x + 3},${y + 5.88} ${x + 1.8},${y + 4.2} ${x + 0.12},${y + 3} ${x + 1.8},${y + 1.8}`} />;
   }
   return (
     <rect
       key={`${row}-${column}`}
-      x={x}
-      y={y}
-      width="5"
-      height="5"
-      rx={style === "rounded" ? "1.4" : "0"}
+      x={x + 0.12}
+      y={y + 0.12}
+      width="5.76"
+      height="5.76"
+      rx={style === "rounded" ? "1.2" : "0"}
     />
   );
 }
@@ -93,9 +112,11 @@ export default function QrCodeStylePicker({
               viewBox="0 0 30 30"
             >
               {previewModules.flatMap((row, rowIndex) =>
-                row.flatMap((isDark, columnIndex) => isDark
-                  ? [renderPreviewModule(option.id, rowIndex, columnIndex)]
-                  : []),
+                option.id === "pencil"
+                  ? renderPencilPreviewRow(row, rowIndex)
+                  : row.flatMap((isDark, columnIndex) => isDark
+                    ? [renderPreviewModule(option.id, rowIndex, columnIndex)]
+                    : []),
               )}
             </svg>
             <span>{option.label}</span>
