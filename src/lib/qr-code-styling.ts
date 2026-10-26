@@ -3,19 +3,12 @@ import { isQrCodeStylingShape } from "@/lib/qr-code-styling-adapter";
 
 export const QR_CODE_STYLES = [
   "square",
-  "rounded",
   "dots",
-  "vertical",
-  "leaf",
   "star",
-  "pencil",
   "mosaic",
   "heart",
-  "pencil-vertical",
   "relief",
   "classy",
-  "classy-rounded",
-  "extra-rounded",
 ] as const;
 export type QrCodeStyle = (typeof QR_CODE_STYLES)[number];
 export const QR_CODE_EYE_STYLES = ["square", "rounded", "circle", "diamond", "octagon", "leaf", "heart"] as const;
@@ -27,53 +20,32 @@ export const qrCodeStyleOptions: {
   description: string;
 }[] = [
   { id: "square", label: "Clássico", description: "Módulos quadrados" },
-  { id: "rounded", label: "Arredondado", description: "Blocos agrupados com junções suaves" },
   { id: "dots", label: "Pontos", description: "Manchas orgânicas conectadas" },
-  { id: "vertical", label: "Vertical", description: "Faixas verticais agrupadas" },
-  { id: "leaf", label: "Folha", description: "Formas orgânicas interligadas" },
   { id: "star", label: "Estrela", description: "Estrelas conectadas por braços" },
-  { id: "pencil", label: "Lápis", description: "Traços horizontais agrupados" },
   { id: "mosaic", label: "Mosaico", description: "Blocos conectados em formas geométricas" },
   { id: "heart", label: "Coração", description: "Corações encorpados que se encontram em grupos" },
-  { id: "pencil-vertical", label: "Lápis vertical", description: "Traços verticais agrupados em hastes" },
   { id: "relief", label: "Relevo", description: "Módulos recortados unidos em relevos" },
   { id: "classy", label: "Elegante", description: "Módulos clássicos estilizados pela QRCodeStyling" },
-  { id: "classy-rounded", label: "Elegante arredondado", description: "Traços suaves e conectados pela QRCodeStyling" },
-  { id: "extra-rounded", label: "Extra arredondado", description: "Módulos densos e arredondados pela QRCodeStyling" },
 ];
 
 const groupedStyleConnectorWidths: Record<QrCodeStyle, number> = {
   square: 0,
-  rounded: 0.58,
   dots: 0.78,
-  vertical: 0.68,
-  leaf: 0.64,
   star: 0.38,
-  pencil: 0.56,
   mosaic: 0.16,
   heart: 0.58,
-  "pencil-vertical": 0.56,
   relief: 0.52,
   classy: 0,
-  "classy-rounded": 0,
-  "extra-rounded": 0,
 };
 
 const groupedStyleConnectorCaps: Record<QrCodeStyle, CanvasLineCap> = {
   square: "round",
-  rounded: "round",
   dots: "round",
-  vertical: "round",
-  leaf: "round",
   star: "square",
-  pencil: "square",
   mosaic: "square",
   heart: "round",
-  "pencil-vertical": "square",
   relief: "square",
   classy: "square",
-  "classy-rounded": "square",
-  "extra-rounded": "square",
 };
 
 export const qrCodeEyeStyleOptions: { id: QrCodeEyeStyle; label: string }[] = [
@@ -152,28 +124,6 @@ function visitGroupedStyleConnectors(
   }
 }
 
-function pencilGeometry(width: number, height: number) {
-  return {
-    tip: Math.min(height * 0.28, width * 0.2),
-    cap: Math.min(height * 0.12, width * 0.12),
-    inset: height * 0.025,
-  };
-}
-
-function pencilSvgPath(x: number, y: number, width: number, height: number) {
-  const { tip, cap, inset } = pencilGeometry(width, height);
-  const centerY = y + height / 2;
-  return `M${x} ${centerY}L${x + tip} ${y + inset}H${x + width - cap}Q${x + width} ${y + inset} ${x + width} ${centerY}Q${x + width} ${y + height - inset} ${x + width - cap} ${y + height - inset}H${x + tip}Z`;
-}
-
-function verticalPencilSvgPath(x: number, y: number, width: number, height: number) {
-  const tip = Math.min(width * 0.28, height * 0.2);
-  const cap = Math.min(width * 0.12, height * 0.12);
-  const inset = width * 0.025;
-  const centerX = x + width / 2;
-  return `M${centerX} ${y}L${x + width - inset} ${y + tip}V${y + height - cap}Q${x + width - inset} ${y + height} ${centerX} ${y + height}Q${x + inset} ${y + height} ${x + inset} ${y + height - cap}V${y + tip}Z`;
-}
-
 function drawReliefModule(context: CanvasRenderingContext2D, x: number, y: number, size: number) {
   const inset = size * 0.13;
   const notch = size * 0.12;
@@ -203,102 +153,6 @@ function reliefSvgPath(x: number, y: number, size: number) {
   const inset = size * 0.13;
   const notch = size * 0.12;
   return `M${x + inset} ${y}H${x + size / 2 - notch}Q${x + size / 2} ${y + size * 0.12} ${x + size / 2 + notch} ${y}H${x + size - inset}Q${x + size} ${y} ${x + size} ${y + inset}V${y + size / 2 - notch}Q${x + size - size * 0.12} ${y + size / 2} ${x + size} ${y + size / 2 + notch}V${y + size - inset}Q${x + size} ${y + size} ${x + size - inset} ${y + size}H${x + size / 2 + notch}Q${x + size / 2} ${y + size - size * 0.12} ${x + size / 2 - notch} ${y + size}H${x + inset}Q${x} ${y + size} ${x} ${y + size - inset}V${y + size / 2 + notch}Q${x + size * 0.12} ${y + size / 2} ${x} ${y + size / 2 - notch}V${y + inset}Q${x} ${y} ${x + inset} ${y}Z`;
-}
-
-function drawPencilRun(
-  context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  vertical: boolean,
-) {
-  if (vertical) {
-    const tip = Math.min(width * 0.28, height * 0.2);
-    const cap = Math.min(width * 0.12, height * 0.12);
-    const inset = width * 0.025;
-    const centerX = x + width / 2;
-    context.beginPath();
-    context.moveTo(centerX, y);
-    context.lineTo(x + width - inset, y + tip);
-    context.lineTo(x + width - inset, y + height - cap);
-    context.quadraticCurveTo(x + width - inset, y + height, centerX, y + height);
-    context.quadraticCurveTo(x + inset, y + height, x + inset, y + height - cap);
-    context.lineTo(x + inset, y + tip);
-    context.closePath();
-    context.fill();
-    return;
-  }
-  const { tip, cap, inset } = pencilGeometry(width, height);
-  const centerY = y + height / 2;
-  context.beginPath();
-  context.moveTo(x, centerY);
-  context.lineTo(x + tip, y + inset);
-  context.lineTo(x + width - cap, y + inset);
-  context.quadraticCurveTo(x + width, y + inset, x + width, centerY);
-  context.quadraticCurveTo(x + width, y + height - inset, x + width - cap, y + height - inset);
-  context.lineTo(x + tip, y + height - inset);
-  context.closePath();
-  context.fill();
-}
-
-function drawPencilModules(
-  context: CanvasRenderingContext2D,
-  qrCode: ReturnType<typeof createQrCode>,
-  moduleSize: number,
-  offsetX: number,
-  offsetY: number,
-  frameStyle: QrCodeEyeStyle,
-  ballStyle: QrCodeEyeStyle,
-  vertical: boolean,
-) {
-  const size = qrCode.modules.size;
-  for (let line = 0; line < size; line++) {
-    let position = 0;
-    while (position < size) {
-      const row = vertical ? position : line;
-      const column = vertical ? line : position;
-      if (isExcludedFinderModule(row, column, size, frameStyle, ballStyle)) {
-        position++;
-        continue;
-      }
-      if (!qrCode.modules.get(row, column)) {
-        position++;
-        continue;
-      }
-      if (qrCode.modules.isReserved(row, column) === 1) {
-        const x = offsetX + (column + quietZone) * moduleSize;
-        const y = offsetY + (row + quietZone) * moduleSize;
-        context.fillRect(x, y, moduleSize, moduleSize);
-        position++;
-        continue;
-      }
-
-      const start = position;
-      position++;
-      while (
-        position < size
-        && !isExcludedFinderModule(
-          vertical ? position : line,
-          vertical ? line : position,
-          size,
-          frameStyle,
-          ballStyle,
-        )
-        && qrCode.modules.get(vertical ? position : line, vertical ? line : position)
-        && qrCode.modules.isReserved(vertical ? position : line, vertical ? line : position) !== 1
-      ) position++;
-
-      drawPencilRun(
-        context,
-        offsetX + ((vertical ? line : start) + quietZone) * moduleSize,
-        offsetY + ((vertical ? start : line) + quietZone) * moduleSize,
-        vertical ? moduleSize : (position - start) * moduleSize,
-        vertical ? (position - start) * moduleSize : moduleSize,
-        vertical,
-      );
-    }
-  }
 }
 
 function drawMosaicModules(
@@ -566,18 +420,7 @@ export async function renderQrCodeCanvas(
     context.restore();
   }
 
-  if (options.style === "pencil" || options.style === "pencil-vertical") {
-    drawPencilModules(
-      context,
-      qrCode,
-      moduleSize,
-      offsetX,
-      offsetY,
-      eyeFrameStyle,
-      eyeBallStyle,
-      options.style === "pencil-vertical",
-    );
-  } else if (options.style === "mosaic") {
+  if (options.style === "mosaic") {
     drawMosaicModules(
       context,
       qrCode,
@@ -600,28 +443,9 @@ export async function renderQrCodeCanvas(
           context.fillRect(x, y, moduleSize, moduleSize);
         } else if (options.style === "relief") {
           drawReliefModule(context, x, y, moduleSize);
-        } else if (options.style === "rounded") {
-          const inset = moduleSize * 0.01;
-          const cellSize = moduleSize - inset * 2;
-          context.beginPath();
-          context.roundRect(x + inset, y + inset, cellSize, cellSize, moduleSize * 0.22);
-          context.fill();
         } else if (options.style === "dots") {
           context.beginPath();
           context.arc(x + moduleSize / 2, y + moduleSize / 2, moduleSize * 0.5, 0, Math.PI * 2);
-          context.fill();
-        } else if (options.style === "vertical") {
-          context.beginPath();
-          context.roundRect(x + moduleSize * 0.02, y + moduleSize * 0.01, moduleSize * 0.96, moduleSize * 0.98, moduleSize * 0.48);
-          context.fill();
-        } else if (options.style === "leaf") {
-          context.beginPath();
-          context.moveTo(x + moduleSize / 2, y + moduleSize * 0.02);
-          context.quadraticCurveTo(x + moduleSize, y + moduleSize * 0.26, x + moduleSize * 0.98, y + moduleSize * 0.66);
-          context.quadraticCurveTo(x + moduleSize * 0.94, y + moduleSize, x + moduleSize / 2, y + moduleSize);
-          context.quadraticCurveTo(x + moduleSize * 0.06, y + moduleSize, x + moduleSize * 0.02, y + moduleSize * 0.66);
-          context.quadraticCurveTo(x, y + moduleSize * 0.26, x + moduleSize / 2, y + moduleSize * 0.02);
-          context.closePath();
           context.fill();
         } else if (options.style === "star") {
           context.beginPath();
@@ -796,51 +620,6 @@ export function createQrCodeSvg(
         ) squarePaths.push(`M${column + quietZone} ${row + quietZone}h1v1h-1z`);
       }
     }
-  } else if (options.style === "pencil" || options.style === "pencil-vertical") {
-    const vertical = options.style === "pencil-vertical";
-    for (let line = 0; line < qrCode.modules.size; line++) {
-      let position = 0;
-      while (position < qrCode.modules.size) {
-        const row = vertical ? position : line;
-        const column = vertical ? line : position;
-        if (isExcludedFinderModule(row, column, qrCode.modules.size, eyeFrameStyle, eyeBallStyle)) {
-          position++;
-          continue;
-        }
-        if (!qrCode.modules.get(row, column)) {
-          position++;
-          continue;
-        }
-        if (qrCode.modules.isReserved(row, column) === 1) {
-          const x = column + quietZone;
-          const y = row + quietZone;
-          squarePaths.push(`M${x} ${y}h1v1h-1z`);
-          position++;
-          continue;
-        }
-
-        const start = position;
-        position++;
-        while (
-          position < qrCode.modules.size
-          && !isExcludedFinderModule(
-            vertical ? position : line,
-            vertical ? line : position,
-            qrCode.modules.size,
-            eyeFrameStyle,
-            eyeBallStyle,
-          )
-          && qrCode.modules.get(vertical ? position : line, vertical ? line : position)
-          && qrCode.modules.isReserved(vertical ? position : line, vertical ? line : position) !== 1
-        ) position++;
-        const x = (vertical ? line : start) + quietZone;
-        const y = (vertical ? start : line) + quietZone;
-        const path = vertical
-          ? verticalPencilSvgPath(x, y, 1, position - start)
-          : pencilSvgPath(x, y, position - start, 1);
-        styledModules.push(`<path d="${path}"/>`);
-      }
-    }
   } else {
     for (let row = 0; row < qrCode.modules.size; row++) {
       for (let column = 0; column < qrCode.modules.size; column++) {
@@ -854,14 +633,8 @@ export function createQrCodeSvg(
           squarePaths.push(`M${x} ${y}h1v1h-1z`);
         } else if (options.style === "relief") {
           styledModules.push(`<path d="${reliefSvgPath(x, y, 1)}"/>`);
-        } else if (options.style === "rounded") {
-          styledModules.push(`<rect x="${x + 0.01}" y="${y + 0.01}" width="0.98" height="0.98" rx="0.22"/>`);
         } else if (options.style === "dots") {
           styledModules.push(`<circle cx="${x + 0.5}" cy="${y + 0.5}" r="0.5"/>`);
-        } else if (options.style === "vertical") {
-          styledModules.push(`<rect x="${x + 0.02}" y="${y + 0.01}" width="0.96" height="0.98" rx="0.48"/>`);
-        } else if (options.style === "leaf") {
-          styledModules.push(`<path d="M${x + 0.5} ${y + 0.005}Q${x + 1} ${y + 0.26} ${x + 0.98} ${y + 0.66}Q${x + 0.94} ${y + 1} ${x + 0.5} ${y + 1}Q${x + 0.06} ${y + 1} ${x + 0.02} ${y + 0.66}Q${x} ${y + 0.26} ${x + 0.5} ${y + 0.005}Z"/>`);
         } else if (options.style === "star") {
           styledModules.push(`<path d="M${x + 0.5} ${y + 0.03}L${x + 0.74} ${y + 0.26}L${x + 0.97} ${y + 0.5}L${x + 0.74} ${y + 0.74}L${x + 0.5} ${y + 0.97}L${x + 0.26} ${y + 0.74}L${x + 0.03} ${y + 0.5}L${x + 0.26} ${y + 0.26}Z"/>`);
         } else if (options.style === "heart") {

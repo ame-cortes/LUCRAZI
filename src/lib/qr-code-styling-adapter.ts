@@ -1,7 +1,7 @@
 import type { Options as QrCodeStylingOptions } from "qr-code-styling";
 import type { QrCodeEyeStyle } from "@/lib/qr-code-styling";
 
-export const QRCODE_STYLING_SHAPES = ["classy", "classy-rounded", "extra-rounded"] as const;
+export const QRCODE_STYLING_SHAPES = ["classy"] as const;
 export type QrCodeStylingShape = (typeof QRCODE_STYLING_SHAPES)[number];
 
 export type QrCodeStylingRenderOptions = {

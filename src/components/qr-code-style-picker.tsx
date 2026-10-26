@@ -16,86 +16,23 @@ const previewModules = [
 
 const previewConnectorWidths: Record<QrCodeStyle, number> = {
   square: 0,
-  rounded: 3.48,
   dots: 4.68,
-  vertical: 4.08,
-  leaf: 3.84,
   star: 2.28,
-  pencil: 3.36,
   mosaic: 0.96,
   heart: 3.48,
-  "pencil-vertical": 3.36,
   relief: 3.12,
   classy: 0,
-  "classy-rounded": 0,
-  "extra-rounded": 0,
 };
 
 const previewConnectorCaps: Record<QrCodeStyle, "round" | "square"> = {
   square: "round",
-  rounded: "round",
   dots: "round",
-  vertical: "round",
-  leaf: "round",
   star: "square",
-  pencil: "square",
   mosaic: "square",
   heart: "round",
-  "pencil-vertical": "square",
   relief: "square",
   classy: "square",
-  "classy-rounded": "square",
-  "extra-rounded": "square",
 };
-
-function renderPencilPreviewModules(vertical: boolean): React.JSX.Element[] {
-  const pencils: React.JSX.Element[] = [];
-  const lines = vertical ? previewModules[0].length : previewModules.length;
-  const length = vertical ? previewModules.length : previewModules[0].length;
-  for (let line = 0; line < lines; line++) {
-    let position = 0;
-    while (position < length) {
-      const isDark = vertical ? previewModules[position][line] : previewModules[line][position];
-      if (!isDark) {
-        position++;
-        continue;
-      }
-      const start = position++;
-      while (
-        position < length
-        && (vertical ? previewModules[position][line] : previewModules[line][position])
-      ) position++;
-
-      const x = (vertical ? line : start) * 6;
-      const y = (vertical ? start : line) * 6;
-      const width = vertical ? 6 : (position - start) * 6;
-      const height = vertical ? (position - start) * 6 : 6;
-      const tip = Math.min(height * 0.28, width * 0.2);
-      const cap = Math.min(height * 0.12, width * 0.12);
-      const inset = height * 0.025;
-      if (vertical) {
-        const verticalTip = Math.min(width * 0.28, height * 0.2);
-        const verticalCap = Math.min(width * 0.12, height * 0.12);
-        const verticalInset = width * 0.025;
-        const centerX = x + width / 2;
-        pencils.push(
-          <path
-            key={`pencil-${line}-${start}`}
-            d={`M${centerX} ${y}L${x + width - verticalInset} ${y + verticalTip}V${y + height - verticalCap}Q${x + width - verticalInset} ${y + height} ${centerX} ${y + height}Q${x + verticalInset} ${y + height} ${x + verticalInset} ${y + height - verticalCap}V${y + verticalTip}Z`}
-          />,
-        );
-      } else {
-        pencils.push(
-          <path
-            key={`pencil-${line}-${start}`}
-            d={`M${x} ${y + height / 2}L${x + tip} ${y + inset}H${x + width - cap}Q${x + width} ${y + inset} ${x + width} ${y + height / 2}Q${x + width} ${y + height - inset} ${x + width - cap} ${y + height - inset}H${x + tip}Z`}
-          />,
-        );
-      }
-    }
-  }
-  return pencils;
-}
 
 function renderGroupedPreviewConnectors(style: QrCodeStyle): React.JSX.Element {
   const segments: string[] = [];
@@ -119,17 +56,12 @@ function renderGroupedPreviewConnectors(style: QrCodeStyle): React.JSX.Element {
   );
 }
 
+/** Preview module rendering */
 function renderPreviewModule(style: QrCodeStyle, row: number, column: number): React.JSX.Element {
   const x = column * 6;
   const y = row * 6;
   if (style === "dots") {
     return <circle key={`${row}-${column}`} cx={x + 3} cy={y + 3} r="2.98" />;
-  }
-  if (style === "vertical") {
-    return <rect key={`${row}-${column}`} x={x + 0.12} y={y + 0.06} width="5.76" height="5.88" rx="2.88" />;
-  }
-  if (style === "leaf") {
-    return <path key={`${row}-${column}`} d={`M${x + 3} ${y + 0.2}Q${x + 5.8} ${y + 1.6} ${x + 5.4} ${y + 3.8}Q${x + 5} ${y + 5.8} ${x + 3} ${y + 5.9}Q${x + 1} ${y + 5.8} ${x + 0.6} ${y + 3.8}Q${x + 0.2} ${y + 1.6} ${x + 3} ${y + 0.2}Z`} />;
   }
   if (style === "star") {
     return <polygon key={`${row}-${column}`} points={`${x + 3},${y + 0.09} ${x + 4.44},${y + 1.56} ${x + 5.91},${y + 3} ${x + 4.44},${y + 4.44} ${x + 3},${y + 5.91} ${x + 1.56},${y + 4.44} ${x + 0.09},${y + 3} ${x + 1.56},${y + 1.56}`} />;
@@ -143,12 +75,6 @@ function renderPreviewModule(style: QrCodeStyle, row: number, column: number): R
   if (style === "classy") {
     return <path key={`${row}-${column}`} d={`M${x + 0.12} ${y + 0.12}H${x + 4.2}L${x + 5.88} ${y + 1.8}V${y + 5.88}H${x + 1.8}L${x + 0.12} ${y + 4.2}Z`} />;
   }
-  if (style === "classy-rounded") {
-    return <path key={`${row}-${column}`} d={`M${x + 3} ${y + 0.12}C${x + 4.9} ${y + 0.12} ${x + 5.88} ${y + 1.1} ${x + 5.88} ${y + 3}V${y + 5.88}H${x + 3}C${x + 1.1} ${y + 5.88} ${x + 0.12} ${y + 4.9} ${x + 0.12} ${y + 3}C${x + 0.12} ${y + 1.1} ${x + 1.1} ${y + 0.12} ${x + 3} ${y + 0.12}Z`} />;
-  }
-  if (style === "extra-rounded") {
-    return <rect key={`${row}-${column}`} x={x + 0.12} y={y + 0.12} width="5.76" height="5.76" rx="2.88" />;
-  }
   return (
     <rect
       key={`${row}-${column}`}
@@ -156,7 +82,7 @@ function renderPreviewModule(style: QrCodeStyle, row: number, column: number): R
       y={y + 0.12}
       width="5.76"
       height="5.76"
-      rx={style === "mosaic" ? "0.36" : style === "rounded" ? "1.2" : "0"}
+      rx={style === "mosaic" ? "0.36" : "0"}
     />
   );
 }
@@ -204,15 +130,11 @@ export default function QrCodeStylePicker({
               viewBox="0 0 30 30"
             >
               {option.id !== "square" && renderGroupedPreviewConnectors(option.id)}
-              {option.id === "pencil"
-                ? renderPencilPreviewModules(false)
-                : option.id === "pencil-vertical"
-                  ? renderPencilPreviewModules(true)
-                  : previewModules.flatMap((row, rowIndex) =>
-                    row.flatMap((isDark, columnIndex) => isDark
-                      ? [renderPreviewModule(option.id, rowIndex, columnIndex)]
-                      : []),
-                  )}
+              {previewModules.flatMap((row, rowIndex) =>
+                row.flatMap((isDark, columnIndex) => isDark
+                  ? [renderPreviewModule(option.id, rowIndex, columnIndex)]
+                  : []),
+              )}
             </svg>
             <span>{option.label}</span>
             <small>{option.description}</small>
