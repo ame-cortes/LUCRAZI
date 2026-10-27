@@ -3789,6 +3789,15 @@ button:focus-visible {
   gap: 24px;
 }
 
+@media (min-width: 1024px) {
+  .qr-preview-card {
+    position: sticky;
+    top: 24px;
+    max-height: calc(100vh - 48px);
+    overflow: auto;
+  }
+}
+
 .qr-examples {
   margin-top: 48px;
   padding-top: 32px;
@@ -3803,13 +3812,10 @@ button:focus-visible {
 }
 
 .qr-examples-grid {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 24px;
   align-items: start;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  padding-bottom: 8px;
-  scroll-snap-type: x mandatory;
 }
 
 .qr-example-card {
@@ -3819,8 +3825,7 @@ button:focus-visible {
   border: 1px solid var(--line);
   border-radius: 16px;
   box-shadow: 0 4px 16px rgb(36 38 32 / 3%);
-  flex: 0 0 280px;
-  scroll-snap-align: start;
+  min-width: 0;
 }
 
 .qr-example-card {
@@ -3835,8 +3840,10 @@ button:focus-visible {
 .qr-example-card img {
   border-radius: 12px;
   margin-bottom: 12px;
-  max-width: 100%;
+  width: 100%;
   height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
 }
 
 .qr-example-card p {
