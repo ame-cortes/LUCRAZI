@@ -448,7 +448,9 @@ export async function renderQrCodeCanvas(
       // Estes devem sempre aparecer e serem intocáveis, mesmo com estilo heart
       for (let row = 0; row < moduleSizeInt; row++) {
         for (let column = 0; column < moduleSizeInt; column++) {
-          if (qrCode.modules.isReserved(row, column) === 1 && !isFinderPatternModule(row, column, moduleSizeInt)) {
+          if (qrCode.modules.isReserved(row, column) === 1 
+              && !isFinderPatternModule(row, column, moduleSizeInt)
+              && qrCode.modules.get(row, column)) {
             const x = offsetX + (column + quietZone) * moduleSize;
             const y = offsetY + (row + quietZone) * moduleSize;
             context.fillRect(x, y, moduleSize, moduleSize);
@@ -735,7 +737,9 @@ export function createQrCodeSvg(
       // Estes devem sempre aparecer e serem intocáveis, mesmo com estilo heart
       for (let row = 0; row < moduleSizeInt; row++) {
         for (let column = 0; column < moduleSizeInt; column++) {
-          if (qrCode.modules.isReserved(row, column) === 1 && !isFinderPatternModule(row, column, moduleSizeInt)) {
+          if (qrCode.modules.isReserved(row, column) === 1 
+              && !isFinderPatternModule(row, column, moduleSizeInt)
+              && qrCode.modules.get(row, column)) {
             const x = column + quietZone;
             const y = row + quietZone;
             squarePaths.push(`M${x} ${y}h1v1h-1z`);
