@@ -852,6 +852,7 @@ export function createQrCodeSvg(
         }
       }
     }
+  }
 
   const background = escapeXml(options.backgroundColor);
   const eyePatterns = eyeFrameStyle === "square"
