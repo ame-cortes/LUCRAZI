@@ -19,7 +19,7 @@ const previewConnectorWidths: Record<QrCodeStyle, number> = {
   dots: 4.68,
   star: 2.28,
   mosaic: 0.96,
-  heart: 3.48,
+  heart: 5.16,
   relief: 3.12,
   classy: 0,
   "classy-rounded": 0,

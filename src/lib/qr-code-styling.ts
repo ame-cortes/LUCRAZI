@@ -37,7 +37,7 @@ const groupedStyleConnectorWidths: Record<QrCodeStyle, number> = {
   dots: 0.78,
   star: 0.38,
   mosaic: 0.16,
-  heart: 0.58,
+  heart: 0.85,
   relief: 0.52,
   classy: 0,
   "classy-rounded": 0,
