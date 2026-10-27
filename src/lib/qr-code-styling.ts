@@ -248,11 +248,11 @@ function drawEyeShape(
     context.fill();
   } else if (style === "heart") {
     context.beginPath();
-    context.moveTo(x + size / 2, y + size);
-    context.bezierCurveTo(x + size * 0.3, y + size * 0.85, x - size * 0.1, y + size * 0.55, x + size * 0.05, y + size * 0.35);
-    context.bezierCurveTo(x + size * 0.05, y + size * 0.15, x + size * 0.3, y + size * 0.05, x + size / 2, y + size * 0.15);
-    context.bezierCurveTo(x + size * 0.7, y + size * 0.05, x + size * 0.95, y + size * 0.15, x + size * 0.95, y + size * 0.35);
-    context.bezierCurveTo(x + size * 1.1, y + size * 0.55, x + size * 0.7, y + size * 0.85, x + size / 2, y + size);
+    context.moveTo(x + size / 2, y + size * 0.96);
+    context.bezierCurveTo(x + size * 0.35, y + size * 0.82, x + size * 0.05, y + size * 0.58, x + size * 0.05, y + size * 0.32);
+    context.bezierCurveTo(x + size * 0.05, y + size * 0.08, x + size * 0.4, y - size * 0.02, x + size / 2, y + size * 0.2);
+    context.bezierCurveTo(x + size * 0.6, y - size * 0.02, x + size * 0.95, y + size * 0.08, x + size * 0.95, y + size * 0.32);
+    context.bezierCurveTo(x + size * 0.95, y + size * 0.58, x + size * 0.65, y + size * 0.82, x + size / 2, y + size * 0.96);
     context.closePath();
     context.fill();
   } else if (style === "diamond" || style === "octagon" || style === "leaf") {
