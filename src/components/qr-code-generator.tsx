@@ -681,7 +681,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
           <div className="qr-example-card">
             <img
               alt="Exemplo de QR Code com gradiente e estilo elegante"
-              src="https://placehold.co/280x280/FF0000/FFFFFF?text=QR+1"
+              src="/images/qr-exemplo-1.png"
               width={280}
               height={280}
             />
@@ -690,7 +690,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
           <div className="qr-example-card">
             <img
               alt="Exemplo de QR Code com pontos e estilo clássico"
-              src="https://placehold.co/280x280/006400/FFFFFF?text=QR+2"
+              src="/images/qr-exemplo-2.png"
               width={280}
               height={280}
             />
@@ -699,7 +699,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
           <div className="qr-example-card">
             <img
               alt="Exemplo de QR Code com padrão quadrado"
-              src="https://placehold.co/280x280/006400/FFFFFF?text=QR+3"
+              src="/images/qr-exemplo-3.png"
               width={280}
               height={280}
             />
@@ -708,7 +708,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
           <div className="qr-example-card">
             <img
               alt="Exemplo de QR Code com estilo elegante vermelho"
-              src="https://placehold.co/280x280/CC0000/FFFFFF?text=QR+4"
+              src="/images/qr-exemplo-4.png"
               width={280}
               height={280}
             />
