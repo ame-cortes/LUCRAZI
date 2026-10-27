@@ -514,6 +514,13 @@ export async function renderQrCodeCanvas(
         const x = offsetX + (minCol + quietZone) * moduleSize - (size - baseSize) / 2;
         const y = offsetY + (minRow + quietZone) * moduleSize - (size - baseSize) / 2;
         
+        // Zona de limpeza: mascarar área atrás da ponta do V do coração ANTES de desenhar o coração
+        // Evita que módulos abaixo apareçam através da abertura
+        context.fillStyle = options.backgroundColor;
+        const maskWidth = size * 0.15;
+        const maskHeight = size * 0.2;
+        context.fillRect(x + size / 2 - maskWidth / 2, y + size * 1.0, maskWidth, maskHeight);
+        
         // Coração grande ocupando o cluster
         context.beginPath();
         context.moveTo(x + size / 2, y + size * 0.96);
@@ -523,13 +530,6 @@ export async function renderQrCodeCanvas(
         context.bezierCurveTo(x + size * 0.95, y + size * 0.52, x + size * 0.75, y + size * 0.78, x + size / 2, y + size * 0.96);
         context.closePath();
         context.fill();
-        
-        // Zona de limpeza: mascarar área atrás da ponta do V do coração
-        // Evita que módulos abaixo apareçam através da abertura
-        context.fillStyle = options.backgroundColor;
-        const maskWidth = size * 0.15;
-        const maskHeight = size * 0.2;
-        context.fillRect(x + size / 2 - maskWidth / 2, y + size * 0.96, maskWidth, maskHeight);
       });
       
       // Segundo passo: renderizar corações individuais para módulos restantes
