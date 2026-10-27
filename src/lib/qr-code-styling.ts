@@ -523,6 +523,13 @@ export async function renderQrCodeCanvas(
         context.bezierCurveTo(x + size * 0.95, y + size * 0.52, x + size * 0.75, y + size * 0.78, x + size / 2, y + size * 0.96);
         context.closePath();
         context.fill();
+        
+        // Zona de limpeza: mascarar área atrás da ponta do V do coração
+        // Evita que módulos abaixo apareçam através da abertura
+        context.fillStyle = options.backgroundColor;
+        const maskWidth = size * 0.15;
+        const maskHeight = size * 0.2;
+        context.fillRect(x + size / 2 - maskWidth / 2, y + size * 0.96, maskWidth, maskHeight);
       });
       
       // Segundo passo: renderizar corações individuais para módulos restantes
