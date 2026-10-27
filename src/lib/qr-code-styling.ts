@@ -441,46 +441,57 @@ export async function renderQrCodeCanvas(
   } else {
     // Heart style com detecção de clusters para corações maiores
     if (options.style === "heart") {
-      const visited = new Set<string>();
       const moduleSizeInt = qrCode.modules.size;
+      const clustersToRender: Array<{minRow: number, maxRow: number, minCol: number, maxCol: number, modules: [number, number][]}> = [];
+      const visited = new Set<string>();
       
-      // Primeiro passo: identificar clusters de 4-6 módulos adjacentes
+      // Primeiro passo: identificar clusters de 4-6 módulos adjacentes via BFS
       for (let row = 0; row < moduleSizeInt; row++) {
         for (let column = 0; column < moduleSizeInt; column++) {
+          const key = `${row},${column}`;
+          
+          // Pular se já visitado ou não é módulo válido
+          if (visited.has(key)) continue;
           if (isExcludedFinderModule(row, column, moduleSizeInt, eyeFrameStyle, eyeBallStyle)) continue;
           if (!qrCode.modules.get(row, column)) continue;
           if (qrCode.modules.isReserved(row, column) === 1) continue;
           
-          const key = `${row},${column}`;
-          if (visited.has(key)) continue;
+          // BFS para encontrar cluster conectado
+          const cluster: [number, number][] = [];
+          const queue: [number, number][] = [[row, column]];
+          const localVisited = new Set<string>();
           
-          // Coletar cluster de módulos adjacentes
-          const cluster = [];
-          const stack = [[row, column]];
-          const clusterVisited = new Set<string>();
-          
-          while (stack.length > 0) {
-            const [r, c] = stack.pop()!;
+          while (queue.length > 0) {
+            const [r, c] = queue.shift()!;
             const k = `${r},${c}`;
-            if (clusterVisited.has(k)) continue;
+            
+            if (localVisited.has(k)) continue;
             if (r < 0 || r >= moduleSizeInt || c < 0 || c >= moduleSizeInt) continue;
             if (isExcludedFinderModule(r, c, moduleSizeInt, eyeFrameStyle, eyeBallStyle)) continue;
             if (!qrCode.modules.get(r, c)) continue;
             if (qrCode.modules.isReserved(r, c) === 1) continue;
             
-            clusterVisited.add(k);
+            localVisited.add(k);
             cluster.push([r, c]);
             
-            // Verificar vizinhos 8-direções
+            // Adicionar vizinhos 8-direções
             for (let dr = -1; dr <= 1; dr++) {
               for (let dc = -1; dc <= 1; dc++) {
                 if (dr === 0 && dc === 0) continue;
-                stack.push([r + dr, c + dc]);
+                const nr = r + dr;
+                const nc = c + dc;
+                const nk = `${nr},${nc}`;
+                if (!localVisited.has(nk) && !visited.has(nk)) {
+                  queue.push([nr, nc]);
+                }
               }
             }
           }
           
-          // Se cluster tem 4-6 módulos, renderizar coração maior
+          // Marcar todos os módulos do cluster como visitados globalmente
+          localVisited.forEach(k => visited.add(k));
+          
+          // Verificar se é cluster válido (4-6 módulos compactos)
           if (cluster.length >= 4 && cluster.length <= 6) {
             const rows = cluster.map(([r]) => r);
             const cols = cluster.map(([, c]) => c);
@@ -491,33 +502,35 @@ export async function renderQrCodeCanvas(
             
             const clusterWidth = maxCol - minCol + 1;
             const clusterHeight = maxRow - minRow + 1;
+            const area = clusterWidth * clusterHeight;
             
-            // Só renderiza se for bloco compacto aprox. 2x2 ou 3x3
-            if (clusterWidth <= 3 && clusterHeight <= 3 && cluster.length >= 4) {
-              const x = offsetX + (minCol + quietZone) * moduleSize;
-              const y = offsetY + (minRow + quietZone) * moduleSize;
-              const size = Math.max(clusterWidth, clusterHeight) * moduleSize;
-              
-              // Renderizar coração maior para o cluster
-              context.beginPath();
-              context.moveTo(x + size / 2, y + size);
-              context.bezierCurveTo(x + size * 0.3, y + size * 0.85, x - size * 0.1, y + size * 0.55, x + size * 0.1, y + size * 0.35);
-              context.bezierCurveTo(x + size * 0.1, y + size * 0.15, x + size * 0.3, y + size * 0.05, x + size / 2, y + size * 0.15);
-              context.bezierCurveTo(x + size * 0.7, y + size * 0.05, x + size * 0.9, y + size * 0.15, x + size * 0.9, y + size * 0.35);
-              context.bezierCurveTo(x + size * 1.1, y + size * 0.55, x + size * 0.7, y + size * 0.85, x + size / 2, y + size);
-              context.closePath();
-              context.fill();
-              
-              // Marcar módulos do cluster como visitados
-              cluster.forEach(([r, c]) => visited.add(`${r},${c}`));
-              continue;
+            // Cluster compacto: área pequena e densidade alta
+            if (clusterWidth <= 3 && clusterHeight <= 3 && cluster.length >= area * 0.6) {
+              clustersToRender.push({ minRow, maxRow, minCol, maxCol, modules: cluster });
             }
           }
-          
-          // Marcar o módulo inicial como visitado
-          visited.add(key);
         }
       }
+      
+      // Renderizar corações maiores para clusters
+      clustersToRender.forEach(clusterInfo => {
+        const { minRow, maxRow, minCol, maxCol, modules } = clusterInfo;
+        const clusterWidth = maxCol - minCol + 1;
+        const clusterHeight = maxRow - minRow + 1;
+        const size = Math.max(clusterWidth, clusterHeight) * moduleSize;
+        const x = offsetX + (minCol + quietZone) * moduleSize;
+        const y = offsetY + (minRow + quietZone) * moduleSize;
+        
+        // Coração grande ocupando o cluster
+        context.beginPath();
+        context.moveTo(x + size / 2, y + size * 0.96);
+        context.bezierCurveTo(x + size * 0.25, y + size * 0.78, x + size * 0.05, y + size * 0.52, x + size * 0.1, y + size * 0.28);
+        context.bezierCurveTo(x + size * 0.1, y + size * 0.08, x + size * 0.35, y - size * 0.02, x + size / 2, y + size * 0.18);
+        context.bezierCurveTo(x + size * 0.65, y - size * 0.02, x + size * 0.9, y + size * 0.08, x + size * 0.9, y + size * 0.28);
+        context.bezierCurveTo(x + size * 0.95, y + size * 0.52, x + size * 0.75, y + size * 0.78, x + size / 2, y + size * 0.96);
+        context.closePath();
+        context.fill();
+      });
       
       // Segundo passo: renderizar corações individuais para módulos restantes
       for (let row = 0; row < moduleSizeInt; row++) {
@@ -726,28 +739,119 @@ export function createQrCodeSvg(
       }
     }
   } else {
-    for (let row = 0; row < qrCode.modules.size; row++) {
-      for (let column = 0; column < qrCode.modules.size; column++) {
-        if (isExcludedFinderModule(row, column, qrCode.modules.size, eyeFrameStyle, eyeBallStyle)) continue;
-        if (!qrCode.modules.get(row, column)) continue;
+    // Heart style com detecção de clusters para corações maiores
+    if (options.style === "heart") {
+      const moduleSizeInt = qrCode.modules.size;
+      const clustersToRender: Array<{minRow: number, maxRow: number, minCol: number, maxCol: number, modules: [number, number][]}> = [];
+      const visited = new Set<string>();
+      
+      // Identificar clusters
+      for (let row = 0; row < moduleSizeInt; row++) {
+        for (let column = 0; column < moduleSizeInt; column++) {
+          const key = `${row},${column}`;
+          if (visited.has(key)) continue;
+          if (isExcludedFinderModule(row, column, moduleSizeInt, eyeFrameStyle, eyeBallStyle)) continue;
+          if (!qrCode.modules.get(row, column)) continue;
+          if (qrCode.modules.isReserved(row, column) === 1) continue;
+          
+          const cluster: [number, number][] = [];
+          const queue: [number, number][] = [[row, column]];
+          const localVisited = new Set<string>();
+          
+          while (queue.length > 0) {
+            const [r, c] = queue.shift()!;
+            const k = `${r},${c}`;
+            if (localVisited.has(k)) continue;
+            if (r < 0 || r >= moduleSizeInt || c < 0 || c >= moduleSizeInt) continue;
+            if (isExcludedFinderModule(r, c, moduleSizeInt, eyeFrameStyle, eyeBallStyle)) continue;
+            if (!qrCode.modules.get(r, c)) continue;
+            if (qrCode.modules.isReserved(r, c) === 1) continue;
+            
+            localVisited.add(k);
+            cluster.push([r, c]);
+            
+            for (let dr = -1; dr <= 1; dr++) {
+              for (let dc = -1; dc <= 1; dc++) {
+                if (dr === 0 && dc === 0) continue;
+                const nr = r + dr;
+                const nc = c + dc;
+                const nk = `${nr},${nc}`;
+                if (!localVisited.has(nk) && !visited.has(nk)) {
+                  queue.push([nr, nc]);
+                }
+              }
+            }
+          }
+          
+          localVisited.forEach(k => visited.add(k));
+          
+          if (cluster.length >= 4 && cluster.length <= 6) {
+            const rows = cluster.map(([r]) => r);
+            const cols = cluster.map(([, c]) => c);
+            const minRow = Math.min(...rows);
+            const maxRow = Math.max(...rows);
+            const minCol = Math.min(...cols);
+            const maxCol = Math.max(...cols);
+            
+            const clusterWidth = maxCol - minCol + 1;
+            const clusterHeight = maxRow - minRow + 1;
+            const area = clusterWidth * clusterHeight;
+            
+            if (clusterWidth <= 3 && clusterHeight <= 3 && cluster.length >= area * 0.6) {
+              clustersToRender.push({ minRow, maxRow, minCol, maxCol, modules: cluster });
+            }
+          }
+        }
+      }
+      
+      // Renderizar clusters
+      clustersToRender.forEach(clusterInfo => {
+        const { minRow, maxRow, minCol, maxCol } = clusterInfo;
+        const clusterWidth = maxCol - minCol + 1;
+        const clusterHeight = maxRow - minRow + 1;
+        const size = Math.max(clusterWidth, clusterHeight);
+        const x = minCol + quietZone;
+        const y = minRow + quietZone;
+        
+        styledModules.push(`<path d="M${x + size / 2} ${y + size * 0.96}C${x + size * 0.25} ${y + size * 0.78} ${x + size * 0.05} ${y + size * 0.52} ${x + size * 0.1} ${y + size * 0.28}C${x + size * 0.1} ${y + size * 0.08} ${x + size * 0.35} ${y - size * 0.02} ${x + size / 2} ${y + size * 0.18}C${x + size * 0.65} ${y - size * 0.02} ${x + size * 0.9} ${y + size * 0.08} ${x + size * 0.9} ${y + size * 0.28}C${x + size * 0.95} ${y + size * 0.52} ${x + size * 0.75} ${y + size * 0.78} ${x + size / 2} ${y + size * 0.96}Z" fill="${foregroundPaint}"/>`);
+      });
+      
+      // Renderizar módulos individuais restantes
+      for (let row = 0; row < moduleSizeInt; row++) {
+        for (let column = 0; column < moduleSizeInt; column++) {
+          const key = `${row},${column}`;
+          if (visited.has(key)) continue;
+          
+          if (isExcludedFinderModule(row, column, moduleSizeInt, eyeFrameStyle, eyeBallStyle)) continue;
+          if (!qrCode.modules.get(row, column)) continue;
+          if (qrCode.modules.isReserved(row, column) === 1) continue;
+          
+          const x = column + quietZone;
+          const y = row + quietZone;
+          styledModules.push(`<path d="M${x + 0.5} ${y + 1}C${x + 0.3} ${y + 0.85} ${x - 0.1} ${y + 0.55} ${x + 0.05} ${y + 0.35}C${x + 0.05} ${y + 0.15} ${x + 0.3} ${y + 0.05} ${x + 0.5} ${y + 0.15}C${x + 0.7} ${y + 0.05} ${x + 0.95} ${y + 0.15} ${x + 0.95} ${y + 0.35}C${x + 1.1} ${y + 0.55} ${x + 0.7} ${y + 0.85} ${x + 0.5} ${y + 1}Z" fill="${foregroundPaint}"/>`);
+        }
+      }
+    } else {
+      for (let row = 0; row < qrCode.modules.size; row++) {
+        for (let column = 0; column < qrCode.modules.size; column++) {
+          if (isExcludedFinderModule(row, column, qrCode.modules.size, eyeFrameStyle, eyeBallStyle)) continue;
+          if (!qrCode.modules.get(row, column)) continue;
 
-        const x = column + quietZone;
-        const y = row + quietZone;
-        const isFunctionModule = qrCode.modules.isReserved(row, column) === 1;
-        if (options.style === "square" || isFunctionModule) {
-          squarePaths.push(`M${x} ${y}h1v1h-1z`);
-        } else if (options.style === "relief") {
-          styledModules.push(`<path d="${reliefSvgPath(x, y, 1)}"/>`);
-        } else if (options.style === "dots") {
-          styledModules.push(`<circle cx="${x + 0.5}" cy="${y + 0.5}" r="0.5"/>`);
-        } else if (options.style === "star") {
-          styledModules.push(`<path d="M${x + 0.5} ${y + 0.03}L${x + 0.74} ${y + 0.26}L${x + 0.97} ${y + 0.5}L${x + 0.74} ${y + 0.74}L${x + 0.5} ${y + 0.97}L${x + 0.26} ${y + 0.74}L${x + 0.03} ${y + 0.5}L${x + 0.26} ${y + 0.26}Z"/>`);
-        } else if (options.style === "heart") {
-          styledModules.push(`<path d="M${x + 0.5} ${y + 1}C${x + 0.3} ${y + 0.85} ${x - 0.1} ${y + 0.55} ${x + 0.05} ${y + 0.35}C${x + 0.05} ${y + 0.15} ${x + 0.3} ${y + 0.05} ${x + 0.5} ${y + 0.15}C${x + 0.7} ${y + 0.05} ${x + 0.95} ${y + 0.15} ${x + 0.95} ${y + 0.35}C${x + 1.1} ${y + 0.55} ${x + 0.7} ${y + 0.85} ${x + 0.5} ${y + 1}Z"/>`);
+          const x = column + quietZone;
+          const y = row + quietZone;
+          const isFunctionModule = qrCode.modules.isReserved(row, column) === 1;
+          if (options.style === "square" || isFunctionModule) {
+            squarePaths.push(`M${x} ${y}h1v1h-1z`);
+          } else if (options.style === "relief") {
+            styledModules.push(`<path d="${reliefSvgPath(x, y, 1)}"/>`);
+          } else if (options.style === "dots") {
+            styledModules.push(`<circle cx="${x + 0.5}" cy="${y + 0.5}" r="0.5"/>`);
+          } else if (options.style === "star") {
+            styledModules.push(`<path d="M${x + 0.5} ${y + 0.03}L${x + 0.74} ${y + 0.26}L${x + 0.97} ${y + 0.5}L${x + 0.74} ${y + 0.74}L${x + 0.5} ${y + 0.97}L${x + 0.26} ${y + 0.74}L${x + 0.03} ${y + 0.5}L${x + 0.26} ${y + 0.26}Z" fill="${foregroundPaint}"/>`);
+          }
         }
       }
     }
-  }
 
   const background = escapeXml(options.backgroundColor);
   const eyePatterns = eyeFrameStyle === "square"
