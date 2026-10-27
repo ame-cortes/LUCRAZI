@@ -445,72 +445,44 @@ export async function renderQrCodeCanvas(
       const clustersToRender: Array<{minRow: number, maxRow: number, minCol: number, maxCol: number, modules: [number, number][]}> = [];
       const visited = new Set<string>();
       
-      // Primeiro passo: identificar clusters de 4-6 módulos adjacentes via BFS
-      for (let row = 0; row < moduleSizeInt; row++) {
-        for (let column = 0; column < moduleSizeInt; column++) {
-          const key = `${row},${column}`;
-          
-          // Pular se já visitado ou não é módulo válido
-          if (visited.has(key)) continue;
+      // Verificar blocos 2x2 e 3x3
+      for (let row = 0; row < moduleSizeInt - 2; row++) {
+        for (let column = 0; column < moduleSizeInt - 2; column++) {
           // PROTEÇÃO ABSOLUTA: Sempre excluir marcadores de posição
           if (isFinderPatternModule(row, column, moduleSizeInt)) continue;
-          if (isExcludedFinderModule(row, column, moduleSizeInt, eyeFrameStyle, eyeBallStyle)) continue;
-          if (!qrCode.modules.get(row, column)) continue;
-          if (qrCode.modules.isReserved(row, column) === 1) continue;
           
-          // BFS para encontrar cluster conectado
-          const cluster: [number, number][] = [];
-          const queue: [number, number][] = [[row, column]];
-          const localVisited = new Set<string>();
+          // Verificar bloco 2x2
+          let block2x2Count = 0;
+          const block2x2Modules: [number, number][] = [];
           
-          while (queue.length > 0) {
-            const [r, c] = queue.shift()!;
-            const k = `${r},${c}`;
-            
-            if (localVisited.has(k)) continue;
-            if (r < 0 || r >= moduleSizeInt || c < 0 || c >= moduleSizeInt) continue;
-            // PROTEÇÃO ABSOLUTA: Sempre excluir marcadores de posição
-            if (isFinderPatternModule(r, c, moduleSizeInt)) continue;
-            if (isExcludedFinderModule(r, c, moduleSizeInt, eyeFrameStyle, eyeBallStyle)) continue;
-            if (!qrCode.modules.get(r, c)) continue;
-            if (qrCode.modules.isReserved(r, c) === 1) continue;
-            
-            localVisited.add(k);
-            cluster.push([r, c]);
-            
-            // Adicionar vizinhos 8-direções
-            for (let dr = -1; dr <= 1; dr++) {
-              for (let dc = -1; dc <= 1; dc++) {
-                if (dr === 0 && dc === 0) continue;
-                const nr = r + dr;
-                const nc = c + dc;
-                const nk = `${nr},${nc}`;
-                if (!localVisited.has(nk) && !visited.has(nk)) {
-                  queue.push([nr, nc]);
-                }
-              }
+          for (let dr = 0; dr < 2; dr++) {
+            for (let dc = 0; dc < 2; dc++) {
+              const r = row + dr;
+              const c = column + dc;
+              
+              if (isFinderPatternModule(r, c, moduleSizeInt)) continue;
+              if (isExcludedFinderModule(r, c, moduleSizeInt, eyeFrameStyle, eyeBallStyle)) continue;
+              if (!qrCode.modules.get(r, c)) continue;
+              if (qrCode.modules.isReserved(r, c) === 1) continue;
+              
+              block2x2Count++;
+              block2x2Modules.push([r, c]);
             }
           }
           
-          // Marcar todos os módulos do cluster como visitados globalmente
-          localVisited.forEach(k => visited.add(k));
-          
-          // Verificar se é cluster válido (4-6 módulos compactos)
-          if (cluster.length >= 4 && cluster.length <= 6) {
-            const rows = cluster.map(([r]) => r);
-            const cols = cluster.map(([, c]) => c);
-            const minRow = Math.min(...rows);
-            const maxRow = Math.max(...rows);
-            const minCol = Math.min(...cols);
-            const maxCol = Math.max(...cols);
-            
-            const clusterWidth = maxCol - minCol + 1;
-            const clusterHeight = maxRow - minRow + 1;
-            const area = clusterWidth * clusterHeight;
-            
-            // Cluster compacto: área pequena e densidade alta
-            if (clusterWidth <= 3 && clusterHeight <= 3 && cluster.length >= area * 0.6) {
-              clustersToRender.push({ minRow, maxRow, minCol, maxCol, modules: cluster });
+          // Se bloco 2x2 tem 3+ módulos, renderizar coração maior
+          if (block2x2Count >= 3) {
+            // Verificar se não foi já visitado
+            const blockKey = block2x2Modules.map(([r, c]) => `${r},${c}`).sort().join('|');
+            if (!visited.has(blockKey)) {
+              clustersToRender.push({
+                minRow: row,
+                maxRow: row + 1,
+                minCol: column,
+                maxCol: column + 1,
+                modules: block2x2Modules
+              });
+              block2x2Modules.forEach(([r, c]) => visited.add(`${r},${c}`));
             }
           }
         }
@@ -751,64 +723,43 @@ export function createQrCodeSvg(
       const clustersToRender: Array<{minRow: number, maxRow: number, minCol: number, maxCol: number, modules: [number, number][]}> = [];
       const visited = new Set<string>();
       
-      // Identificar clusters
-      for (let row = 0; row < moduleSizeInt; row++) {
-        for (let column = 0; column < moduleSizeInt; column++) {
-          const key = `${row},${column}`;
-          if (visited.has(key)) continue;
+      // Verificar blocos 2x2 e 3x3
+      for (let row = 0; row < moduleSizeInt - 2; row++) {
+        for (let column = 0; column < moduleSizeInt - 2; column++) {
           // PROTEÇÃO ABSOLUTA: Sempre excluir marcadores de posição
           if (isFinderPatternModule(row, column, moduleSizeInt)) continue;
-          if (isExcludedFinderModule(row, column, moduleSizeInt, eyeFrameStyle, eyeBallStyle)) continue;
-          if (!qrCode.modules.get(row, column)) continue;
-          if (qrCode.modules.isReserved(row, column) === 1) continue;
           
-          const cluster: [number, number][] = [];
-          const queue: [number, number][] = [[row, column]];
-          const localVisited = new Set<string>();
+          // Verificar bloco 2x2
+          let block2x2Count = 0;
+          const block2x2Modules: [number, number][] = [];
           
-          while (queue.length > 0) {
-            const [r, c] = queue.shift()!;
-            const k = `${r},${c}`;
-            if (localVisited.has(k)) continue;
-            if (r < 0 || r >= moduleSizeInt || c < 0 || c >= moduleSizeInt) continue;
-            // PROTEÇÃO ABSOLUTA: Sempre excluir marcadores de posição
-            if (isFinderPatternModule(r, c, moduleSizeInt)) continue;
-            if (isExcludedFinderModule(r, c, moduleSizeInt, eyeFrameStyle, eyeBallStyle)) continue;
-            if (!qrCode.modules.get(r, c)) continue;
-            if (qrCode.modules.isReserved(r, c) === 1) continue;
-            
-            localVisited.add(k);
-            cluster.push([r, c]);
-            
-            for (let dr = -1; dr <= 1; dr++) {
-              for (let dc = -1; dc <= 1; dc++) {
-                if (dr === 0 && dc === 0) continue;
-                const nr = r + dr;
-                const nc = c + dc;
-                const nk = `${nr},${nc}`;
-                if (!localVisited.has(nk) && !visited.has(nk)) {
-                  queue.push([nr, nc]);
-                }
-              }
+          for (let dr = 0; dr < 2; dr++) {
+            for (let dc = 0; dc < 2; dc++) {
+              const r = row + dr;
+              const c = column + dc;
+              
+              if (isFinderPatternModule(r, c, moduleSizeInt)) continue;
+              if (isExcludedFinderModule(r, c, moduleSizeInt, eyeFrameStyle, eyeBallStyle)) continue;
+              if (!qrCode.modules.get(r, c)) continue;
+              if (qrCode.modules.isReserved(r, c) === 1) continue;
+              
+              block2x2Count++;
+              block2x2Modules.push([r, c]);
             }
           }
           
-          localVisited.forEach(k => visited.add(k));
-          
-          if (cluster.length >= 4 && cluster.length <= 6) {
-            const rows = cluster.map(([r]) => r);
-            const cols = cluster.map(([, c]) => c);
-            const minRow = Math.min(...rows);
-            const maxRow = Math.max(...rows);
-            const minCol = Math.min(...cols);
-            const maxCol = Math.max(...cols);
-            
-            const clusterWidth = maxCol - minCol + 1;
-            const clusterHeight = maxRow - minRow + 1;
-            const area = clusterWidth * clusterHeight;
-            
-            if (clusterWidth <= 3 && clusterHeight <= 3 && cluster.length >= area * 0.6) {
-              clustersToRender.push({ minRow, maxRow, minCol, maxCol, modules: cluster });
+          // Se bloco 2x2 tem 3+ módulos, renderizar coração maior
+          if (block2x2Count >= 3) {
+            const blockKey = block2x2Modules.map(([r, c]) => `${r},${c}`).sort().join('|');
+            if (!visited.has(blockKey)) {
+              clustersToRender.push({
+                minRow: row,
+                maxRow: row + 1,
+                minCol: column,
+                maxCol: column + 1,
+                modules: block2x2Modules
+              });
+              block2x2Modules.forEach(([r, c]) => visited.add(`${r},${c}`));
             }
           }
         }
