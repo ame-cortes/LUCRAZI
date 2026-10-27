@@ -248,11 +248,11 @@ function drawEyeShape(
     context.fill();
   } else if (style === "heart") {
     context.beginPath();
-    context.moveTo(x + size / 2, y + size * 0.96);
-    context.bezierCurveTo(x + size * 0.4, y + size * 0.82, x + size * 0.02, y + size * 0.58, x + size * 0.02, y + size * 0.3);
-    context.bezierCurveTo(x + size * 0.02, y + size * 0.02, x + size * 0.38, y - size * 0.04, x + size / 2, y + size * 0.24);
-    context.bezierCurveTo(x + size * 0.62, y - size * 0.04, x + size * 0.98, y + size * 0.02, x + size * 0.98, y + size * 0.3);
-    context.bezierCurveTo(x + size * 0.98, y + size * 0.58, x + size * 0.6, y + size * 0.82, x + size / 2, y + size * 0.96);
+    context.moveTo(x + size / 2, y + size);
+    context.bezierCurveTo(x + size * 0.3, y + size * 0.85, x - size * 0.1, y + size * 0.55, x + size * 0.05, y + size * 0.35);
+    context.bezierCurveTo(x + size * 0.05, y + size * 0.15, x + size * 0.3, y + size * 0.05, x + size / 2, y + size * 0.15);
+    context.bezierCurveTo(x + size * 0.7, y + size * 0.05, x + size * 0.95, y + size * 0.15, x + size * 0.95, y + size * 0.35);
+    context.bezierCurveTo(x + size * 1.1, y + size * 0.55, x + size * 0.7, y + size * 0.85, x + size / 2, y + size);
     context.closePath();
     context.fill();
   } else if (style === "diamond" || style === "octagon" || style === "leaf") {
@@ -646,7 +646,7 @@ export function createQrCodeSvg(
         } else if (options.style === "star") {
           styledModules.push(`<path d="M${x + 0.5} ${y + 0.03}L${x + 0.74} ${y + 0.26}L${x + 0.97} ${y + 0.5}L${x + 0.74} ${y + 0.74}L${x + 0.5} ${y + 0.97}L${x + 0.26} ${y + 0.74}L${x + 0.03} ${y + 0.5}L${x + 0.26} ${y + 0.26}Z"/>`);
         } else if (options.style === "heart") {
-          styledModules.push(`<path d="M${x + 0.5} ${y + 0.96}C${x + 0.4} ${y + 0.84} ${x + 0.02} ${y + 0.6} ${x + 0.02} ${y + 0.32}C${x + 0.02} ${y + 0.02} ${x + 0.38} ${y - 0.04} ${x + 0.5} ${y + 0.25}C${x + 0.62} ${y - 0.04} ${x + 0.98} ${y + 0.02} ${x + 0.98} ${y + 0.32}C${x + 0.98} ${y + 0.6} ${x + 0.6} ${y + 0.84} ${x + 0.5} ${y + 0.96}Z"/>`);
+          styledModules.push(`<path d="M${x + 0.5} ${y + 1}C${x + 0.3} ${y + 0.85} ${x - 0.1} ${y + 0.55} ${x + 0.05} ${y + 0.35}C${x + 0.05} ${y + 0.15} ${x + 0.3} ${y + 0.05} ${x + 0.5} ${y + 0.15}C${x + 0.7} ${y + 0.05} ${x + 0.95} ${y + 0.15} ${x + 0.95} ${y + 0.35}C${x + 1.1} ${y + 0.55} ${x + 0.7} ${y + 0.85} ${x + 0.5} ${y + 1}Z"/>`);
         }
       }
     }

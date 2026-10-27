@@ -80,7 +80,7 @@ function eyeShape(
     return `<path d="M${x + size / 2} ${y}Q${x + size} ${y + size * 0.28} ${x + size} ${y + size / 2}Q${x + size * 0.72} ${y + size} ${x + size / 2} ${y + size}Q${x} ${y + size * 0.72} ${x} ${y + size / 2}Q${x + size * 0.28} ${y} ${x + size / 2} ${y}Z" fill="${color}"/>`;
   }
   if (style === "heart") {
-    return `<path d="M${x + size / 2} ${y + size * 0.96}C${x + size * 0.4} ${y + size * 0.82} ${x + size * 0.02} ${y + size * 0.58} ${x + size * 0.02} ${y + size * 0.3}C${x + size * 0.02} ${y + size * 0.02} ${x + size * 0.38} ${y - size * 0.04} ${x + size / 2} ${y + size * 0.24}C${x + size * 0.62} ${y - size * 0.04} ${x + size * 0.98} ${y + size * 0.02} ${x + size * 0.98} ${y + size * 0.3}C${x + size * 0.98} ${y + size * 0.58} ${x + size * 0.6} ${y + size * 0.82} ${x + size / 2} ${y + size * 0.96}Z" fill="${color}"/>`;
+    return `<path d="M${x + size / 2} ${y + size}C${x + size * 0.3} ${y + size * 0.85} ${x - size * 0.1} ${y + size * 0.55} ${x + size * 0.05} ${y + size * 0.35}C${x + size * 0.05} ${y + size * 0.15} ${x + size * 0.3} ${y + size * 0.05} ${x + size / 2} ${y + size * 0.15}C${x + size * 0.7} ${y + size * 0.05} ${x + size * 0.95} ${y + size * 0.15} ${x + size * 0.95} ${y + size * 0.35}C${x + size * 1.1} ${y + size * 0.55} ${x + size * 0.7} ${y + size * 0.85} ${x + size / 2} ${y + size}Z" fill="${color}"/>`;
   }
   return `<rect x="${x}" y="${y}" width="${size}" height="${size}" fill="${color}"/>`;
 }
