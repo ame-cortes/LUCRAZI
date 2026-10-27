@@ -507,9 +507,10 @@ export async function renderQrCodeCanvas(
         const { minRow, maxRow, minCol, maxCol, modules } = clusterInfo;
         const clusterWidth = maxCol - minCol + 1;
         const clusterHeight = maxRow - minRow + 1;
-        const size = Math.max(clusterWidth, clusterHeight) * moduleSize;
-        const x = offsetX + (minCol + quietZone) * moduleSize;
-        const y = offsetY + (minRow + quietZone) * moduleSize;
+        const baseSize = Math.max(clusterWidth, clusterHeight) * moduleSize;
+        const size = baseSize * 1.3;
+        const x = offsetX + (minCol + quietZone) * moduleSize - (size - baseSize) / 2;
+        const y = offsetY + (minRow + quietZone) * moduleSize - (size - baseSize) / 2;
         
         // Coração grande ocupando o cluster
         context.beginPath();
@@ -795,8 +796,8 @@ export function createQrCodeSvg(
         const size = Math.max(clusterWidth, clusterHeight);
         const x = minCol + quietZone;
         const y = minRow + quietZone;
-        // Aumentar o tamanho do coração para preencher o bloco 2x2
-        const heartSize = size * 1.8; 
+        // Tamanho do coração para preencher o bloco 2x2 de forma natural
+        const heartSize = size * 1.3; 
         const heartX = x - (heartSize - size) / 2;
         const heartY = y - (heartSize - size) / 2;
         
