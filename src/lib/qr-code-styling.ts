@@ -9,6 +9,8 @@ export const QR_CODE_STYLES = [
   "heart",
   "relief",
   "classy",
+  "classy-rounded",
+  "extra-rounded",
 ] as const;
 export type QrCodeStyle = (typeof QR_CODE_STYLES)[number];
 export const QR_CODE_EYE_STYLES = ["square", "rounded", "circle", "diamond", "octagon", "leaf", "heart"] as const;
@@ -26,6 +28,8 @@ export const qrCodeStyleOptions: {
   { id: "heart", label: "Coração", description: "Corações encorpados que se encontram em grupos" },
   { id: "relief", label: "Relevo", description: "Módulos recortados unidos em relevos" },
   { id: "classy", label: "Elegante", description: "Módulos clássicos estilizados pela QRCodeStyling" },
+  { id: "classy-rounded", label: "Elegante Arredondado", description: "Módulos clássicos arredondados pela QRCodeStyling" },
+  { id: "extra-rounded", label: "Elegante Extra", description: "Módulos clássicos extra arredondados pela QRCodeStyling" },
 ];
 
 const groupedStyleConnectorWidths: Record<QrCodeStyle, number> = {
@@ -36,6 +40,8 @@ const groupedStyleConnectorWidths: Record<QrCodeStyle, number> = {
   heart: 0.58,
   relief: 0.52,
   classy: 0,
+  "classy-rounded": 0,
+  "extra-rounded": 0,
 };
 
 const groupedStyleConnectorCaps: Record<QrCodeStyle, CanvasLineCap> = {
@@ -46,6 +52,8 @@ const groupedStyleConnectorCaps: Record<QrCodeStyle, CanvasLineCap> = {
   heart: "round",
   relief: "square",
   classy: "square",
+  "classy-rounded": "square",
+  "extra-rounded": "square",
 };
 
 export const qrCodeEyeStyleOptions: { id: QrCodeEyeStyle; label: string }[] = [

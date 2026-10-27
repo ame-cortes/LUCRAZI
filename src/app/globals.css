@@ -3784,7 +3784,7 @@ button:focus-visible {
 
 .qr-tool {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.82fr);
+  grid-template-columns: minmax(0, 1fr) 360px;
   align-items: start;
   gap: 24px;
 }

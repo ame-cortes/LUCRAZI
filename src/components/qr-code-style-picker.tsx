@@ -22,6 +22,8 @@ const previewConnectorWidths: Record<QrCodeStyle, number> = {
   heart: 3.48,
   relief: 3.12,
   classy: 0,
+  "classy-rounded": 0,
+  "extra-rounded": 0,
 };
 
 const previewConnectorCaps: Record<QrCodeStyle, "round" | "square"> = {
@@ -32,6 +34,8 @@ const previewConnectorCaps: Record<QrCodeStyle, "round" | "square"> = {
   heart: "round",
   relief: "square",
   classy: "square",
+  "classy-rounded": "square",
+  "extra-rounded": "square",
 };
 
 function renderGroupedPreviewConnectors(style: QrCodeStyle): React.JSX.Element {
@@ -82,7 +86,7 @@ function renderPreviewModule(style: QrCodeStyle, row: number, column: number): R
       y={y + 0.12}
       width="5.76"
       height="5.76"
-      rx={style === "mosaic" ? "0.36" : "0"}
+      rx={style === "mosaic" ? "0.36" : style === "classy-rounded" ? "0.6" : style === "extra-rounded" ? "1.44" : "0"}
     />
   );
 }
