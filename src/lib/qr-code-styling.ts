@@ -443,6 +443,19 @@ export async function renderQrCodeCanvas(
     // Heart style com detecção de clusters para corações maiores
     if (options.style === "heart") {
       const moduleSizeInt = qrCode.modules.size;
+      
+      // Primeiro: desenhar módulos reservados (alinhamento, timing) como quadrados
+      // Estes devem sempre aparecer e serem intocáveis, mesmo com estilo heart
+      for (let row = 0; row < moduleSizeInt; row++) {
+        for (let column = 0; column < moduleSizeInt; column++) {
+          if (qrCode.modules.isReserved(row, column) === 1 && !isFinderPatternModule(row, column, moduleSizeInt)) {
+            const x = offsetX + (column + quietZone) * moduleSize;
+            const y = offsetY + (row + quietZone) * moduleSize;
+            context.fillRect(x, y, moduleSize, moduleSize);
+          }
+        }
+      }
+      
       const clustersToRender: Array<{minRow: number, maxRow: number, minCol: number, maxCol: number, modules: [number, number][]}> = [];
       const visited = new Set<string>();
       
@@ -716,6 +729,19 @@ export function createQrCodeSvg(
     // Heart style com detecção de clusters para corações maiores
     if (options.style === "heart") {
       const moduleSizeInt = qrCode.modules.size;
+      
+      // Primeiro: desenhar módulos reservados (alinhamento, timing) como quadrados
+      // Estes devem sempre aparecer e serem intocáveis, mesmo com estilo heart
+      for (let row = 0; row < moduleSizeInt; row++) {
+        for (let column = 0; column < moduleSizeInt; column++) {
+          if (qrCode.modules.isReserved(row, column) === 1 && !isFinderPatternModule(row, column, moduleSizeInt)) {
+            const x = column + quietZone;
+            const y = row + quietZone;
+            squarePaths.push(`M${x} ${y}h1v1h-1z`);
+          }
+        }
+      }
+      
       const clustersToRender: Array<{minRow: number, maxRow: number, minCol: number, maxCol: number, modules: [number, number][]}> = [];
       const visited = new Set<string>();
       
@@ -849,5 +875,7 @@ export function createQrCodeSvg(
   const gradient = options.gradientEndColor
     ? `<defs><linearGradient id="qr-code-gradient" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${totalModules}" y2="0"><stop offset="0%" stop-color="${escapeXml(options.foregroundColor)}"/><stop offset="100%" stop-color="${escapeXml(options.gradientEndColor)}"/></linearGradient></defs>`
     : "";
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="720" height="720" viewBox="0 0 ${totalModules} ${totalModules}">${gradient}<rect width="100%" height="100%" fill="${background}"/>${squarePath}${styledPath}${eyePatterns}${logo}</svg>`;
+  // Ordem correta: background → módulos estilizados → módulos quadrados (reservados) → olhos → logo
+  // Isso garante que marcadores de posição e alinhamento sempre apareçam por cima
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="720" height="720" viewBox="0 0 ${totalModules} ${totalModules}">${gradient}<rect width="100%" height="100%" fill="${background}"/>${styledPath}${squarePath}${eyePatterns}${logo}</svg>`;
 }
