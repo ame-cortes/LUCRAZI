@@ -470,8 +470,8 @@ export async function renderQrCodeCanvas(
             }
           }
           
-          // Se bloco 2x2 tem 3+ módulos, renderizar coração maior
-          if (block2x2Count >= 3) {
+          // Se bloco 2x2 tem EXATAMENTE 4 módulos, renderizar coração maior
+          if (block2x2Count === 4) {
             // Verificar se não foi já visitado
             const blockKey = block2x2Modules.map(([r, c]) => `${r},${c}`).sort().join('|');
             if (!visited.has(blockKey)) {
@@ -748,8 +748,8 @@ export function createQrCodeSvg(
             }
           }
           
-          // Se bloco 2x2 tem 3+ módulos, renderizar coração maior
-          if (block2x2Count >= 3) {
+          // Se bloco 2x2 tem EXATAMENTE 4 módulos, renderizar coração maior
+          if (block2x2Count === 4) {
             const blockKey = block2x2Modules.map(([r, c]) => `${r},${c}`).sort().join('|');
             if (!visited.has(blockKey)) {
               clustersToRender.push({
@@ -773,8 +773,12 @@ export function createQrCodeSvg(
         const size = Math.max(clusterWidth, clusterHeight);
         const x = minCol + quietZone;
         const y = minRow + quietZone;
+        // Aumentar o tamanho do coração para preencher o bloco 2x2
+        const heartSize = size * 1.8; 
+        const heartX = x - (heartSize - size) / 2;
+        const heartY = y - (heartSize - size) / 2;
         
-        styledModules.push(`<path d="M${x + size / 2} ${y + size * 0.96}C${x + size * 0.25} ${y + size * 0.78} ${x + size * 0.05} ${y + size * 0.52} ${x + size * 0.1} ${y + size * 0.28}C${x + size * 0.1} ${y + size * 0.08} ${x + size * 0.35} ${y - size * 0.02} ${x + size / 2} ${y + size * 0.18}C${x + size * 0.65} ${y - size * 0.02} ${x + size * 0.9} ${y + size * 0.08} ${x + size * 0.9} ${y + size * 0.28}C${x + size * 0.95} ${y + size * 0.52} ${x + size * 0.75} ${y + size * 0.78} ${x + size / 2} ${y + size * 0.96}Z" fill="${foregroundPaint}"/>`);
+        styledModules.push(`<path d="M${heartX + heartSize / 2} ${heartY + heartSize * 0.96}C${heartX + heartSize * 0.25} ${heartY + heartSize * 0.78} ${heartX + heartSize * 0.05} ${heartY + heartSize * 0.52} ${heartX + heartSize * 0.1} ${heartY + heartSize * 0.28}C${heartX + heartSize * 0.1} ${heartY + heartSize * 0.08} ${heartX + heartSize * 0.35} ${heartY - heartSize * 0.02} ${heartX + heartSize / 2} ${heartY + heartSize * 0.18}C${heartX + heartSize * 0.65} ${heartY - heartSize * 0.02} ${heartX + heartSize * 0.9} ${heartY + heartSize * 0.08} ${heartX + heartSize * 0.9} ${heartY + heartSize * 0.28}C${heartX + heartSize * 0.95} ${heartY + heartSize * 0.52} ${heartX + heartSize * 0.75} ${heartY + heartSize * 0.78} ${heartX + heartSize / 2} ${heartY + heartSize * 0.96}Z" fill="${foregroundPaint}"/>`);
       });
       
       // Renderizar módulos individuais restantes
