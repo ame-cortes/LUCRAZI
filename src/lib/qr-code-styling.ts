@@ -452,6 +452,8 @@ export async function renderQrCodeCanvas(
           
           // Pular se já visitado ou não é módulo válido
           if (visited.has(key)) continue;
+          // PROTEÇÃO ABSOLUTA: Sempre excluir marcadores de posição
+          if (isFinderPatternModule(row, column, moduleSizeInt)) continue;
           if (isExcludedFinderModule(row, column, moduleSizeInt, eyeFrameStyle, eyeBallStyle)) continue;
           if (!qrCode.modules.get(row, column)) continue;
           if (qrCode.modules.isReserved(row, column) === 1) continue;
@@ -467,6 +469,8 @@ export async function renderQrCodeCanvas(
             
             if (localVisited.has(k)) continue;
             if (r < 0 || r >= moduleSizeInt || c < 0 || c >= moduleSizeInt) continue;
+            // PROTEÇÃO ABSOLUTA: Sempre excluir marcadores de posição
+            if (isFinderPatternModule(r, c, moduleSizeInt)) continue;
             if (isExcludedFinderModule(r, c, moduleSizeInt, eyeFrameStyle, eyeBallStyle)) continue;
             if (!qrCode.modules.get(r, c)) continue;
             if (qrCode.modules.isReserved(r, c) === 1) continue;
@@ -538,6 +542,8 @@ export async function renderQrCodeCanvas(
           const key = `${row},${column}`;
           if (visited.has(key)) continue;
           
+          // PROTEÇÃO ABSOLUTA: Sempre excluir marcadores de posição
+          if (isFinderPatternModule(row, column, moduleSizeInt)) continue;
           if (isExcludedFinderModule(row, column, moduleSizeInt, eyeFrameStyle, eyeBallStyle)) continue;
           if (!qrCode.modules.get(row, column)) continue;
           if (qrCode.modules.isReserved(row, column) === 1) continue;
@@ -750,6 +756,8 @@ export function createQrCodeSvg(
         for (let column = 0; column < moduleSizeInt; column++) {
           const key = `${row},${column}`;
           if (visited.has(key)) continue;
+          // PROTEÇÃO ABSOLUTA: Sempre excluir marcadores de posição
+          if (isFinderPatternModule(row, column, moduleSizeInt)) continue;
           if (isExcludedFinderModule(row, column, moduleSizeInt, eyeFrameStyle, eyeBallStyle)) continue;
           if (!qrCode.modules.get(row, column)) continue;
           if (qrCode.modules.isReserved(row, column) === 1) continue;
@@ -763,6 +771,8 @@ export function createQrCodeSvg(
             const k = `${r},${c}`;
             if (localVisited.has(k)) continue;
             if (r < 0 || r >= moduleSizeInt || c < 0 || c >= moduleSizeInt) continue;
+            // PROTEÇÃO ABSOLUTA: Sempre excluir marcadores de posição
+            if (isFinderPatternModule(r, c, moduleSizeInt)) continue;
             if (isExcludedFinderModule(r, c, moduleSizeInt, eyeFrameStyle, eyeBallStyle)) continue;
             if (!qrCode.modules.get(r, c)) continue;
             if (qrCode.modules.isReserved(r, c) === 1) continue;
@@ -822,6 +832,8 @@ export function createQrCodeSvg(
           const key = `${row},${column}`;
           if (visited.has(key)) continue;
           
+          // PROTEÇÃO ABSOLUTA: Sempre excluir marcadores de posição
+          if (isFinderPatternModule(row, column, moduleSizeInt)) continue;
           if (isExcludedFinderModule(row, column, moduleSizeInt, eyeFrameStyle, eyeBallStyle)) continue;
           if (!qrCode.modules.get(row, column)) continue;
           if (qrCode.modules.isReserved(row, column) === 1) continue;
