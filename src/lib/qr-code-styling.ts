@@ -570,13 +570,9 @@ export async function renderQrCodeCanvas(
     }
   }
 
-  if (
-    eyeFrameStyle !== "square"
-    || eyeBallStyle !== "square"
-    || eyeFrameColor !== options.foregroundColor
-    || eyeBallColor !== options.foregroundColor
-  ) {
-    drawFinderPatterns(
+  // Sempre desenhar os marcadores de posição (Finder Patterns)
+  // Eles devem estar sempre visíveis e intocáveis, independentemente do estilo dos olhos
+  drawFinderPatterns(
       context,
       qrCode.modules.size,
       moduleSize,
@@ -589,7 +585,6 @@ export async function renderQrCodeCanvas(
       eyeFrameStyle,
       eyeBallStyle,
     );
-  }
 
   await drawLogo(context, canvas, options.logoDataUrl || "", options.backgroundColor);
 }
@@ -823,12 +818,9 @@ export function createQrCodeSvg(
   }
 
   const background = escapeXml(options.backgroundColor);
-  const eyePatterns = eyeFrameStyle === "square"
-    && eyeBallStyle === "square"
-    && eyeFrameColor === options.foregroundColor
-    && eyeBallColor === options.foregroundColor
-    ? ""
-    : [[0, 0], [0, qrCode.modules.size - 7], [qrCode.modules.size - 7, 0]]
+  // Sempre renderizar os marcadores de posição (Finder Patterns)
+  // Eles devem estar sempre visíveis e intocáveis
+  const eyePatterns = [[0, 0], [0, qrCode.modules.size - 7], [qrCode.modules.size - 7, 0]]
       .map(([row, column]) => {
         const x = column + quietZone;
         const y = row + quietZone;
