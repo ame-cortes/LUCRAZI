@@ -96,8 +96,9 @@ function isExcludedFinderModule(
   frameStyle: QrCodeEyeStyle,
   ballStyle: QrCodeEyeStyle,
 ): boolean {
-  return (frameStyle !== "square" || ballStyle !== "square")
-    && isFinderPatternModule(row, column, size);
+  // SEMPRE excluir marcadores de posição, independentemente do estilo dos olhos
+  // Os olhos são renderizados separadamente, os módulos de dados nunca devem tocar nos marcadores
+  return isFinderPatternModule(row, column, size);
 }
 
 function visitGroupedStyleConnectors(
