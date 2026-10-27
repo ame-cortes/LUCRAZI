@@ -516,10 +516,15 @@ export async function renderQrCodeCanvas(
         
         // Zona de limpeza: mascarar área atrás da ponta do V do coração ANTES de desenhar o coração
         // Evita que módulos abaixo apareçam através da abertura
+        context.save();
         context.fillStyle = options.backgroundColor;
         const maskWidth = size * 0.15;
         const maskHeight = size * 0.2;
         context.fillRect(x + size / 2 - maskWidth / 2, y + size * 1.0, maskWidth, maskHeight);
+        context.restore();
+        
+        // Restaurar cor do coração
+        context.fillStyle = foregroundPaint;
         
         // Coração grande ocupando o cluster
         context.beginPath();
