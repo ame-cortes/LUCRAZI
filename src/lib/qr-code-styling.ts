@@ -25,7 +25,6 @@ export const qrCodeStyleOptions: {
   { id: "dots", label: "Pontos", description: "Manchas orgânicas conectadas" },
   { id: "star", label: "Estrela", description: "Estrelas conectadas por braços" },
   { id: "mosaic", label: "Mosaico", description: "Blocos conectados em formas geométricas" },
-  { id: "heart", label: "Coração", description: "Corações encorpados que se encontram em grupos" },
   { id: "relief", label: "Relevo", description: "Módulos recortados unidos em relevos" },
   { id: "classy", label: "Elegante", description: "Módulos clássicos estilizados pela QRCodeStyling" },
   { id: "classy-rounded", label: "Elegante Arredondado", description: "Módulos clássicos arredondados pela QRCodeStyling" },
