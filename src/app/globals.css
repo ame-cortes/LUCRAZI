@@ -3789,6 +3789,49 @@ button:focus-visible {
   gap: 24px;
 }
 
+.qr-examples {
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid var(--line);
+}
+
+.qr-examples h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: var(--text);
+}
+
+.qr-examples-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+  align-items: start;
+}
+
+.qr-example-card {
+  text-align: center;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgb(36 38 32 / 3%);
+}
+
+.qr-example-card img {
+  border-radius: 12px;
+  margin-bottom: 12px;
+  max-width: 100%;
+  height: auto;
+}
+
+.qr-example-card p {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin: 0;
+}
+
 .qr-settings,
 .qr-preview-card,
 .qr-email-card {

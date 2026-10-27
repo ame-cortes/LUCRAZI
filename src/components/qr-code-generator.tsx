@@ -674,6 +674,48 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
           </p>
         )}
       </section>
+
+      <section aria-label="Exemplos de estilos de QR Code" className="qr-examples">
+        <h3>Exemplos de estilos disponíveis</h3>
+        <div className="qr-examples-grid">
+          <div className="qr-example-card">
+            <img
+              alt="Exemplo de QR Code com gradiente e estilo elegante"
+              src="https://placehold.co/280x280/FF0000/FFFFFF?text=QR+1"
+              width={280}
+              height={280}
+            />
+            <p>Elegante com gradiente</p>
+          </div>
+          <div className="qr-example-card">
+            <img
+              alt="Exemplo de QR Code com pontos e estilo clássico"
+              src="https://placehold.co/280x280/006400/FFFFFF?text=QR+2"
+              width={280}
+              height={280}
+            />
+            <p>Pontos e logo central</p>
+          </div>
+          <div className="qr-example-card">
+            <img
+              alt="Exemplo de QR Code com padrão quadrado"
+              src="https://placehold.co/280x280/006400/FFFFFF?text=QR+3"
+              width={280}
+              height={280}
+            />
+            <p>Clássico com ícone</p>
+          </div>
+          <div className="qr-example-card">
+            <img
+              alt="Exemplo de QR Code com estilo elegante vermelho"
+              src="https://placehold.co/280x280/CC0000/FFFFFF?text=QR+4"
+              width={280}
+              height={280}
+            />
+            <p>Elegante vermelho</p>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
