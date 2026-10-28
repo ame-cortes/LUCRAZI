@@ -7163,7 +7163,6 @@ button:focus-visible {
   }
   .qr-preview-card {
     order: 3;
-  .qr-preview-card {
     position: sticky;
     top: 84px;
     align-self: start;
