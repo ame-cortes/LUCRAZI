@@ -7157,12 +7157,6 @@ button:focus-visible {
   }
   .qr-preview-card {
     order: 1;
-  }
-  .qr-settings {
-    order: 2;
-  }
-  .qr-email-card {
-    order: 3;
     position: sticky;
     top: 84px;
     align-self: start;
@@ -7172,6 +7166,15 @@ button:focus-visible {
     padding: 16px;
     margin-bottom: 24px;
     z-index: 2;
+  }
+  .qr-settings {
+    order: 2;
+  }
+  .qr-email-card {
+    order: 3;
+  }
+  .qr-examples {
+    order: 4;
   }
   .qr-preview-canvas {
     width: min(100%, 280px);
