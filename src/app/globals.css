@@ -7175,6 +7175,7 @@ button:focus-visible {
   }
   .qr-examples {
     order: 4;
+    margin-top: 280px;
   }
   .qr-preview-canvas {
     width: min(100%, 220px);
