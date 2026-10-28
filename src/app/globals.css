@@ -7190,5 +7190,15 @@ button:focus-visible {
   .qr-color-fields {
     grid-template-columns: 1fr;
   }
+
+  .qr-social-icons {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 12px;
+  }
+  .qr-social-icon-option {
+    min-height: 76px;
+    padding: 12px 6px;
+    font-size: 12px;
+  }
 }
 
