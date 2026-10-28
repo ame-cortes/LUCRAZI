@@ -7152,18 +7152,27 @@ button:focus-visible {
 
   /* QR Code generator mobile - preview fixo enquanto rola */
   .qr-tool {
-    display: block;
+    display: flex;
+    flex-direction: column;
+  }
+  .qr-settings {
+    order: 1;
+  }
+  .qr-email-card {
+    order: 2;
   }
   .qr-preview-card {
-    position: static;
+    order: 3;
+  .qr-preview-card {
+    position: sticky;
+    top: 84px;
+    align-self: start;
     background: var(--paper);
     border: 1px solid var(--line);
     border-radius: 18px;
     padding: 16px;
     margin-bottom: 24px;
-  }
-  .qr-preview-canvas {
-    margin-block: 12px 8px;
+    z-index: 2;
   }
   .qr-preview-canvas {
     width: min(100%, 280px);
