@@ -7152,12 +7152,12 @@ button:focus-visible {
 
   /* QR Code generator mobile - preview fixo enquanto rola */
   .qr-tool {
-    grid-template-columns: 1fr;
+    display: block;
   }
   .qr-preview-card {
     position: sticky;
-    top: 12px;
-    z-index: 5;
+    top: 84px;
+    z-index: 4;
     background: var(--paper);
     border-radius: 18px;
     padding: 16px;
