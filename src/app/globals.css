@@ -7158,10 +7158,10 @@ button:focus-visible {
   .qr-settings {
     order: 1;
   }
-  .qr-email-card {
+  .qr-preview-card {
     order: 2;
   }
-  .qr-preview-card {
+  .qr-email-card {
     order: 3;
     position: sticky;
     top: 84px;
