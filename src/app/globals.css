@@ -7094,6 +7094,7 @@ button:focus-visible {
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
     gap: 16px;
     padding: 0 12px 16px;
     scroll-padding: 12px;
@@ -7122,6 +7123,7 @@ button:focus-visible {
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
     gap: 16px;
     padding: 0 12px 16px;
     scroll-padding: 12px;
@@ -7155,6 +7157,10 @@ button:focus-visible {
     display: flex;
     flex-direction: column;
   }
+  .qr-tool-content {
+    display: flex;
+    flex-direction: column;
+  }
   .qr-preview-card {
     order: 1;
     position: sticky;
@@ -7175,7 +7181,7 @@ button:focus-visible {
   }
   .qr-examples {
     order: 4;
-    margin-top: 280px;
+    margin-top: 0;
   }
   .qr-preview-canvas {
     width: min(100%, 220px);
