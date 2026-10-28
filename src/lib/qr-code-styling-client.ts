@@ -12,11 +12,7 @@ export async function createQrCodeStylingSvg(
   shape: QrCodeStylingShape,
   options: QrCodeStylingRenderOptions,
 ) {
-  // Evita falha com logo em estilos elegant no cliente
-  const safeOptions = shape && options.logoDataUrl
-    ? { ...options, logoDataUrl: undefined }
-    : options;
-  const stylingOptions = createQrCodeStylingOptions(content, safeOptions, 0);
+  const stylingOptions = createQrCodeStylingOptions(content, options, 0);
   const initialCode = new QRCodeStyling({
     ...stylingOptions,
     dotsOptions: { ...stylingOptions.dotsOptions, type: shape },

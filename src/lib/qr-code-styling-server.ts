@@ -22,23 +22,37 @@ async function createQrCodeStylingSvgServer(
   shape: QrCodeStylingShape,
   options: QrCodeStylingRenderOptions,
 ) {
-  // Evita falha com logo em estilos elegant / QRCodeStyling no servidor
-  const safeOptions = shape && options.logoDataUrl
-    ? { ...options, logoDataUrl: undefined }
-    : options;
-  const stylingOptions = createQrCodeStylingOptions(content, safeOptions, 0);
+  const stylingOptions = createQrCodeStylingOptions(content, options, 0);
   const qrCode = new QRCodeStyling({
     ...stylingOptions,
     dotsOptions: { ...stylingOptions.dotsOptions, type: shape },
     jsdom: JSDOM,
   });
-
-  const moduleCount = qrCode._qr?.getModuleCount();
-  if (!moduleCount) throw new Error("A biblioteca QRCodeStyling não criou a matriz do QR.");
-  const margin = (720 * 4) / (moduleCount + 8);
-  qrCode.update({ margin });
-  const svg = await readQrCodeStylingSvg(await qrCode.getRawData("svg"));
-  return addQrCodeStylingEyePatterns(svg, moduleCount, margin, options);
+  // Tenta gerar com logo; se falhar, tenta sem logo para não quebrar o envio
+  try {
+    const moduleCount = qrCode._qr?.getModuleCount();
+    if (!moduleCount) throw new Error("A biblioteca QRCodeStyling não criou a matriz do QR.");
+    const margin = (720 * 4) / (moduleCount + 8);
+    qrCode.update({ margin });
+    const svg = await readQrCodeStylingSvg(await qrCode.getRawData("svg"));
+    return addQrCodeStylingEyePatterns(svg, moduleCount, margin, options);
+  } catch (_err) {
+    // Fallback sem logo
+    if (!options.logoDataUrl) throw new Error("A biblioteca QRCodeStyling não conseguiu criar a matriz do QR.");
+    const fallbackOptions = { ...options, logoDataUrl: undefined };
+    const fallbackStylingOptions = createQrCodeStylingOptions(content, fallbackOptions, 0);
+    const fallbackQrCode = new QRCodeStyling({
+      ...fallbackStylingOptions,
+      dotsOptions: { ...fallbackStylingOptions.dotsOptions, type: shape },
+      jsdom: JSDOM,
+    });
+    const moduleCount = fallbackQrCode._qr?.getModuleCount();
+    if (!moduleCount) throw new Error("A biblioteca QRCodeStyling não criou a matriz do QR.");
+    const margin = (720 * 4) / (moduleCount + 8);
+    fallbackQrCode.update({ margin });
+    const svg = await readQrCodeStylingSvg(await fallbackQrCode.getRawData("svg"));
+    return addQrCodeStylingEyePatterns(svg, moduleCount, margin, fallbackOptions);
+  }
 }
 
 export async function createQrCodeSvgServer(content: string, options: QrCodeSvgOptions) {

@@ -50,6 +50,7 @@ type QrRequest = {
   eyeFrameColor: string;
   eyeBallColor: string;
   logoDataUrl?: string;
+  svg?: string;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -180,6 +181,7 @@ function parseQrRequest(value: unknown): QrRequest | null {
     eyeFrameColor: validHexColor(value.eyeFrameColor) ? value.eyeFrameColor : value.foregroundColor,
     eyeBallColor: validHexColor(value.eyeBallColor) ? value.eyeBallColor : value.foregroundColor,
     ...(typeof value.logoDataUrl === "string" ? { logoDataUrl: value.logoDataUrl } : {}),
+    ...(typeof value.svg === "string" ? { svg: value.svg } : {}),
   };
 }
 
@@ -210,6 +212,7 @@ function parseLogo(value: string | undefined) {
 }
 
 async function createQrSvg(input: QrRequest, logo: ReturnType<typeof parseLogo>) {
+  if (input.svg) return input.svg;
   return createQrCodeSvgServer(input.content, {
     foregroundColor: input.foregroundColor,
     ...(input.gradientEndColor ? { gradientEndColor: input.gradientEndColor } : {}),

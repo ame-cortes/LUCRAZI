@@ -326,6 +326,21 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
     setIsSubmitting(true);
     const submittedRequestKey = requestKey;
     try {
+      // Gera SVG no cliente para suportar ícone/logo com estilos elegantes
+      const options = {
+        foregroundColor,
+        ...(gradientEnabled ? { gradientEndColor } : {}),
+        backgroundColor,
+        style: qrStyle,
+        eyeFrameStyle,
+        eyeBallStyle,
+        eyeFrameColor,
+        eyeBallColor,
+        logoDataUrl: logoDataUrl || undefined,
+      };
+      const svg = isQrCodeStylingShape(qrStyle)
+        ? await createQrCodeStylingSvg(trimmedContent || " ", qrStyle, options)
+        : createQrCodeSvg(trimmedContent || " ", options);
       const appCheck = await getFirebaseAppCheck();
       const { token } = await getToken(appCheck);
       const response = await fetch("/api/qr-code", {
@@ -348,6 +363,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
           eyeBallColor,
           ...(logoDataUrl ? { logoDataUrl } : {}),
           consent: consented,
+          svg,
         }),
       });
 
