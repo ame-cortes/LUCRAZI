@@ -75,27 +75,18 @@ function createGeolocationBridgePage(codeId: string, destination: string): Respo
 </head>
 <body>
   <main>
-    <p role="status" aria-live="polite">Se o navegador perguntar, permita a localização para mostrar uma área aproximada nas métricas. Se não permitir, o QR Code continua abrindo; nesse caso, usamos somente cidade/região estimada pelo IP.</p>
+    <p role="status" aria-live="polite">Redirecionando para o destino...</p>
     <a id="fallback" href="${safeDestination}" rel="noreferrer" hidden>Abrir destino</a>
   </main>
   <script>
     (() => {
       const fallback = document.getElementById("fallback");
-      let completed = false;
-
-      async function finishScan(position) {
-        if (completed) return;
-        completed = true;
-        const body = position ? {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy
-        } : {};
+      async function finishScan() {
         try {
           const response = await fetch("/q/${codeId}", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify(body),
+            body: JSON.stringify({}),
             cache: "no-store",
             credentials: "same-origin"
           });
@@ -105,21 +96,10 @@ function createGeolocationBridgePage(codeId: string, destination: string): Respo
           }
           window.location.replace(result.redirectUrl);
         } catch {
-          fallback.hidden = false;
           window.location.replace(fallback.href);
         }
       }
-
-      if (!navigator.geolocation) {
-        finishScan(null);
-        return;
-      }
-      window.setTimeout(() => finishScan(null), 7000);
-      navigator.geolocation.getCurrentPosition(
-        (position) => finishScan(position),
-        () => finishScan(null),
-        { enableHighAccuracy: true, maximumAge: 300000, timeout: 6000 }
-      );
+      finishScan();
     })();
   </script>
 </body>
@@ -131,7 +111,6 @@ function createGeolocationBridgePage(codeId: string, destination: string): Respo
       "cache-control": "no-store, private",
       "referrer-policy": "no-referrer",
       "x-content-type-options": "nosniff",
-      "permissions-policy": "geolocation=(self)",
       "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
     },
   });

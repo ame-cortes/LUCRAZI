@@ -215,7 +215,7 @@ export async function GET(
     const topCities = Array.from(scansByCity.entries())
       .map(([city, count]) => ({ city, count }))
       .sort((a, b) => b.count - a.count)
-      .slice(0, 10);
+      .slice(0, 20);
 
     const topCountries = Array.from(scansByCountry.entries())
       .map(([country, count]) => ({ country, count }))

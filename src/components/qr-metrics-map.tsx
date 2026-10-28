@@ -353,8 +353,6 @@ export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetrics
     const areas = new Map<string, ScanLocation>();
     scanLocations.forEach((location) => {
       if (
-        location.locationSource !== "browser"
-        ||
         location.latitude === null
         || location.longitude === null
       ) return;
@@ -515,7 +513,7 @@ export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetrics
                   {location.count.toLocaleString("pt-BR")} scans
                   <br />
                   <small>
-                    Localização do aparelho compartilhada com permissão. O ponto é arredondado para uma grade de cerca de 250 m e exibido como uma área ampliada; não representa uma casa.
+                    Localização aproximada por IP. O ponto é arredondado para uma grade de cerca de 100 m e exibido como uma área ampliada; não representa uma casa.
                   </small>
                 </Popup>
               </Circle>
@@ -525,7 +523,7 @@ export default function QrMetricsMap({ scansByRegion, scanLocations }: QrMetrics
       )}
       <div className="qr-brazil-map-legend">
         <span><i className="qr-map-legend-state" />Área preenchida: volume por estado/município</span>
-        <span><i className="qr-map-legend-point" />Áreas aproximadas do aparelho; cor mais forte indica mais scans</span>
+        <span><i className="qr-map-legend-point" />Áreas aproximadas por IP; cor mais forte indica mais scans</span>
         <span>Fonte dos limites: IBGE</span>
       </div>
     </div>

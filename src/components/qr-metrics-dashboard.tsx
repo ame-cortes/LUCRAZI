@@ -324,7 +324,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
             />
             <div className="qr-metrics-grid qr-metrics-grid-3">
               <div className="qr-metrics-list">
-                <h4>Top Cidades</h4>
+                <h4>Top Municípios</h4>
                 {metrics.topCities.length > 0 ? (
                   <ul>
                     {metrics.topCities.map((item, index) => (
@@ -336,7 +336,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
                     ))}
                   </ul>
                 ) : (
-                  <p className="qr-metrics-empty">Sem dados de cidades</p>
+                  <p className="qr-metrics-empty">Sem dados de municípios</p>
                 )}
               </div>
               <div className="qr-metrics-list">
@@ -477,7 +477,7 @@ export default function QrMetricsDashboard({ user, codeId, codeName, onClose }: 
                       <div
                         className="qr-chart-bar"
                         style={{
-                          height: `${Math.max((count / maxDailyScans) * 100, count > 0 ? 30 : 0)}%`,
+                          height: `${Math.max((count / maxDailyScans) * 100, count > 0 ? 50 : 0)}%`,
                           opacity: count > 0 ? 1 : 0.3
                         }}
                         title={`${DAYS[day]}: ${count} escaneamentos`}
