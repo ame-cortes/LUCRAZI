@@ -7155,14 +7155,15 @@ button:focus-visible {
     display: block;
   }
   .qr-preview-card {
-    position: sticky;
-    top: 84px;
-    z-index: 4;
+    position: static;
     background: var(--paper);
+    border: 1px solid var(--line);
     border-radius: 18px;
     padding: 16px;
-    margin-bottom: 16px;
-    box-shadow: 0 4px 20px rgb(36 38 32 / 6%);
+    margin-bottom: 24px;
+  }
+  .qr-preview-canvas {
+    margin-block: 12px 8px;
   }
   .qr-preview-canvas {
     width: min(100%, 280px);
