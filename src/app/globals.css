@@ -7155,10 +7155,10 @@ button:focus-visible {
     display: flex;
     flex-direction: column;
   }
-  .qr-settings {
+  .qr-preview-card {
     order: 1;
   }
-  .qr-preview-card {
+  .qr-settings {
     order: 2;
   }
   .qr-email-card {
