@@ -22,7 +22,11 @@ async function createQrCodeStylingSvgServer(
   shape: QrCodeStylingShape,
   options: QrCodeStylingRenderOptions,
 ) {
-  const stylingOptions = createQrCodeStylingOptions(content, options, 0);
+  // Evita falha com logo em estilos elegant / QRCodeStyling no servidor
+  const safeOptions = shape && options.logoDataUrl
+    ? { ...options, logoDataUrl: undefined }
+    : options;
+  const stylingOptions = createQrCodeStylingOptions(content, safeOptions, 0);
   const qrCode = new QRCodeStyling({
     ...stylingOptions,
     dotsOptions: { ...stylingOptions.dotsOptions, type: shape },
