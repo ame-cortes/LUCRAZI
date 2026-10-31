@@ -167,31 +167,52 @@ export default async function Home() {
         <div className="max-w-5xl mx-auto px-4">
           <span className="eyebrow block text-center mb-2">CLIENTES</span>
           <h2 id="home-clients-heading" className="text-2xl md:text-3xl font-bold text-center mb-8">Empresas que confiam no nosso Gerador de QR Code</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 justify-items-center">
+          
+          {/* Desktop grid */}
+          <div className="hidden sm:grid grid-cols-2 gap-10 justify-items-center">
             <a href="https://passeiolegal.com" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center text-center p-6 rounded-2xl border border-gray-200 hover:shadow-lg transition">
-              <Image
-                src="/images/qr-passeiolegal.png"
-                alt="QR Code Passeio Legal"
-                width={160}
-                height={160}
-                sizes="160px"
-                className="rounded-xl"
-              />
+              <Image src="/images/qr-passeiolegal.png" alt="QR Code Passeio Legal" width={160} height={160} sizes="160px" className="rounded-xl" />
               <span className="mt-4 font-semibold text-lg">Passeio Legal</span>
               <span className="text-sm text-gray-500">passeiolegal.com</span>
             </a>
             <a href="https://transferfortalezatur.com" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center text-center p-6 rounded-2xl border border-gray-200 hover:shadow-lg transition">
-              <Image
-                src="/images/qr-transferfortelezatur.png"
-                alt="QR Code Transfer Fortaleza Tur"
-                width={160}
-                height={160}
-                sizes="160px"
-                className="rounded-xl"
-              />
+              <Image src="/images/qr-transferfortelezatur.png" alt="QR Code Transfer Fortaleza Tur" width={160} height={160} sizes="160px" className="rounded-xl" />
               <span className="mt-4 font-semibold text-lg">Transfer Fortaleza Tur</span>
               <span className="text-sm text-gray-500">transferfortalezatur.com</span>
             </a>
+          </div>
+
+          {/* Mobile infinite carousel */}
+          <div className="sm:hidden overflow-hidden">
+            <style>{`
+              @keyframes marquee {
+                0% { transform: translateX(0); }
+                100% { transform: translateX(-50%); }
+              }
+            `}</style>
+            <div className="flex gap-6 w-max animate-[marquee_15s_linear_infinite] hover:[animation-play-state:paused]">
+              <a href="https://passeiolegal.com" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center text-center p-6 rounded-2xl border border-gray-200 min-w-[220px]">
+                <Image src="/images/qr-passeiolegal.png" alt="QR Code Passeio Legal" width={140} height={140} sizes="140px" className="rounded-xl" />
+                <span className="mt-4 font-semibold">Passeio Legal</span>
+                <span className="text-xs text-gray-500">passeiolegal.com</span>
+              </a>
+              <a href="https://transferfortalezatur.com" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center text-center p-6 rounded-2xl border border-gray-200 min-w-[220px]">
+                <Image src="/images/qr-transferfortelezatur.png" alt="QR Code Transfer Fortaleza Tur" width={140} height={140} sizes="140px" className="rounded-xl" />
+                <span className="mt-4 font-semibold">Transfer Fortaleza Tur</span>
+                <span className="text-xs text-gray-500">transferfortalezatur.com</span>
+              </a>
+              {/* Duplicados para loop infinito */}
+              <a href="https://passeiolegal.com" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center text-center p-6 rounded-2xl border border-gray-200 min-w-[220px]">
+                <Image src="/images/qr-passeiolegal.png" alt="QR Code Passeio Legal" width={140} height={140} sizes="140px" className="rounded-xl" />
+                <span className="mt-4 font-semibold">Passeio Legal</span>
+                <span className="text-xs text-gray-500">passeiolegal.com</span>
+              </a>
+              <a href="https://transferfortalezatur.com" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center text-center p-6 rounded-2xl border border-gray-200 min-w-[220px]">
+                <Image src="/images/qr-transferfortelezatur.png" alt="QR Code Transfer Fortaleza Tur" width={140} height={140} sizes="140px" className="rounded-xl" />
+                <span className="mt-4 font-semibold">Transfer Fortaleza Tur</span>
+                <span className="text-xs text-gray-500">transferfortalezatur.com</span>
+              </a>
+            </div>
           </div>
         </div>
       </section>
