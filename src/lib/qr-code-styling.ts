@@ -335,8 +335,8 @@ function drawLogo(
   return new Promise<void>((resolve, reject) => {
     const image = new Image();
     image.onload = () => {
-      const logoSize = canvas.width * 0.14;
-      const backingSize = logoSize * 1.14;
+      const logoSize = canvas.width * 0.22;
+      const backingSize = logoSize * 1.2;
       const center = canvas.width / 2;
       context.fillStyle = backgroundColor;
       context.beginPath();
@@ -345,7 +345,7 @@ function drawLogo(
         center - backingSize / 2,
         backingSize,
         backingSize,
-        backingSize * 0.12,
+        backingSize * 0.15,
       );
       context.fill();
       context.drawImage(image, center - logoSize / 2, center - logoSize / 2, logoSize, logoSize);
