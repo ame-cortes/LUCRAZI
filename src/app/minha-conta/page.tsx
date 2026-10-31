@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function MyAccountPage() {
-  return <QrCodeDashboard />;
+  return <QrCodeDashboard />; 
 } 
