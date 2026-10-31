@@ -432,7 +432,7 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
   return (
     <div className="qr-tool">
       <div className="qr-tool-content">
-      <section aria-label="Prévia e exportação do QR Code" className="qr-preview-card">
+      <section aria-label="Configurações do QR Code">
         <div className="qr-field">
           <label htmlFor="qr-content-type">Tipo de conteúdo</label>
           <select
@@ -590,39 +590,6 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
         </div>
       </section>
 
-      <section aria-label="Prévia e exportação do QR Code" className="qr-preview-card">
-        <span className="qr-preview-label">PRÉVIA EM TEMPO REAL</span>
-        <canvas
-          aria-label="Prévia do QR Code"
-          className="qr-preview-canvas"
-          height={720}
-          ref={canvasRef}
-          role="img"
-          width={720}
-        />
-        <p className="qr-preview-hint">A estrutura dos marcadores de leitura e a margem branca são preservadas. Teste a leitura antes de imprimir.</p>
-        {downloadsUnlocked ? (
-          <>
-            <p aria-live="polite" className="qr-success" role="status">
-              QR Code enviado para {email.trim()}. Os downloads locais estão liberados.
-            </p>
-            <div className="qr-download-actions">
-              <button className="button button-dark" onClick={() => void handleDownloadPng()} type="button">
-                Baixar PNG <span aria-hidden="true">↓</span>
-              </button>
-              <button className="qr-secondary-button" onClick={() => void handleDownloadSvg()} type="button">
-                Baixar SVG
-              </button>
-            </div>
-          </>
-        ) : (
-          <p aria-live="polite" className="qr-delivery-notice" role="status">
-            Informe seu e-mail e confirme a entrega para liberar os downloads locais.
-          </p>
-        )}
-        {previewError && <p aria-live="polite" className="qr-error" role="alert">{previewError}</p>}
-      </section>
-
       <section aria-labelledby="qr-email-heading" className="qr-email-card">
         <span className="qr-preview-label">ENTREGA POR E-MAIL</span>
         <h2 id="qr-email-heading">Informe seu e-mail para receber e baixar o QR Code.</h2>
@@ -693,6 +660,40 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
       </section>
       </div>
 
+      <section aria-label="Prévia e exportação do QR Code" className="qr-preview-card">
+        <span className="qr-preview-label">PRÉVIA EM TEMPO REAL</span>
+        <canvas
+          aria-label="Prévia do QR Code"
+          className="qr-preview-canvas"
+          height={720}
+          ref={canvasRef}
+          role="img"
+          width={720}
+        />
+        <p className="qr-preview-hint">A estrutura dos marcadores de leitura e a margem branca são preservadas. Teste a leitura antes de imprimir.</p>
+        {downloadsUnlocked ? (
+          <>
+            <p aria-live="polite" className="qr-success" role="status">
+              QR Code enviado para {email.trim()}. Os downloads locais estão liberados.
+            </p>
+            <div className="qr-download-actions">
+              <button className="button button-dark" onClick={() => void handleDownloadPng()} type="button">
+                Baixar PNG <span aria-hidden="true">↓</span>
+              </button>
+              <button className="qr-secondary-button" onClick={() => void handleDownloadSvg()} type="button">
+                Baixar SVG
+              </button>
+            </div>
+          </>
+        ) : (
+          <p aria-live="polite" className="qr-delivery-notice" role="status">
+            Informe seu e-mail e confirme a entrega para liberar os downloads locais.
+          </p>
+        )}
+        {previewError && <p aria-live="polite" className="qr-error" role="alert">{previewError}</p>}
+      </section>
+    </div>
+
       <section aria-label="Exemplos de estilos de QR Code" className="qr-examples">
         <h3>Exemplos de estilos disponíveis</h3>
         <div className="qr-examples-grid">
@@ -734,6 +735,5 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
           </div>
         </div>
       </section>
-    </div>
   );
 }
