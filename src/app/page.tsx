@@ -163,32 +163,34 @@ export default async function Home() {
           </div>
         </div>
       </section> 
-      <section aria-labelledby="home-clients-heading" className="home-clients-section">
-        <div className="wrap home-clients-inner">
-          <span className="eyebrow">CLIENTES</span>
-          <h2 id="home-clients-heading">Empresas que confiam no nosso Gerador de QR Code</h2>
-          <div className="home-clients-grid">
-            <a href="https://passeiolegal.com" target="_blank" rel="noopener noreferrer" className="home-client-card">
+      <section aria-labelledby="home-clients-heading" className="py-12 bg-white">
+        <div className="max-w-5xl mx-auto px-4">
+          <span className="eyebrow block text-center mb-2">CLIENTES</span>
+          <h2 id="home-clients-heading" className="text-2xl md:text-3xl font-bold text-center mb-8">Empresas que confiam no nosso Gerador de QR Code</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 justify-items-center">
+            <a href="https://passeiolegal.com" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center text-center p-6 rounded-2xl border border-gray-200 hover:shadow-lg transition">
               <Image
                 src="/images/qr-passeiolegal.png"
                 alt="QR Code Passeio Legal"
                 width={160}
                 height={160}
                 sizes="160px"
+                className="rounded-xl"
               />
-              <span className="home-client-name">Passeio Legal</span>
-              <span className="home-client-site">passeiolegal.com</span>
+              <span className="mt-4 font-semibold text-lg">Passeio Legal</span>
+              <span className="text-sm text-gray-500">passeiolegal.com</span>
             </a>
-            <a href="https://transferfortalezatur.com" target="_blank" rel="noopener noreferrer" className="home-client-card">
+            <a href="https://transferfortalezatur.com" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center text-center p-6 rounded-2xl border border-gray-200 hover:shadow-lg transition">
               <Image
                 src="/images/qr-transferfortelezatur.png"
                 alt="QR Code Transfer Fortaleza Tur"
                 width={160}
                 height={160}
                 sizes="160px"
+                className="rounded-xl"
               />
-              <span className="home-client-name">Transfer Fortaleza Tur</span>
-              <span className="home-client-site">transferfortalezatur.com</span>
+              <span className="mt-4 font-semibold text-lg">Transfer Fortaleza Tur</span>
+              <span className="text-sm text-gray-500">transferfortalezatur.com</span>
             </a>
           </div>
         </div>
