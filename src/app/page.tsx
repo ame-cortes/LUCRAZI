@@ -162,7 +162,7 @@ export default async function Home() {
             </Link>
           </div>
         </div>
-      </section>
+      </section> 
       <section aria-labelledby="home-clients-heading" className="home-clients-section">
         <div className="wrap home-clients-inner">
           <span className="eyebrow">CLIENTES</span>
