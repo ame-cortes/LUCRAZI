@@ -335,7 +335,7 @@ function drawLogo(
   return new Promise<void>((resolve, reject) => {
     const image = new Image();
     image.onload = () => {
-      const logoSize = canvas.width * 0.14;
+      const logoSize = canvas.width * 0.22;
       const backingSize = logoSize * 1.14;
       const center = canvas.width / 2;
       context.fillStyle = backgroundColor;
@@ -875,7 +875,7 @@ export function createQrCodeSvg(
       .join("");
   let logo = "";
   if (options.logoDataUrl) {
-    const logoSize = totalModules * 0.14;
+    const logoSize = totalModules * 0.22;
     const backingSize = logoSize * 1.14;
     const backingOffset = (totalModules - backingSize) / 2;
     const logoOffset = (totalModules - logoSize) / 2;

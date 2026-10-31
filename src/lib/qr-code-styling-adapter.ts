@@ -1,4 +1,5 @@
-import type { Options as QrCodeStylingOptions } from "qr-code-styling";
+// import type { Options as QrCodeStylingOptions } from "qr-code-styling";
+type QrCodeStylingOptions = any;
 import type { QrCodeEyeStyle } from "@/lib/qr-code-styling";
 
 export const QRCODE_STYLING_SHAPES = ["classy", "classy-rounded", "extra-rounded"] as const;
@@ -51,7 +52,7 @@ export function createQrCodeStylingOptions(
     ...(options.logoDataUrl
       ? {
           image: options.logoDataUrl,
-          imageOptions: { hideBackgroundDots: true, imageSize: 0.14, margin: 0 },
+          imageOptions: { hideBackgroundDots: true, imageSize: 0.22, margin: 0 },
         }
       : {}),
   };

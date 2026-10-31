@@ -163,6 +163,36 @@ export default async function Home() {
           </div>
         </div>
       </section>
+      <section aria-labelledby="home-clients-heading" className="home-clients-section">
+        <div className="wrap home-clients-inner">
+          <span className="eyebrow">CLIENTES</span>
+          <h2 id="home-clients-heading">Empresas que confiam no nosso Gerador de QR Code</h2>
+          <div className="home-clients-grid">
+            <a href="https://passeiolegal.com" target="_blank" rel="noopener noreferrer" className="home-client-card">
+              <Image
+                src="/images/qr-passeiolegal.png"
+                alt="QR Code Passeio Legal"
+                width={240}
+                height={240}
+                sizes="240px"
+              />
+              <span className="home-client-name">Passeio Legal</span>
+              <span className="home-client-site">passeiolegal.com</span>
+            </a>
+            <a href="https://transferfortalezatur.com" target="_blank" rel="noopener noreferrer" className="home-client-card">
+              <Image
+                src="/images/qr-transferfortalezatur.png"
+                alt="QR Code Transfer Fortaleza Tur"
+                width={240}
+                height={240}
+                sizes="240px"
+              />
+              <span className="home-client-name">Transfer Fortaleza Tur</span>
+              <span className="home-client-site">transferfortalezatur.com</span>
+            </a>
+          </div>
+        </div>
+      </section>
       <div className="wrap">
         <AdSlot className="home-display-ad" slotId="2358805021" />
       </div>
