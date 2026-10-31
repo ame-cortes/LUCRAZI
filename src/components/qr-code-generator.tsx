@@ -430,7 +430,8 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
   }
 
   return (
-    <div className="qr-tool">
+    <>
+      <div className="qr-tool">
       <div className="qr-tool-content">
       <section aria-label="Configurações do QR Code">
         <div className="qr-field">
@@ -735,5 +736,6 @@ export function QrCodeGenerator({ emailDeliveryEnabled }: QrCodeGeneratorProps) 
           </div>
         </div>
       </section>
+    </>
   );
 }
