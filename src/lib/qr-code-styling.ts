@@ -345,7 +345,7 @@ function drawLogo(
         center - backingSize / 2,
         backingSize,
         backingSize,
-        backingSize * 0.12,
+        backingSize * 0.15,
       );
       context.fill();
       context.drawImage(image, center - logoSize / 2, center - logoSize / 2, logoSize, logoSize);
